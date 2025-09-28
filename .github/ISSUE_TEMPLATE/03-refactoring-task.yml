@@ -1,0 +1,198 @@
+name: 🔄 Refactoring Task
+description: Improve code quality while maintaining functionality
+title: "[REFACTOR] "
+labels: ["refactoring", "technical-debt", "code-quality"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Refactoring Task
+
+        Use this template for code improvements that don't change functionality but improve code quality, performance, or maintainability.
+
+  - type: input
+    id: refactor-target
+    attributes:
+      label: Refactoring Target
+      description: What code/component needs refactoring?
+      placeholder: "e.g., Chess move validation logic, WebRTC connection class, Game state management"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: refactor-type
+    attributes:
+      label: Refactoring Type
+      description: What type of refactoring is this?
+      options:
+        - "🏗️ Structural (reorganize code architecture)"
+        - "⚡ Performance (optimize for speed/memory)"
+        - "🧹 Code cleanup (remove duplication, improve readability)"
+        - "🔒 Type safety (improve TypeScript typing)"
+        - "🧪 Test improvement (better test coverage/structure)"
+        - "📦 Dependency management (update/remove dependencies)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-issues
+    attributes:
+      label: Current Issues
+      description: What problems exist with the current code?
+      placeholder: |
+        - Code duplication in multiple components
+        - Poor performance under heavy load
+        - Difficult to test due to tight coupling
+        - Missing TypeScript types
+      value: |
+        -
+        -
+        -
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired-outcome
+    attributes:
+      label: Desired Outcome
+      description: What should the code look like after refactoring?
+      placeholder: |
+        - Single responsibility principle applied
+        - 50% performance improvement
+        - 90%+ test coverage
+        - Full TypeScript type safety
+      value: |
+        -
+        -
+        -
+    validations:
+      required: true
+
+  - type: textarea
+    id: refactoring-approach
+    attributes:
+      label: Refactoring Approach
+      description: How will you approach this refactoring safely?
+      placeholder: |
+        1. Ensure 100% test coverage of current behavior
+        2. Refactor in small, isolated commits
+        3. Run full test suite after each change
+        4. Performance benchmarks before/after
+      value: |
+        1.
+        2.
+        3.
+        4.
+    validations:
+      required: true
+
+  - type: textarea
+    id: safety-measures
+    attributes:
+      label: Safety Measures
+      description: How will you ensure no functionality is broken?
+      placeholder: |
+        ## Existing Test Coverage
+        - [ ] Unit tests: 85%
+        - [ ] Integration tests: 70%
+        - [ ] E2E tests: 60%
+
+        ## Additional Tests to Add
+        - [ ] Test current behavior before refactoring
+        - [ ] Performance benchmarks
+        - [ ] Edge case testing
+
+        ## Validation Steps
+        - [ ] All existing tests pass
+        - [ ] No performance regression
+        - [ ] Code review with team
+      value: |
+        ## Existing Test Coverage
+        - [ ] Unit tests:
+        - [ ] Integration tests:
+        - [ ] E2E tests:
+
+        ## Additional Tests to Add
+        - [ ]
+        - [ ]
+
+        ## Validation Steps
+        - [ ] All existing tests pass
+        - [ ] No performance regression
+        - [ ] Code review completed
+
+  - type: checkboxes
+    id: refactoring-checklist
+    attributes:
+      label: Refactoring Checklist
+      description: Track progress through the refactoring process
+      options:
+        - label: "📊 Baseline measurements taken (performance, coverage, complexity)"
+          required: false
+        - label: "🛡️ Comprehensive tests written for current behavior"
+          required: false
+        - label: "🔄 Refactoring completed in small, reviewable commits"
+          required: false
+        - label: "✅ All existing functionality preserved"
+          required: false
+        - label: "📈 Metrics improved (performance, maintainability, etc.)"
+          required: false
+        - label: "🧪 Test suite updated to reflect new structure"
+          required: false
+        - label: "📚 Documentation updated"
+          required: false
+        - label: "👥 Code review completed"
+          required: false
+
+  - type: dropdown
+    id: impact-scope
+    attributes:
+      label: Impact Scope
+      description: How much of the codebase will this affect?
+      options:
+        - "🎯 Isolated (single component/function)"
+        - "📦 Module-level (single feature area)"
+        - "🏗️ Cross-cutting (multiple features)"
+        - "🌍 System-wide (architecture change)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this refactoring?
+      options:
+        - "🔥 Critical (blocking development)"
+        - "🚨 High (tech debt causing issues)"
+        - "📋 Medium (improving maintainability)"
+        - "🔄 Low (nice to have)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: breaking-changes
+    attributes:
+      label: Potential Breaking Changes
+      description: List any potential breaking changes or API modifications
+      placeholder: |
+        - Function signature changes
+        - Component prop changes
+        - File/folder restructuring
+        - Dependency updates
+
+  - type: textarea
+    id: rollback-plan
+    attributes:
+      label: Rollback Plan
+      description: How will you rollback if issues are discovered?
+      placeholder: |
+        1. Git revert to last stable commit
+        2. Feature flag to disable new code path
+        3. Gradual rollout strategy
+      value: |
+        1.
+        2.
+        3.

@@ -1,0 +1,204 @@
+name: 🧪 Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test & Quality Checks
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: 🏗️ Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: 📚 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Type checking
+        run: pnpm run check
+
+      - name: 🎨 Lint code
+        run: pnpm run lint
+
+      - name: 🧪 Run unit tests
+        run: pnpm run test:coverage
+
+      - name: 📊 Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unit
+          name: codecov-unit
+
+      - name: 🏗️ Build application
+        run: pnpm run build
+
+      - name: 🔍 Check build artifacts
+        run: |
+          ls -la dist/
+          du -sh dist/
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+
+      - name: 📚 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔗 Run integration tests
+        run: pnpm run test:integration
+
+      - name: 📊 Upload integration coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage-integration/lcov.info
+          flags: integration
+          name: codecov-integration
+
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+
+      - name: 📚 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🎭 Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: 🏗️ Build for testing
+        run: pnpm run build
+
+      - name: 🚀 Start preview server
+        run: pnpm run preview &
+        env:
+          CI: true
+
+      - name: ⏳ Wait for server
+        run: npx wait-on http://localhost:4321 --timeout 60000
+
+      - name: 🎭 Run E2E tests
+        run: pnpm run test:e2e
+
+      - name: 📸 Upload E2E test results
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: e2e-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+
+      - name: 📚 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔒 Run security audit
+        run: pnpm audit --prod
+
+      - name: 🛡️ Check for vulnerabilities
+        run: |
+          if pnpm audit --prod --json | grep -q '"vulnerabilities"'; then
+            echo "Security vulnerabilities found!"
+            pnpm audit --prod
+            exit 1
+          else
+            echo "No security vulnerabilities found."
+          fi
+
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [test, integration-test, e2e-test, security]
+    if: always()
+
+    steps:
+      - name: ✅ Quality Gate Check
+        run: |
+          if [[ "${{ needs.test.result }}" == "success" &&
+                "${{ needs.integration-test.result }}" == "success" &&
+                "${{ needs.e2e-test.result }}" == "success" &&
+                "${{ needs.security.result }}" == "success" ]]; then
+            echo "🎉 All quality checks passed!"
+            exit 0
+          else
+            echo "❌ Quality gate failed!"
+            echo "Test: ${{ needs.test.result }}"
+            echo "Integration: ${{ needs.integration-test.result }}"
+            echo "E2E: ${{ needs.e2e-test.result }}"
+            echo "Security: ${{ needs.security.result }}"
+            exit 1
+          fi

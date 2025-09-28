@@ -1,0 +1,83 @@
+{
+  "name": "kings-cooking",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "A custom chess variant board game built with Astro and WebRTC",
+  "author": "Your Name",
+  "license": "MIT",
+  "keywords": [
+    "chess",
+    "board-game",
+    "astro",
+    "webrtc",
+    "multiplayer",
+    "tdd"
+  ],
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "sync": "astro sync",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:integration": "vitest --config vitest.integration.config.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "lint": "eslint . --ext .js,.ts,.astro --max-warnings 0",
+    "lint:fix": "eslint . --ext .js,.ts,.astro --fix",
+    "format": "prettier --write \"src/**/*.{astro,js,ts,md,json}\"",
+    "format:check": "prettier --check \"src/**/*.{astro,js,ts,md,json}\"",
+    "validate": "pnpm run check && pnpm run lint && pnpm run test:coverage",
+    "prepare": "husky install",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "astro": "^5.0.0",
+    "@astrojs/check": "^0.9.0",
+    "@astrojs/tailwind": "^5.1.0",
+    "@astrojs/sitemap": "^3.2.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.6.0"
+  },
+  "devDependencies": {
+    "@astrojs/ts-plugin": "^1.10.0",
+    "@playwright/test": "^1.40.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-astro": "^0.34.0",
+    "happy-dom": "^12.0.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.3.0",
+    "prettier-plugin-astro": "^0.14.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "lint-staged": {
+    "*.{astro,js,ts}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{md,json}": [
+      "prettier --write"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/kings-cooking.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/kings-cooking/issues"
+  },
+  "homepage": "https://yourusername.github.io/kings-cooking/"
+}

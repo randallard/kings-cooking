@@ -1,0 +1,150 @@
+name: 🐛 Bug Report
+description: Report a bug with TDD investigation approach
+title: "[BUG] "
+labels: ["bug", "tdd", "investigation"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report with TDD Investigation
+
+        Use this template to report bugs and follow TDD principles to fix them. We'll write tests that reproduce the bug, then fix the issue.
+
+  - type: input
+    id: bug-summary
+    attributes:
+      label: Bug Summary
+      description: Brief description of the issue
+      placeholder: "e.g., WebRTC connection fails on mobile Chrome, Piece moves to invalid square"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - "🔥 Critical (app unusable)"
+        - "🚨 High (major feature broken)"
+        - "⚠️ Medium (feature partially broken)"
+        - "📝 Low (minor issue)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the bug
+      placeholder: |
+        1. Navigate to...
+        2. Click on...
+        3. Enter...
+        4. Observe...
+      value: |
+        1.
+        2.
+        3.
+        4.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+      placeholder: "The feature should..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happens?
+      placeholder: "Instead, the feature..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Information about your testing environment
+      placeholder: |
+        - Browser: Chrome 120.0.0
+        - OS: Windows 11
+        - Device: Desktop/Mobile
+        - Screen size: 1920x1080
+        - WebRTC support: Yes/No
+      value: |
+        - Browser:
+        - OS:
+        - Device:
+        - Screen size:
+        - WebRTC support:
+
+  - type: textarea
+    id: console-errors
+    attributes:
+      label: Console Errors/Logs
+      description: Any error messages or relevant console output
+      render: shell
+      placeholder: |
+        [Error] WebRTC connection failed: ICE failed
+        [Warning] Piece validation returned false
+
+  - type: textarea
+    id: reproduction-tests
+    attributes:
+      label: Reproduction Tests (TDD Approach)
+      description: Tests that should be written to reproduce this bug
+      placeholder: |
+        ## Unit Tests to Write
+        - [ ] Test case that reproduces the bug
+        - [ ] Test edge cases around the bug
+
+        ## Integration Tests to Write
+        - [ ] Test that captures the integration failure
+
+        ## E2E Tests to Write
+        - [ ] Test that reproduces the user-facing issue
+      value: |
+        ## Unit Tests to Write
+        - [ ]
+
+        ## Integration Tests to Write
+        - [ ]
+
+        ## E2E Tests to Write
+        - [ ]
+
+  - type: checkboxes
+    id: tdd-bug-fix-checklist
+    attributes:
+      label: TDD Bug Fix Checklist
+      description: Follow TDD approach to fix the bug
+      options:
+        - label: "🔴 RED: Write failing test that reproduces the bug"
+          required: false
+        - label: "🟢 GREEN: Fix the bug to make the test pass"
+          required: false
+        - label: "🔄 REFACTOR: Improve fix while keeping tests green"
+          required: false
+        - label: "✅ All existing tests still pass"
+          required: false
+        - label: "🧪 Added regression tests to prevent future occurrences"
+          required: false
+        - label: "📝 Updated documentation if needed"
+          required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information about the bug
+      placeholder: "This issue started happening after..., Related to issue #..."

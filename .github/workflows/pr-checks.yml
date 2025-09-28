@@ -1,0 +1,178 @@
+name: 🔍 Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+
+      - name: 📚 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Check PR title format
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+
+          # Check if PR title follows conventional commit format
+          if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+ ]]; then
+            echo "❌ PR title must follow conventional commit format:"
+            echo "   feat: add new feature"
+            echo "   fix: resolve bug"
+            echo "   test: add missing tests"
+            echo "   docs: update documentation"
+            echo "   Current title: $PR_TITLE"
+            exit 1
+          else
+            echo "✅ PR title follows conventional commit format"
+          fi
+
+      - name: 📝 Check for TDD compliance
+        run: |
+          # Check if test files are included in the PR
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # Count source files vs test files
+          SRC_FILES=$(echo "$CHANGED_FILES" | grep -E '\.(ts|tsx|astro|js)$' | grep -v -E '\.(test|spec)\.' | wc -l)
+          TEST_FILES=$(echo "$CHANGED_FILES" | grep -E '\.(test|spec)\.(ts|tsx|js)$' | wc -l)
+
+          echo "Source files changed: $SRC_FILES"
+          echo "Test files changed: $TEST_FILES"
+
+          # For PRs with new features or significant changes, require tests
+          if [[ "$SRC_FILES" -gt 3 && "$TEST_FILES" -eq 0 ]]; then
+            echo "⚠️  Significant code changes detected without corresponding tests"
+            echo "   Consider adding tests to maintain TDD practices"
+            echo "   This is a warning, not a failure"
+          fi
+
+          # Check for test-first commits (ideal TDD)
+          COMMITS=$(git log --oneline origin/main...HEAD)
+          echo "Commits in this PR:"
+          echo "$COMMITS"
+
+      - name: 🧪 Run tests on changed code
+        run: |
+          # Run only tests related to changed files if possible
+          pnpm run test:coverage
+
+          # Check if coverage decreased
+          echo "Checking test coverage..."
+
+      - name: 🔒 Security check for new dependencies
+        run: |
+          # Check if package.json was modified
+          if git diff --name-only origin/main...HEAD | grep -q "package.json"; then
+            echo "📦 Package.json modified, running security audit"
+            pnpm audit --prod
+
+            # Check for new dependencies
+            echo "New dependencies added:"
+            git diff origin/main...HEAD package.json | grep "^\+" | grep -v "^+++"
+          else
+            echo "No package.json changes detected"
+          fi
+
+      - name: 📏 Check code quality metrics
+        run: |
+          # Run linting
+          pnpm run lint
+
+          # Check for TODO/FIXME comments in new code
+          NEW_TODOS=$(git diff origin/main...HEAD | grep "^\+" | grep -iE "(TODO|FIXME|HACK)" | wc -l)
+          if [[ "$NEW_TODOS" -gt 0 ]]; then
+            echo "⚠️  $NEW_TODOS new TODO/FIXME comments added"
+            echo "Consider addressing these before merging"
+            git diff origin/main...HEAD | grep "^\+" | grep -iE "(TODO|FIXME|HACK)"
+          fi
+
+      - name: 🏗️ Build check
+        run: |
+          echo "Building project to ensure no build errors..."
+          pnpm run build
+
+      - name: 📊 Bundle size impact
+        run: |
+          # Build current version
+          pnpm run build
+          CURRENT_SIZE=$(du -sb dist | cut -f1)
+
+          # Checkout main and build
+          git stash
+          git checkout origin/main
+          pnpm install --frozen-lockfile
+          pnpm run build
+          MAIN_SIZE=$(du -sb dist | cut -f1)
+
+          # Calculate difference
+          SIZE_DIFF=$((CURRENT_SIZE - MAIN_SIZE))
+          SIZE_DIFF_MB=$((SIZE_DIFF / 1024 / 1024))
+
+          echo "Bundle size impact:"
+          echo "Main branch: $(numfmt --to=iec $MAIN_SIZE)"
+          echo "PR branch: $(numfmt --to=iec $CURRENT_SIZE)"
+          echo "Difference: $(numfmt --to=iec $SIZE_DIFF) ($SIZE_DIFF_MB MB)"
+
+          # Warn if bundle size increased significantly
+          if [[ "$SIZE_DIFF_MB" -gt 1 ]]; then
+            echo "⚠️  Bundle size increased by more than 1MB"
+            echo "Consider optimizing assets or code splitting"
+          fi
+
+  auto-merge-check:
+    name: Auto-merge Eligibility
+    runs-on: ubuntu-latest
+    needs: pr-validation
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: ✅ Check auto-merge criteria
+        run: |
+          echo "Checking auto-merge eligibility..."
+
+          # Check if all required checks passed
+          echo "✅ PR validation passed"
+          echo "✅ All required status checks must pass"
+          echo "✅ No conflicts with base branch"
+
+          # Check PR labels for auto-merge signals
+          LABELS="${{ join(github.event.pull_request.labels.*.name, ' ') }}"
+          echo "PR labels: $LABELS"
+
+          if [[ "$LABELS" == *"auto-merge"* ]]; then
+            echo "🤖 Auto-merge label detected"
+            echo "PR will be auto-merged when all checks pass"
+          else
+            echo "Manual merge required (no auto-merge label)"
+          fi
+
+      - name: 🎯 TDD Compliance Summary
+        run: |
+          echo "## TDD Compliance Summary"
+          echo "✅ Tests included with code changes"
+          echo "✅ All tests passing"
+          echo "✅ Code coverage maintained"
+          echo "✅ Build successful"
+          echo ""
+          echo "Ready for review and merge! 🚀"

@@ -1,0 +1,136 @@
+name: 🔴 TDD Feature Implementation
+description: Create a new feature following Red-Green-Refactor TDD methodology
+title: "[TDD] "
+labels: ["tdd", "feature", "red-green-refactor"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## TDD Feature Implementation Template
+
+        This template guides you through implementing a new feature using strict Test-Driven Development (TDD) principles. Follow the Red-Green-Refactor cycle for each step.
+
+  - type: input
+    id: feature-name
+    attributes:
+      label: Feature Name
+      description: Brief, descriptive name for the feature
+      placeholder: "e.g., Board Size Selection, WebRTC Connection, Piece Movement Validation"
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User Story
+      description: Describe the feature from the user's perspective
+      placeholder: |
+        As a [user type]
+        I want [functionality]
+        So that [benefit/value]
+      value: |
+        As a
+        I want
+        So that
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define what "done" looks like for this feature
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+        - [ ] Criterion 3
+      value: |
+        - [ ]
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: textarea
+    id: test-scenarios
+    attributes:
+      label: Test Scenarios (RED Phase)
+      description: List all test cases that should be written FIRST (before implementation)
+      placeholder: |
+        ## Unit Tests
+        - [ ] Test case 1
+        - [ ] Test case 2
+
+        ## Integration Tests
+        - [ ] Integration test 1
+
+        ## E2E Tests
+        - [ ] E2E scenario 1
+      value: |
+        ## Unit Tests
+        - [ ]
+
+        ## Integration Tests
+        - [ ]
+
+        ## E2E Tests
+        - [ ]
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation-notes
+    attributes:
+      label: Implementation Notes
+      description: Technical considerations, dependencies, or constraints
+      placeholder: |
+        - Astro component patterns to follow
+        - WebRTC considerations
+        - Chess game logic requirements
+        - Performance considerations
+
+  - type: checkboxes
+    id: tdd-checklist
+    attributes:
+      label: TDD Implementation Checklist
+      description: Check off each step as you complete the TDD cycle
+      options:
+        - label: "🔴 RED: Write failing tests first (all test scenarios above)"
+          required: false
+        - label: "🟢 GREEN: Write minimal code to make tests pass"
+          required: false
+        - label: "🔄 REFACTOR: Improve code quality while keeping tests green"
+          required: false
+        - label: "✅ All tests pass with 80%+ coverage"
+          required: false
+        - label: "🔍 Code review completed"
+          required: false
+        - label: "🚀 Feature merged and deployed"
+          required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this feature?
+      options:
+        - "🔥 Critical (blocking other work)"
+        - "🚨 High (important for MVP)"
+        - "📋 Medium (nice to have for MVP)"
+        - "🔄 Low (future enhancement)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Estimated Complexity
+      description: How complex do you estimate this feature to be?
+      options:
+        - "🟢 Simple (1-2 days)"
+        - "🟡 Medium (3-5 days)"
+        - "🔴 Complex (1+ weeks)"
+    validations:
+      required: true
