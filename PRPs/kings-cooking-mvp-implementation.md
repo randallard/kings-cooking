@@ -13,8 +13,8 @@ description: |
 - Astro 5+ static site with Islands Architecture
 - WebRTC peer-to-peer multiplayer (no server required)
 - Custom chess variant rules implementation
-- Variable board sizes (4x4 to 12x12)
-- Three setup modes (Random, Mirrored, Independent)
+- Variable board sizes (2x2 to 16x16)
+- Setup parameters: Pawns, pickingstyle
 - Party victory condition (captured pieces join opponent's king)
 - Off-board moves for rooks and queens
 - Mobile-responsive design
