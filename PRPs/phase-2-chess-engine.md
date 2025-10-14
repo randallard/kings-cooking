@@ -16,7 +16,7 @@ Implement a fully functional, type-safe chess engine for King's Cooking variant 
 - Complete `KingsChessEngine` class with all piece movement logic
 - Rook, knight, and bishop movement validation (standard chess rules)
 - Off-board movement mechanics (rooks can exit, knights can jump off, bishops must edge-first)
-- Capture mechanics (captured pieces go to capturing player's king's court)
+- Capture mechanics (captured pieces go back to their own king's court and are not counted)
 - Victory condition detection (most pieces in opponent's court wins)
 - Move history tracking with complete game state serialization
 - **MINIMUM 80% test coverage** on chess engine code
@@ -26,7 +26,7 @@ Implement a fully functional, type-safe chess engine for King's Cooking variant 
 **Success Criteria:**
 - [ ] All piece movements validated correctly per chess rules
 - [ ] Off-board moves work according to King's Cooking rules
-- [ ] Captures send pieces to correct court (captured piece to captor's king court)
+- [ ] Captures send pieces to correct court (captured piece back to their king's court and are not counted)
 - [ ] Victory detection works correctly
 - [ ] Move history tracks all moves with timestamps
 - [ ] State serialization round-trips successfully
@@ -131,10 +131,10 @@ class KingsChessEngine {
 #### 4. Capture Mechanics
 
 **CRITICAL RULE:** When a piece is captured:
-- The captured piece goes to the **capturing player's king's court**
+- The captured piece goes to  **their king's court**
 - NOT the opponent's court
 - Does NOT count toward score
-- Example: White rook captures Black knight → Black knight goes to **White** king's court (no points for anyone)
+- Example: White rook captures Black knight → Black knight goes to **Black** king's court (adding no points for anyone)
 
 #### 5. Victory Conditions
 
@@ -297,8 +297,10 @@ canMoveOffBoard(from: Position, piece: Piece): boolean {
     return this.hasKnightJumpOffBoard(from);
   }
 
-  // Bishops cannot move off-board (must edge-first)
-  return false;
+  if (piece.type == 'bishop') {
+    // Bishops cannot move off-board (must edge-first)
+    return !this.hitsBoardEdgeOnLastRowBeforeGoal(from);
+  }
 }
 ```
 
@@ -310,9 +312,9 @@ canMoveOffBoard(from: Position, piece: Piece): boolean {
    - **Fix**: All bounds checking must use `row >= 0 && row < 3 && col >= 0 && col < 3`
 
 2. **Capture Destination Error**
-   - ❌ **WRONG**: Captured piece goes to opponent's court (scoring)
-   - ✅ **CORRECT**: Captured piece goes to captor's king's court (no score)
-   - **Fix**: `if (captured) { this.myCourt.push(captured); }` not `opponentCourt`
+   - ❌ **WRONG**: Captured piece goes to my court (scoring)
+   - ✅ **CORRECT**: Captured piece goes back to their king's court (no score)
+   - **Fix**: `if (captured) { this.opponentCourt.push(captured); }` not `myCourt`
 
 3. **Off-Board Movement Confusion**
    - ❌ **WRONG**: All pieces can move off-board
@@ -320,6 +322,7 @@ canMoveOffBoard(from: Position, piece: Piece): boolean {
    - ❌ **WRONG**: Bishops can move diagonally off
    - ✅ **CORRECT**: Bishops MUST stop at edge, then move off next turn
    - **Fix**: Implement `canMoveOffBoard()` with piece-specific logic
+   - **Note**: If bishop is NOT on an edge in the last row before goal, they CAN move off into the goal
 
 4. **Victory Condition Mistake**
    - ❌ **WRONG**: Count all pieces in courts (including captured)
