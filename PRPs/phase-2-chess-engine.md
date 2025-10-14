@@ -1969,14 +1969,14 @@ const [row, col] = piece.position; // Error if null
 ### Common Implementation Mistakes
 
 1. **Wrong Capture Destination**
-   - Captured pieces go to CAPTOR's court, not opponent's
+   - Captured pieces go back to their own court
 
 2. **Board Indexing**
    - Rows: 0 (Black), 1 (Middle), 2 (White)
    - Columns: 0, 1, 2
 
 3. **Off-Board Validation**
-   - Bishops CANNOT move off-board directly
+   - Bishops CANNOT move off-board directly unless their position in the last row before the goal would not be on an edge
 
 4. **Victory Counting**
    - Only count `whiteCourt` and `blackCourt` arrays

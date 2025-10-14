@@ -1298,17 +1298,17 @@ describe('KingsChessEngine', () => {
 
     it('knight moves in L-shape');
     it('knight can jump pieces');
-    it('knight can jump off-board directly');
+    it('knight can jump off-board directly from middle or last rows');
 
     it('bishop moves diagonally');
     it('bishop cannot jump pieces');
-    it('bishop must stop at edge before moving off');
+    it('bishop must stop when encountering either side edge');
     it('bishop cannot move straight');
   });
 
   describe('Captures', () => {
     it('captured piece removed from board');
-    it('captured piece added to captor\'s king\'s court');
+    it('captured piece added to their king\'s court');
     it('captured pieces do not count toward score');
     it('capturing own piece is invalid');
   });
@@ -1323,6 +1323,7 @@ describe('KingsChessEngine', () => {
     it('detects winner with most pieces in opponent court');
     it('detects draw when equal pieces in courts');
     it('game ends when all pieces off board');
+    it('game ends when all of one team\'s pieces are off the board');
     it('handles stalemate correctly');
   });
 
@@ -1418,7 +1419,6 @@ describe('URL Mode Game Flow', () => {
 3. **Error Scenarios**
    - Load invalid URL
    - Clear localStorage mid-game
-   - Refresh page during game
    - Corrupted URL data
 
 4. **Mobile Tests**
@@ -1431,6 +1431,10 @@ describe('URL Mode Game Flow', () => {
    - Toggle dark mode during game
    - All elements visible
    - Sufficient contrast
+
+6. **Resiliency**
+   - Gracefully handle refreshed browser during test
+   - Gracefully handle player1 load when its player 2's turn in url mode
 
 ### 6.5 Coverage Requirements
 
