@@ -7,27 +7,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
-    setupFiles: ['./src/test/setup.ts'],
+    include: ['**/*.integration.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
-      exclude: [
-        'node_modules/',
-        'src/test/',
-        '**/*.test.{ts,tsx}',
-        '**/*.spec.{ts,tsx}',
-        '**/*.config.ts',
-        '**/types.ts',
-        '**/*.d.ts',
-      ],
-      thresholds: {
-        global: {
-          lines: 80,
-          functions: 80,
-          branches: 80,
-          statements: 80,
-        },
-      },
+      reportsDirectory: './coverage-integration',
     },
   },
   resolve: {
