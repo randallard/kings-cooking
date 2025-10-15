@@ -6,6 +6,8 @@
 **Estimated Duration:** Week 1-2
 **Complexity:** High
 
+> **📝 NOTE:** URL state validation features (player identity validation, turn sequence validation, browser refresh recovery) have been deferred to **Phase 3: URL Encoding & Security**. Phase 2 focuses exclusively on core chess engine logic and game rules implementation.
+
 ---
 
 ## 🎯 GOAL
@@ -150,8 +152,35 @@ return { winner: null } // Draw
 ```
 
 **Game End Triggers:**
-- All 6 pieces are either captured or in a king's court
-- Stalemate (no legal moves available)
+1. All 6 pieces are either captured or in a king's court
+2. All pieces from one team are off the board (captured or scored)
+3. Stalemate (no legal moves available)
+
+**Auto-Scoring Rule (CRITICAL):**
+When all pieces from one team are off the board, the game ends immediately and remaining opponent pieces still on the board are automatically counted as having reached the opponent's court.
+
+```typescript
+// Check if one team eliminated
+const whitePiecesOnBoard = countPiecesOnBoard(gameState, 'white');
+const blackPiecesOnBoard = countPiecesOnBoard(gameState, 'black');
+
+if (whitePiecesOnBoard === 0 || blackPiecesOnBoard === 0) {
+  // Auto-score remaining pieces
+  const whiteScore = gameState.whiteCourt.length + whitePiecesOnBoard;
+  const blackScore = gameState.blackCourt.length + blackPiecesOnBoard;
+
+  return {
+    gameOver: true,
+    winner: whiteScore > blackScore ? 'white' : blackScore > whiteScore ? 'black' : null,
+    score: { white: whiteScore, black: blackScore }
+  };
+}
+```
+
+**Examples:**
+- All White pieces captured → Black gets auto-scored for remaining pieces on board
+- All Black pieces off-board (2 scored, 1 captured) → White gets auto-scored for remaining pieces
+- Example: White eliminated (0 points), Black has 2 on board + 1 scored = Black wins 3-0
 
 #### 6. State Serialization
 
@@ -285,22 +314,62 @@ getRookMoves(from: Position): Position[] {
 #### Off-Board Movement Pattern
 
 ```typescript
-// Check if piece can move off-board
-canMoveOffBoard(from: Position, piece: Piece): boolean {
-  // Only rooks and knights for King's Cooking
+// Check if piece can move off-board (as part of current move)
+canMoveOffBoard(from: Position, to: 'off_board', piece: Piece): boolean {
   if (piece.type === 'rook') {
-    return this.hasPathToOpponentEdge(from);
+    // Rook needs clear path to opponent's edge
+    return this.hasPathToOpponentEdge(from, piece);
   }
 
   if (piece.type === 'knight') {
-    // Knight can jump, check if L-shape lands off-board
-    return this.hasKnightJumpOffBoard(from);
+    // Knight can jump directly if L-shape lands in goal zone
+    return this.hasKnightJumpOffBoard(from, piece);
   }
 
-  if (piece.type == 'bishop') {
-    // Bishops cannot move off-board (must edge-first)
-    return !this.hitsBoardEdgeOnLastRowBeforeGoal(from);
+  if (piece.type === 'bishop') {
+    // Bishop trajectory-based rule
+    // Can move off-board if diagonal path goes through MIDDLE column of opponent's row
+    // Must stop if path goes through CORNER columns
+    return this.canBishopDiagonalOffBoard(from, piece);
   }
+
+  return false;
+}
+
+// Bishop specific off-board check
+canBishopDiagonalOffBoard(from: Position, piece: Piece): boolean {
+  const [row, col] = from;
+
+  // Get all diagonal directions
+  const diagonals: Direction[] = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+
+  for (const [dr, dc] of diagonals) {
+    let r = row + dr;
+    let c = col + dc;
+
+    // Follow diagonal path until reaching opponent's edge
+    while (this.isInBounds(r, c)) {
+      // Check if path is blocked
+      if (this.getPieceAt([r, c])) break;
+
+      r += dr;
+      c += dc;
+    }
+
+    // Check if we exited through opponent's edge (not side edge)
+    const exitedThroughOpponentEdge = piece.owner === 'white' ? r < 0 : r > 2;
+
+    if (!exitedThroughOpponentEdge) continue; // Wrong edge
+
+    // Check which column the diagonal crosses through opponent's row
+    const crossingColumn = c - dc; // Step back to last valid column
+
+    // Can move off-board if crossing through MIDDLE column (1)
+    // Must stop if crossing through CORNER columns (0 or 2)
+    if (crossingColumn === 1) return true;
+  }
+
+  return false; // No valid diagonal to move off-board
 }
 ```
 
@@ -312,23 +381,27 @@ canMoveOffBoard(from: Position, piece: Piece): boolean {
    - **Fix**: All bounds checking must use `row >= 0 && row < 3 && col >= 0 && col < 3`
 
 2. **Capture Destination Error**
-   - ❌ **WRONG**: Captured piece goes to my court (scoring)
-   - ✅ **CORRECT**: Captured piece goes back to their king's court (no score)
-   - **Fix**: `if (captured) { this.opponentCourt.push(captured); }` not `myCourt`
+   - ❌ **WRONG**: Captured piece goes to captor's court (scoring)
+   - ✅ **CORRECT**: Captured piece goes back to their own king's court (no score)
+   - **Fix**: `if (captured.owner === 'white') { capturedWhite.push(captured); } else { capturedBlack.push(captured); }`
 
-3. **Off-Board Movement Confusion**
-   - ❌ **WRONG**: All pieces can move off-board
-   - ✅ **CORRECT**: Only rooks (path clear) and knights (jump)
-   - ❌ **WRONG**: Bishops can move diagonally off
-   - ✅ **CORRECT**: Bishops MUST stop at edge, then move off next turn
-   - **Fix**: Implement `canMoveOffBoard()` with piece-specific logic
-   - **Note**: If bishop is NOT on an edge in the last row before goal, they CAN move off into the goal
+3. **Off-Board Movement Confusion - Bishop Trajectory Rule**
+   - ❌ **WRONG**: All pieces can move off-board the same way
+   - ✅ **CORRECT**: Each piece type has specific rules
+   - ❌ **WRONG**: Bishops always must stop at edge first
+   - ✅ **CORRECT**: Bishops can move off-board if diagonal crosses through MIDDLE column (col 1) of opponent's starting row
+   - ✅ **CORRECT**: Bishops must STOP if diagonal crosses through CORNER columns of opponent's starting row (col 0 or 2)
+   - **Fix**: Check diagonal trajectory, not just piece position
+   - **Example**: WhiteBishop at (1,0) moving diagonally through (0,1) crosses middle column → can continue off-board
 
-4. **Victory Condition Mistake**
+4. **Victory Condition Mistakes**
    - ❌ **WRONG**: Count all pieces in courts (including captured)
    - ✅ **CORRECT**: Only count pieces that reached opponent's court
    - **Fix**: `whiteCourt` = white pieces in Black's court (white score)
    - **Fix**: `capturedWhite` = white pieces captured (NOT scored)
+   - ❌ **WRONG**: Forget auto-scoring when team eliminated
+   - ✅ **CORRECT**: When all pieces from one team are off-board, auto-score remaining opponent pieces
+   - **Fix**: `whiteScore = whiteCourt.length + whitePiecesOnBoard`
 
 5. **Position Tracking Error**
    - ❌ **WRONG**: Use `position: [row, col]` for off-board pieces
@@ -674,6 +747,67 @@ export function canKnightJumpOffBoard(
 
   return false;
 }
+
+/**
+ * Check if bishop can move off-board based on diagonal trajectory.
+ *
+ * CRITICAL KING'S COOKING RULE:
+ * - Bishops can move off-board if diagonal path crosses MIDDLE column (col 1) of opponent's row
+ * - Bishops must STOP if diagonal path crosses CORNER columns (col 0 or 2)
+ *
+ * @param from - Starting position
+ * @param piece - Piece to check (must be bishop)
+ * @param getPiece - Function to get piece at position
+ * @returns True if bishop can continue off-board in current move
+ *
+ * @example
+ * // White bishop at (1,0) moving diagonally
+ * // Path: (1,0) → (0,1) → off-board
+ * // Crosses opponent row through middle column → CAN move off-board
+ *
+ * @example
+ * // White bishop at (1,1) moving diagonally
+ * // Path: (1,1) → (0,0) → would exit through side edge
+ * // Crosses opponent row through corner → MUST STOP at (0,0)
+ */
+export function canBishopMoveOffBoard(
+  from: Position,
+  piece: Piece,
+  getPiece: (pos: Position) => Piece | null
+): boolean {
+  if (piece.type !== 'bishop') return false;
+
+  const diagonals: Direction[] = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+
+  for (const [dr, dc] of diagonals) {
+    let row = from[0] + dr;
+    let col = from[1] + dc;
+
+    // Follow diagonal path until reaching edge or blocked
+    while (isInBounds(row, col)) {
+      if (getPiece([row, col])) break; // Path blocked
+
+      row += dr;
+      col += dc;
+    }
+
+    // Check if we exited through opponent's edge (not side edge)
+    const exitedThroughOpponentEdge =
+      piece.owner === 'white' ? row < 0 : row > 2;
+
+    if (!exitedThroughOpponentEdge) continue; // Wrong edge
+
+    // Check which column the diagonal crosses through opponent's row
+    // Step back to last valid column before going off-board
+    const crossingColumn = col - dc;
+
+    // Can move off-board if crossing through MIDDLE column (1)
+    // Must stop if crossing through CORNER columns (0 or 2)
+    if (crossingColumn === 1) return true;
+  }
+
+  return false; // No valid diagonal path to move off-board
+}
 ```
 
 **Tests:** Create `pieceMovement.test.ts`
@@ -682,7 +816,13 @@ export function canKnightJumpOffBoard(
 - Test bishop diagonal moves
 - Test path blocking
 - Test capture moves
-- Test off-board path detection
+- Test off-board path detection (rooks)
+- Test knight jump off-board detection
+- **Test bishop trajectory-based off-board**:
+  - Corner bishops (0,0), (0,2), (2,0), (2,2) CANNOT move off-board directly
+  - Middle row bishops with trajectory through col 1 CAN move off-board
+  - Test diagonal path calculation
+  - Test blocked paths
 - Test board boundaries
 
 **Validation:**
@@ -797,10 +937,24 @@ function validateOffBoardMove(
     };
   }
 
-  // Bishops cannot move off-board
+  if (piece.type === 'bishop') {
+    const canMoveOff = canBishopMoveOffBoard(from, piece, getPiece);
+    if (!canMoveOff) {
+      return {
+        valid: false,
+        reason: 'Bishop diagonal path must cross through middle column (col 1) of opponent row to move off-board. Corner paths require stopping at edge first.',
+      };
+    }
+    return {
+      valid: true,
+      warnings: [`${piece.owner} bishop moves diagonally to ${piece.owner} king's court`],
+    };
+  }
+
+  // Unknown piece type
   return {
     valid: false,
-    reason: 'Bishops cannot move off-board (must stop at edge, then move off next turn)',
+    reason: `${piece.type} cannot move off-board`,
   };
 }
 
@@ -857,7 +1011,7 @@ function validateStandardMove(
 
   if (targetPiece) {
     warnings.push(
-      `Captured ${targetPiece.owner} ${targetPiece.type} will go to ${currentPlayer} king's court`
+      `Captured ${targetPiece.owner} ${targetPiece.type} will return to ${targetPiece.owner} king's court (no points)`
     );
   }
 
@@ -955,12 +1109,49 @@ import type { VictoryResult } from './types';
  * - blackCourt = black pieces in WHITE's court (black scores)
  * - capturedWhite = white pieces captured (no score)
  * - capturedBlack = black pieces captured (no score)
+ * - AUTO-SCORING: When one team eliminated, remaining opponent pieces auto-score
  *
  * @param gameState - Current game state
  * @returns Victory result with winner and scores
  */
 export function checkGameEnd(gameState: GameState): VictoryResult {
-  // Check if all pieces are off-board
+  // Count pieces still on board for each team
+  const whitePiecesOnBoard = countPiecesOnBoard(gameState, 'white');
+  const blackPiecesOnBoard = countPiecesOnBoard(gameState, 'black');
+
+  // Check if one team has been eliminated (all pieces off-board)
+  if (whitePiecesOnBoard === 0 || blackPiecesOnBoard === 0) {
+    // Auto-score remaining pieces
+    const whiteScore = gameState.whiteCourt.length + whitePiecesOnBoard;
+    const blackScore = gameState.blackCourt.length + blackPiecesOnBoard;
+
+    if (whiteScore > blackScore) {
+      return {
+        gameOver: true,
+        winner: 'white',
+        score: { white: whiteScore, black: blackScore },
+        reason: `White wins ${whiteScore}-${blackScore} (${whitePiecesOnBoard === 0 ? 'eliminated' : 'dominating'})`,
+      };
+    }
+
+    if (blackScore > whiteScore) {
+      return {
+        gameOver: true,
+        winner: 'black',
+        score: { white: whiteScore, black: blackScore },
+        reason: `Black wins ${blackScore}-${whiteScore} (${blackPiecesOnBoard === 0 ? 'eliminated' : 'dominating'})`,
+      };
+    }
+
+    return {
+      gameOver: true,
+      winner: null,
+      score: { white: whiteScore, black: blackScore },
+      reason: 'Draw! Both kings serve together.',
+    };
+  }
+
+  // Check if all pieces are off-board (normal game end)
   const allOffBoard = areAllPiecesOffBoard(gameState);
 
   if (!allOffBoard) {
@@ -995,6 +1186,31 @@ export function checkGameEnd(gameState: GameState): VictoryResult {
     score: { white: whiteScore, black: blackScore },
     reason: 'Draw! Both kings serve together.',
   };
+}
+
+/**
+ * Count pieces still on board for a specific team.
+ *
+ * @param gameState - Current game state
+ * @param owner - Team to count ('white' or 'black')
+ * @returns Number of pieces on board
+ */
+function countPiecesOnBoard(
+  gameState: GameState,
+  owner: 'white' | 'black'
+): number {
+  let count = 0;
+
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      const piece = gameState.board[row]?[col];
+      if (piece && piece.owner === owner) {
+        count++;
+      }
+    }
+  }
+
+  return count;
 }
 
 /**
@@ -1313,13 +1529,13 @@ export class KingsChessEngine {
 
     // Handle capture
     if (targetPiece) {
-      // CRITICAL: Captured piece goes to CAPTOR's king court
+      // CRITICAL: Captured piece goes to THEIR OWN king's court (not captor's)
       targetPiece.position = null;
 
-      if (piece.owner === 'white') {
-        this.gameState.capturedBlack.push(targetPiece);
-      } else {
+      if (targetPiece.owner === 'white') {
         this.gameState.capturedWhite.push(targetPiece);
+      } else {
+        this.gameState.capturedBlack.push(targetPiece);
       }
     }
 
@@ -1549,7 +1765,9 @@ describe('KingsChessEngine', () => {
       expect(board[0]![0]?.type).toBe('rook');
       expect(board[0]![0]?.owner).toBe('black');
       expect(board[0]![1]?.type).toBe('knight');
+      expect(board[0]![1]?.owner).toBe('black');
       expect(board[0]![2]?.type).toBe('bishop');
+      expect(board[0]![2]?.owner).toBe('black');
 
       // Empty row 1
       expect(board[1]![0]).toBeNull();
@@ -1560,7 +1778,9 @@ describe('KingsChessEngine', () => {
       expect(board[2]![0]?.type).toBe('rook');
       expect(board[2]![0]?.owner).toBe('white');
       expect(board[2]![1]?.type).toBe('knight');
+      expect(board[2]![1]?.owner).toBe('white');
       expect(board[2]![2]?.type).toBe('bishop');
+      expect(board[2]![2]?.owner).toBe('white');
     });
   });
 
@@ -1582,7 +1802,7 @@ describe('KingsChessEngine', () => {
       const result = engine.makeMove([2, 0], [2, 1]);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('cannot move');
+      expect(result.error).toContain('cannot move to a square occupied by a piece of the same color');
     });
 
     test('should reject move when not your turn', () => {
@@ -1594,41 +1814,162 @@ describe('KingsChessEngine', () => {
 
     test('should handle captures correctly', () => {
       // Set up capture scenario
-      engine.makeMove([2, 1], [1, 2]); // White knight
-      engine.makeMove([0, 2], [1, 2]); // Black bishop captures
+      engine.makeMove([2, 1], [0, 2]); // White knight L-move: 2 up, 1 right
+      engine.makeMove([0, 0], [1, 0]); // Black rook moves forward
 
       const state = engine.getGameState();
-      expect(state.capturedWhite).toHaveLength(1);
-      expect(state.capturedWhite[0]?.type).toBe('knight');
+
+      // White knight captured Black bishop
+      expect(state.capturedBlack).toHaveLength(1);
+      expect(state.capturedBlack[0]?.type).toBe('bishop');
+      expect(state.capturedBlack[0]?.owner).toBe('black');
+
+      // White knight is now at (0,2)
+      expect(state.board[0]![2]?.type).toBe('knight');
+      expect(state.board[0]![2]?.owner).toBe('white');
     });
   });
 
   describe('off-board moves', () => {
-    test('should allow rook to move off-board with clear path', () => {
-      // Clear path for white rook
-      engine.makeMove([2, 0], [1, 0]);
-      engine.makeMove([0, 0], [1, 0]); // Black captures
-      engine.makeMove([2, 1], [0, 2]); // White knight
-      engine.makeMove([1, 0], [0, 0]); // Black rook to edge
+    test('comprehensive off-board scenario with captures and goals', () => {
+      // Starting board:
+      // Row 0: [Black rook, Black knight, Black bishop]  ← Black starting row (White moves through here to reach goal OFF-BOARD)
+      // Row 1: [empty, empty, empty]
+      // Row 2: [White rook, White knight, White bishop]  ← White starting row (Black moves through here to reach goal OFF-BOARD)
 
-      const result = engine.makeMove([0, 0], 'off_board');
+      // Move 1: White knight captures black rook
+      // White knight (2,1) moves L-shape to (0,0), captures black rook
+      let result = engine.makeMove([2, 1], [0, 0]);
+      expect(result.success).toBe(true);
+      let state = engine.getGameState();
+      expect(state.capturedBlack).toHaveLength(1);
+      expect(state.capturedBlack[0]?.type).toBe('rook');
+      expect(state.capturedBlack[0]?.owner).toBe('black');
+      expect(state.board[0]![0]?.type).toBe('knight');
+      expect(state.board[0]![0]?.owner).toBe('white');
+      expect(state.board[2]![1]).toBeNull(); // Original position cleared
+
+      // Move 2: Black knight captures white bishop
+      // Black knight (0,1) moves L-shape to (2,2), captures white bishop
+      result = engine.makeMove([0, 1], [2, 2]);
+      expect(result.success).toBe(true);
+      state = engine.getGameState();
+      expect(state.capturedWhite).toHaveLength(1);
+      expect(state.capturedWhite[0]?.type).toBe('bishop');
+      expect(state.capturedWhite[0]?.owner).toBe('white');
+      expect(state.board[2]![2]?.type).toBe('knight');
+      expect(state.board[2]![2]?.owner).toBe('black');
+      expect(state.board[0]![1]).toBeNull(); // Original position cleared
+
+      // Move 3: White knight moves off-board to goal (Black's court)
+      // Knight at (0,0) moves off-board
+      result = engine.makeMove([0, 0], 'off_board');
+      expect(result.success).toBe(true);
+      state = engine.getGameState();
+      expect(state.blackCourt).toHaveLength(1);
+      expect(state.blackCourt[0]?.type).toBe('knight');
+      expect(state.blackCourt[0]?.owner).toBe('white');
+      expect(state.board[0]![0]).toBeNull(); // Knight left the board
+
+      // Move 4: Black knight moves off-board to goal (White's court)
+      // Knight at (2,2) moves off-board
+      result = engine.makeMove([2, 2], 'off_board');
+      expect(result.success).toBe(true);
+      state = engine.getGameState();
+      expect(state.whiteCourt).toHaveLength(1);
+      expect(state.whiteCourt[0]?.type).toBe('knight');
+      expect(state.whiteCourt[0]?.owner).toBe('black');
+      expect(state.board[2]![2]).toBeNull(); // Knight left the board
+
+      // Move 5: White rook moves straight off-board in one move (no stopping)
+      // White rook at (2,0) has clear path to goal
+      result = engine.makeMove([2, 0], 'off_board');
+      expect(result.success).toBe(true);
+      state = engine.getGameState();
+      expect(state.blackCourt).toHaveLength(2); // Knight + Rook
+      expect(state.blackCourt[1]?.type).toBe('rook');
+      expect(state.blackCourt[1]?.owner).toBe('white');
+      expect(state.board[2]![0]).toBeNull(); // Rook left the board
+
+      // Final verification: Check all courts
+      expect(state.blackCourt).toHaveLength(2); // White knight + White rook
+      expect(state.whiteCourt).toHaveLength(1); // Black knight
+      expect(state.capturedBlack).toHaveLength(1); // Black rook (captured)
+      expect(state.capturedWhite).toHaveLength(1); // White bishop (captured)
+
+      // Verify court pieces have correct owners
+      expect(state.blackCourt.every(p => p.owner === 'white')).toBe(true);
+      expect(state.whiteCourt.every(p => p.owner === 'black')).toBe(true);
+    });
+
+    test('should allow bishop to move off-board from edge of opponent row', () => {
+      // RULE: Bishop can move off-board if starting on an EDGE of opponent's starting row
+      // White bishop at (0,0) - edge of black's starting row
+      const state = engine.getGameState();
+      const whiteBishop = { type: 'bishop' as const, owner: 'white' as const, position: [0,0] as Position, moveCount: 0, id: uuid() };
+      state.board = [[whiteBishop, null, null], [null, null, null], [null, null, null]];
+
+      const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state);
+
+      // Bishop at (0,0) is on EDGE of opponent row → CAN move off-board
+      const result = engine2.makeMove([0, 0], 'off_board');
 
       expect(result.success).toBe(true);
 
-      const state = engine.getGameState();
-      expect(state.blackCourt).toHaveLength(1);
-      expect(state.blackCourt[0]?.type).toBe('rook');
+      const finalState = engine2.getGameState();
+      expect(finalState.blackCourt).toHaveLength(1);
+      expect(finalState.blackCourt[0]?.type).toBe('bishop');
     });
 
-    test('should reject bishop off-board move', () => {
-      engine.makeMove([2, 2], [1, 1]);
-      engine.makeMove([0, 0], [1, 0]);
-      engine.makeMove([1, 1], [0, 2]);
+    test('should allow bishop to move off-board when crossing through non-edge space', () => {
+      // RULE: Bishop can move off-board if diagonal crosses opponent row through NON-EDGE space (middle)
+      // White bishop at (1,0) moving diagonally crosses row 0 through (0,1) - NON-EDGE space
+      const state = engine.getGameState();
+      const whiteBishop = { type: 'bishop' as const, owner: 'white' as const, position: [1,0] as Position, moveCount: 0, id: uuid() };
+      state.board = [[null, null, null], [whiteBishop, null, null], [null, null, null]];
 
-      const result = engine.makeMove([0, 2], 'off_board');
+      const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state);
+
+      // Bishop at (1,0) moving diagonally crosses row 0 through (0,1) - NON-EDGE space
+      const result = engine2.makeMove([1, 0], 'off_board');
+
+      expect(result.success).toBe(true);
+
+      const finalState = engine2.getGameState();
+      expect(finalState.blackCourt).toHaveLength(1);
+      expect(finalState.blackCourt[0]?.type).toBe('bishop');
+    });
+
+    test('should reject bishop off-board move when crossing through edge space', () => {
+      // RULE: Bishop CANNOT move off-board if diagonal crosses opponent row through EDGE space
+      // White bishop at (2,2) moving diagonally would cross row 0 through (0,2) - edge space
+      const state = engine.getGameState();
+      const whiteBishop = { type: 'bishop' as const, owner: 'white' as const, position: [2,2] as Position, moveCount: 0, id: uuid() };
+      state.board = [[null, null, null], [null, null, null],[null, null, whiteBishop]];
+
+      const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state);
+
+      // Bishop at (2,2) diagonal crosses row 0 through (0,2) - EDGE space → REJECTED
+      const result = engine2.makeMove([0, 2], 'off_board');
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Bishops cannot move off-board');
+      expect(result.error).toContain('bishop cannot move off-board through an edge space');
+    });
+
+    test('should reject bishop off-board move with blocked path', () => {
+      // RULE: Even if trajectory is valid, blocked path prevents off-board move
+      const state = engine.getGameState();
+      const whiteBishop = { type: 'bishop' as const, owner: 'white' as const, position: [1,0] as Position, moveCount: 0, id: uuid() };
+      const blackPawn = { type: 'pawn' as const, owner: 'black' as const, position: [0,1] as Position, moveCount: 0, id: uuid() };
+      state.board = [[null, blackPawn, null], [whiteBishop, null, null], [null, null, null]];
+
+      const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state);
+
+      // Bishop at (1,0) would cross through (0,1) but path is BLOCKED
+      const result = engine2.makeMove([1, 0], 'off_board');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('blocked');
     });
   });
 
@@ -1670,6 +2011,60 @@ describe('KingsChessEngine', () => {
       expect(victory.gameOver).toBe(true);
       expect(victory.winner).toBeNull();
       expect(victory.reason).toContain('Draw');
+    });
+
+    test('should end game when all white pieces eliminated and auto-score black pieces', () => {
+      const state = engine.getGameState();
+      const blackRook = { type: 'rook' as const, owner: 'black' as const, position: [0,0] as Position, moveCount: 0, id: uuid() };
+      const blackKnight = { type: 'knight' as const, owner: 'black' as const, position: [0,1] as Position, moveCount: 0, id: uuid() };
+
+      // All white pieces captured
+      state.capturedWhite = [
+        { type: 'rook' as const, owner: 'white' as const, position: null, moveCount: 2, id: uuid() },
+        { type: 'knight' as const, owner: 'white' as const, position: null, moveCount: 1, id: uuid() },
+        { type: 'bishop' as const, owner: 'white' as const, position: null, moveCount: 1, id: uuid() },
+      ];
+
+      // Black has 2 pieces on board + 1 scored
+      state.board = [[blackRook, blackKnight, null], [null, null, null], [null, null, null]];
+      state.blackCourt = [
+        { type: 'bishop' as const, owner: 'black' as const, position: null, moveCount: 3, id: uuid() },
+      ];
+
+      const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state);
+      const victory = engine2.checkGameEnd();
+
+      expect(victory.gameOver).toBe(true);
+      expect(victory.winner).toBe('black');
+      expect(victory.score).toEqual({ white: 0, black: 3 }); // 1 scored + 2 auto-scored
+    });
+
+    test('should auto-score remaining pieces when opponent eliminated', () => {
+      const state = engine.getGameState();
+      const whiteRook = { type: 'rook' as const, owner: 'white' as const, position: [2,0] as Position, moveCount: 0, id: uuid() };
+
+      // All black pieces off-board (2 scored, 1 captured)
+      state.blackCourt = [
+        { type: 'rook' as const, owner: 'black' as const, position: null, moveCount: 3, id: uuid() },
+        { type: 'knight' as const, owner: 'black' as const, position: null, moveCount: 2, id: uuid() },
+      ];
+      state.capturedBlack = [
+        { type: 'bishop' as const, owner: 'black' as const, position: null, moveCount: 1, id: uuid() },
+      ];
+
+      // White has 1 piece on board + 2 captured
+      state.board = [[null, null, null], [null, null, null], [whiteRook, null, null]];
+      state.capturedWhite = [
+        { type: 'knight' as const, owner: 'white' as const, position: null, moveCount: 1, id: uuid() },
+        { type: 'bishop' as const, owner: 'white' as const, position: null, moveCount: 1, id: uuid() },
+      ];
+
+      const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state);
+      const victory = engine2.checkGameEnd();
+
+      expect(victory.gameOver).toBe(true);
+      expect(victory.winner).toBe('black');
+      expect(victory.score).toEqual({ white: 1, black: 2 }); // White 1 auto-scored, Black 2 scored
     });
   });
 

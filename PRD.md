@@ -95,13 +95,36 @@
 
 1. **Rook:** Can move straight off the opponent's edge if path is clear (one move)
 2. **Knight:** Can jump directly into opponent's court if L-shaped move lands in goal zone
-3. **Bishop:** MUST stop at board edge, then move off into opponent's court on next turn
-   - Example: Bishop at (1,1) can move to edge at (0,0), then next turn move off into Black's court
+3. **Bishop:** Depends on diagonal trajectory through opponent's starting row:
+   - **Middle column path (col 1):** CAN continue off-board in same move
+   - **Corner column path (col 0 or 2):** MUST STOP at edge, move off-board next turn
 
-**Why bishop can't move diagonally off-board:**
-- The landing square would be "beyond" the board diagonally
-- No valid destination square exists in that direction
-- Must approach from the edge first
+**Bishop Geometric Rule (Detailed):**
+
+The bishop off-board rule is based on which column the diagonal path crosses through the opponent's starting row:
+
+**Board reference:**
+```
+Row 0: [Black start]  (0,0) (0,1) (0,2)  ← White's goal edge
+Row 1: [Middle]       (1,0) (1,1) (1,2)
+Row 2: [White start]  (2,0) (2,1) (2,2)  ← Black's goal edge
+```
+
+**Example 1 - CAN move off-board:**
+- White bishop at (1,0) moves diagonally toward (0,2)
+- Path: (1,0) → (0,1) → off-board
+- Trajectory crosses opponent's row through MIDDLE column (0,1 direction)
+- Result: Can continue off-board into Black's court in ONE move
+
+**Example 2 - MUST stop at edge:**
+- White bishop at (2,0) moves diagonally toward (0,0)
+- Path: (2,2) → (1,1) → (0,0) → would exit through side edge
+- Trajectory crosses opponent's row through CORNER column (0,0)
+- Result: Must STOP at (0,0), cannot continue off-board (would exit through side edge)
+
+**Why this rule exists:**
+- Diagonal moves through middle column naturally exit through opponent's court edge (allowed)
+- Diagonal moves through corners would exit through side edges (not allowed)
 
 ### 1.5 Capture Mechanics
 
@@ -129,8 +152,23 @@ When all pieces are either captured or have reached a king's court:
 If equal pieces in each court, it's a DRAW - "Both kings serve together in the center of the field"
 
 **Game End Triggers:**
-- All 6 pieces are either captured or in a king's court
-- Stalemate (no legal moves available)
+1. All 6 pieces are either captured or in a king's court
+2. All pieces from one team are off the board (captured or scored)
+3. Stalemate (no legal moves available)
+
+**Auto-Scoring Rule (Team Elimination):**
+When all pieces from one team are off the board (either captured or scored), the game ends immediately and remaining opponent pieces on the board are automatically counted as having reached the opponent's court.
+
+**Examples:**
+- **Scenario 1:** All White pieces captured (in White's court) = 0 White points
+  - Black has 2 pieces on board + 1 in White's court = 3 Black points (1 scored + 2 auto-scored)
+  - Result: Black wins 3-0
+
+- **Scenario 2:** All Black pieces off-board (2 in White's court, 1 captured)
+  - Black score: 2 points (in White's court)
+  - White has 1 piece on board + 2 captured
+  - White score: 1 point (auto-scored)
+  - Result: Black wins 2-1
 
 **Stalemate Resolution:**
 - If both teams have pieces but no legal moves:
@@ -139,6 +177,7 @@ If equal pieces in each court, it's a DRAW - "Both kings serve together in the c
   - If equal pieces remain, declare tie
 
 ### 1.7 Example Game Flow
+- note that these are not necessarily valid moves but used as an example of game flow only
 
 **Starting Position:**
 ```
