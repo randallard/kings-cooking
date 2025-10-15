@@ -156,38 +156,123 @@ interface ResyncRequestPayload {
 
 ---
 
-## Flow 2: Checksum Mismatch Detection (Automatic Resync)
+## Flow 2: Checksum Mismatch Detection (History Viewer & Manual Resync)
 
-### Player 1 Detects Mismatch Before Sending
+### Player Detects Mismatch When Receiving Move
 
 ```
 ┌─────────────┐                                    ┌─────────────┐
 │  Player 1   │                                    │  Player 2   │
 └─────────────┘                                    └─────────────┘
        │                                                   │
-       │ 1. About to make move                            │
-       │    - loads opponent_last_checksum: "abc123"      │
-       │    - calculates own checksum: "xyz999"           │
-       │    - ❌ MISMATCH!                                │
+       │   <──────── #d=N4IgNgzgrghg... ─────────────────  │
        │                                                   │
-       │ 2. Shows error to user                           │
-       │    "Game states out of sync!"                    │
-       │    [Request Resync] button                       │
+       │ 1. Receives delta move                           │
+       │    - decompresses payload                        │
+       │    - extracts: move, turn, checksum              │
+       │    - applies move to local state                 │
+       │    - calculates own checksum: "abc123"           │
+       │    - received checksum: "xyz999"                 │
+       │    - ❌ CHECKSUM MISMATCH!                       │
        │                                                   │
-       │ 3. User clicks [Request Resync]                  │
-       │    - user still makes their desired move         │
-       │    - generates resync request URL                │
+       │ 2. Shows History Comparison Modal                │
+       │    ┌──────────────────────────────────────┐     │
+       │    │  ⚠️  Game State Mismatch Detected    │     │
+       │    │                                      │     │
+       │    │  Your History   │  Opponent's Move  │     │
+       │    │  ─────────────  │  ───────────────  │     │
+       │    │  Turn 1: ♖→[1,0]│  Turn 1: ♖→[1,0]  │     │
+       │    │  ✓ abc111       │  ✓ abc111         │     │
+       │    │                 │                    │     │
+       │    │  Turn 2: ♜→[1,1]│  Turn 2: ♜→[1,1]  │     │
+       │    │  ✓ def222       │  ✓ def222         │     │
+       │    │                 │                    │     │
+       │    │  Turn 3: ♘→[0,2]│  Turn 3: ♘→[2,2]  │     │
+       │    │  ✓ ghi333       │  ❌ xyz999        │     │
+       │    │                 │  ^^^ Different!   │     │
+       │    │                 │                    │     │
+       │    │  Possible causes:                   │     │
+       │    │  • Different move was made          │     │
+       │    │  • State modified manually          │     │
+       │    │  • Missed a previous URL            │     │
+       │    │                                      │     │
+       │    │  [Review My History]                │     │
+       │    │  [Send My State to Opponent]        │     │
+       │    │  [Accept Opponent's State]          │     │
+       │    │  [Cancel - Don't Continue]          │     │
+       │    └──────────────────────────────────────┘     │
        │                                                   │
-       │ 4. Generates URL                                 │
+```
+
+### Option A: Player Chooses "Send My State to Opponent"
+
+```
+       │                                                   │
+       │ 3. User clicks [Send My State to Opponent]       │
+       │    - Confirms they believe their state is correct│
+       │    - Wants to make their move and share state    │
+       │                                                   │
+       │ 4. User makes their desired move                 │
+       │    - Selects piece and destination               │
+       │    - Move applied to THEIR local state           │
+       │    - New checksum generated                      │
+       │                                                   │
+       │ 5. Generates full_state URL                      │
+       │    type: 'full_state'                            │
+       │    gameState: {complete state with P1's move}    │
+       │    notification: "State diverged at turn 3. Using my state. Please verify."│
+       │    divergenceInfo: {                             │
+       │      turn: 3,                                    │
+       │      myChecksum: "ghi333",                       │
+       │      theirChecksum: "xyz999"                     │
+       │    }                                             │
+       │                                                   │
+       │────── #d=N4IgdghgtgpiBc... ──────────────────>   │
+       │                                                   │
+       │                                    6. Receives    │
+       │                                       - detects type: 'full_state'│
+       │                                       - sees divergenceInfo│
+       │                                       - shows modal│
+       │                                                   │
+       │                                    7. Shows Modal │
+       │                                       ┌─────────────────┐│
+       │                                       │ ⚠️ Opponent sent ││
+       │                                       │ their full state││
+       │                                       │                 ││
+       │                                       │ They believe    ││
+       │                                       │ states diverged ││
+       │                                       │ at turn 3       ││
+       │                                       │                 ││
+       │                                       │ [View Their History]││
+       │                                       │ [Accept Their State]││
+       │                                       │ [Keep My State]     ││
+       │                                       └─────────────────┘│
+       │                                                   │
+```
+
+### Option B: Player Chooses "Accept Opponent's State"
+
+```
+       │                                                   │
+       │ 3. User clicks [Accept Opponent's State]         │
+       │    - Trusts opponent's state is correct          │
+       │    - Wants to replace their local state          │
+       │                                                   │
+       │ 4. Request full state from opponent              │
+       │    - Generates resync_request URL                │
+       │    - Includes their attempted move               │
+       │                                                   │
+       │ 5. Generates URL                                 │
        │    type: 'resync_request'                        │
        │    reason: 'checksum_mismatch'                   │
        │    attemptedMove: {from, to}                     │
        │    turn: expected_turn                           │
-       │    lastKnownChecksum: "abc123"                   │
+       │    myChecksum: "abc123"                          │
+       │    theirChecksum: "xyz999"                       │
        │                                                   │
        │────── #d=N4IgNgzgrghg... ───────────────────>    │
        │                                                   │
-       │                                    5. Receives    │
+       │                                    6. Receives    │
        │                                       - detects type: 'resync_request'│
        │                                       - extracts attemptedMove│
        │                                       - validates move against own state│
@@ -428,11 +513,22 @@ if (receivedTurn !== expectedTurn) {
 
 ### UI Components
 
-- [ ] Error notification component (checksum mismatch)
+- [ ] **History Comparison Modal** (primary divergence UI)
+  - [ ] Side-by-side move history display
+  - [ ] Highlight divergence point with checksum diff
+  - [ ] Action buttons: Send My State / Accept Opponent's State / Review / Cancel
+  - [ ] Expandable move details (piece type, from/to positions)
+  - [ ] Visual diff indicators (✓ match, ❌ mismatch)
+- [ ] **History Viewer Component** (expandable in-game)
+  - [ ] Last 10 moves with checksums
+  - [ ] Collapsible/expandable panel
+  - [ ] Click to expand full move history
+  - [ ] Export history as JSON (debugging)
+- [ ] Error notification component (corrupted URL, parse failures)
 - [ ] Warning notification component (turn mismatch, old URL)
 - [ ] Resync request dialog ("Send this URL to opponent")
 - [ ] Illegal move indicator (highlight attempted square)
-- [ ] State sync indicator (synced/out-of-sync badge)
+- [ ] State sync indicator (synced/out-of-sync badge in corner)
 
 ### Validation & Testing
 
@@ -545,11 +641,252 @@ interface DeltaPayload {
 
 ---
 
+---
+
+## History Viewer Feature (Divergence Resolution UI)
+
+### Purpose
+
+When checksums don't match, players need visibility into:
+1. **Where** did states diverge? (which turn)
+2. **What** was different? (move comparison)
+3. **How** to fix it? (clear action buttons)
+
+### History Comparison Modal
+
+Triggered when checksum mismatch detected on receiving a move.
+
+#### Layout
+```
+┌────────────────────────────────────────────────────────────┐
+│  ⚠️  Game State Mismatch Detected                          │
+│                                                            │
+│  ┌─────────────────────────┬─────────────────────────┐   │
+│  │   Your History          │  Opponent's History     │   │
+│  ├─────────────────────────┼─────────────────────────┤   │
+│  │  Turn 1: ♖ [2,0]→[1,0]  │  Turn 1: ♖ [2,0]→[1,0] │   │
+│  │  Checksum: abc111       │  Checksum: abc111       │   │
+│  │  ✓ Match                │  ✓ Match                │   │
+│  ├─────────────────────────┼─────────────────────────┤   │
+│  │  Turn 2: ♜ [0,0]→[1,1]  │  Turn 2: ♜ [0,0]→[1,1] │   │
+│  │  Checksum: def222       │  Checksum: def222       │   │
+│  │  ✓ Match                │  ✓ Match                │   │
+│  ├─────────────────────────┼─────────────────────────┤   │
+│  │  Turn 3: ♘ [2,1]→[0,2]  │  Turn 3: ♘ [2,1]→[2,2] │   │
+│  │  Checksum: ghi333       │  Checksum: xyz999       │   │
+│  │  ❌ DIVERGENCE DETECTED │  ❌ Different!          │   │
+│  └─────────────────────────┴─────────────────────────┘   │
+│                                                            │
+│  Possible Causes:                                         │
+│  • Different move was recorded at Turn 3                  │
+│  • One player modified their game state                   │
+│  • A previous URL was missed or corrupted                 │
+│                                                            │
+│  What would you like to do?                               │
+│                                                            │
+│  ┌──────────────────────┐  ┌──────────────────────┐     │
+│  │  [Send My State]     │  │ [Accept Their State] │     │
+│  │                      │  │                      │     │
+│  │  Share your complete │  │ Replace your state   │     │
+│  │  game state with     │  │ with opponent's and  │     │
+│  │  opponent            │  │ request resync       │     │
+│  └──────────────────────┘  └──────────────────────┘     │
+│                                                            │
+│  ┌──────────────────────┐  ┌──────────────────────┐     │
+│  │  [Review Boards]     │  │ [Cancel]             │     │
+│  │                      │  │                      │     │
+│  │  See board state at  │  │ Don't continue this  │     │
+│  │  Turn 3 for both     │  │ game                 │     │
+│  └──────────────────────┘  └──────────────────────┘     │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+#### Data Structure for History Comparison
+
+```typescript
+interface MoveHistoryEntry {
+  turn: number;
+  move: {
+    from: Position;
+    to: Position | 'off_board';
+    piece: 'rook' | 'knight' | 'bishop';
+  };
+  checksum: string;
+  timestamp: number;
+  player: 'white' | 'black';
+}
+
+interface HistoryComparison {
+  myHistory: MoveHistoryEntry[];
+  theirHistory: MoveHistoryEntry[];
+  divergencePoint: number | null; // Turn where checksums first differ
+  matchingSince: number | null;   // Last turn that matched
+}
+```
+
+#### Logic for Detecting Divergence Point
+
+```typescript
+function compareHistories(
+  myHistory: MoveHistoryEntry[],
+  theirMoves: MoveHistoryEntry[]
+): HistoryComparison {
+  let divergencePoint = null;
+  let matchingSince = 0;
+
+  const maxTurns = Math.max(myHistory.length, theirMoves.length);
+
+  for (let i = 0; i < maxTurns; i++) {
+    const myEntry = myHistory[i];
+    const theirEntry = theirMoves[i];
+
+    // Both exist - compare checksums
+    if (myEntry && theirEntry) {
+      if (myEntry.checksum === theirEntry.checksum) {
+        matchingSince = i + 1;
+      } else if (divergencePoint === null) {
+        divergencePoint = i + 1; // Turn numbers are 1-indexed
+        break;
+      }
+    }
+
+    // One missing - definitely diverged
+    if (!myEntry || !theirEntry) {
+      divergencePoint = i + 1;
+      break;
+    }
+  }
+
+  return {
+    myHistory,
+    theirHistory: theirMoves,
+    divergencePoint,
+    matchingSince
+  };
+}
+```
+
+### In-Game History Viewer (Optional, Always Available)
+
+A collapsible panel in the game UI that shows move history:
+
+```
+┌─────────────────────────────────────┐
+│  Game History  [⌄]                  │
+├─────────────────────────────────────┤
+│  Turn 5: ♖ [1,0]→[0,0]  ✓ synced   │
+│  Turn 4: ♜ [1,1]→[1,2]  ✓ synced   │
+│  Turn 3: ♘ [0,2]→[2,1]  ✓ synced   │
+│  Turn 2: ♜ [0,0]→[1,1]  ✓ synced   │
+│  Turn 1: ♖ [2,0]→[1,0]  ✓ synced   │
+│                                     │
+│  [Show Full History]                │
+│  [Export as JSON]                   │
+└─────────────────────────────────────┘
+```
+
+**Collapsed state:**
+```
+┌─────────────────────────────────────┐
+│  Game History  [>]  Turn 5  ✓       │
+└─────────────────────────────────────┘
+```
+
+### Storing Move History
+
+Move history needs to be saved in localStorage alongside game state:
+
+```typescript
+interface StoredGameData {
+  gameState: GameState;
+  moveHistory: MoveHistoryEntry[];
+  lastSyncedChecksum: string | null;
+}
+
+// Save after each move
+function saveMoveToHistory(move: Move, checksum: string) {
+  const history = loadMoveHistory();
+
+  history.push({
+    turn: gameState.currentTurn,
+    move: {
+      from: move.from,
+      to: move.to,
+      piece: move.piece.type
+    },
+    checksum,
+    timestamp: Date.now(),
+    player: gameState.currentPlayer
+  });
+
+  localStorage.setItem('kings-cooking:move-history', JSON.stringify(history));
+}
+```
+
+### Reconstructing Opponent's History from URL
+
+When showing history comparison, we need to reconstruct what opponent's history looks like:
+
+```typescript
+function reconstructOpponentHistory(
+  receivedMove: Move,
+  receivedChecksum: string,
+  receivedTurn: number
+): MoveHistoryEntry[] {
+  // We only know their LATEST move from the URL
+  // We need to infer their history based on our history + this move
+
+  const myHistory = loadMoveHistory();
+  const theirHistory: MoveHistoryEntry[] = [];
+
+  // Copy matching history up to divergence
+  for (let i = 0; i < myHistory.length; i++) {
+    if (myHistory[i].turn < receivedTurn) {
+      // Assume their history matches ours until the turn we received
+      theirHistory.push({ ...myHistory[i] });
+    }
+  }
+
+  // Add their received move
+  theirHistory.push({
+    turn: receivedTurn,
+    move: {
+      from: receivedMove.from,
+      to: receivedMove.to,
+      piece: receivedMove.piece.type
+    },
+    checksum: receivedChecksum,
+    timestamp: Date.now(),
+    player: receivedTurn % 2 === 0 ? 'black' : 'white'
+  });
+
+  return theirHistory;
+}
+```
+
+**Limitation:** We can only show opponent's LATEST move in the comparison, not their full history. This is acceptable because:
+1. We can identify WHERE divergence occurred (turn number)
+2. We can see WHAT they did on that turn
+3. Players can coordinate out-of-band if more investigation needed
+
+---
+
 ## Questions for Review
 
 1. ✅ **Resync request includes attempted move** - Player losing state can still make move
 2. ✅ **Illegal moves rejected gracefully** - Full state sent back with notification
-3. ✅ **Automatic resync response** - Receiving player's client handles it transparently
+3. ✅ **Manual resync with history viewer** - Players choose how to resolve divergence
 4. ✅ **URLs unreadable** - Everything in `#d=[compressed]`
+5. ✅ **History comparison UI** - Side-by-side view with clear action buttons
 
-**Next question:** Should we add a **"game history viewer"** in the UI to help players debug state divergence issues? (e.g., show last 5 moves with checksums)
+**Decisions:**
+- ✅ History viewer **always visible** (collapsed by default in corner)
+- ✅ **Full game history** stored (no limits - games are short, ~20KB max)
+- ✅ **"Export as JSON"** available to all users (transparency + debugging)
+
+**Rationale:**
+- 3x3 board games rarely exceed 30 moves
+- Full history = ~20KB even at 100 moves (well under localStorage limits)
+- Export JSON helps with bug reports and debugging
+- Transparency builds trust in the sync mechanism

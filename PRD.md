@@ -230,9 +230,8 @@ White: [♖][ ][♗]  (White rook at 0,0)
 
 **Key Libraries:**
 - **Zod 3.22+** - Runtime validation for game state and URL parameters
-- **crypto-js** - AES encryption for URL mode
-- **lz-string** - Compression for URL state
-- **uuid** - Player ID generation
+- **lz-string** - Compression for URL state (no encryption, checksums for verification)
+- **uuid** - Player ID and game ID generation
 
 **Development Tools:**
 - **Vitest** - Unit and integration testing
@@ -398,41 +397,57 @@ Player1Name → ModeSelection → PreGame → MyTurn → MoveSelected
 
 ### 2.5 URL State Management
 
-**Encryption Flow:**
+**Encoding Flow (Phase 3 - Simplified):**
 ```
-GameState → JSON → LZ-String compress → AES encrypt → Base64 → URL
+Payload → JSON → LZ-String compress → URL hash fragment
 ```
 
 **URL Structure:**
 ```
-https://username.github.io/kings-cooking/?s=base64_encrypted_state
+https://username.github.io/kings-cooking/#d=compressed_payload
 ```
 
 **Implementation:**
 ```typescript
-import CryptoJS from 'crypto-js';
 import LZString from 'lz-string';
 
-const GAME_SECRET = import.meta.env.VITE_GAME_SECRET || 'default-secret';
+// Delta payload (normal moves)
+export function encodeDeltaPayload(move: Move, turn: number, checksum: string): string {
+  const payload: DeltaPayload = {
+    type: 'delta',
+    move: { from: move.from, to: move.to },
+    turn,
+    checksum
+  };
 
-export function encryptGameState(gameState: GameState): string {
+  const json = JSON.stringify(payload);
+  const compressed = LZString.compressToEncodedURIComponent(json);
+
+  return `${window.location.origin}${window.location.pathname}#d=${compressed}`;
+}
+
+// Full state payload (initial game or resync)
+export function encodeFullStatePayload(gameState: GameState, notification?: string): string {
   // Validate before encoding
   const validated = GameStateSchema.parse(gameState);
 
-  const json = JSON.stringify(validated);
-  const compressed = LZString.compressToEncodedURIComponent(json);
-  const encrypted = CryptoJS.AES.encrypt(compressed, GAME_SECRET).toString();
-  const encoded = btoa(encrypted);
+  const payload: FullStatePayload = {
+    type: 'full_state',
+    gameState: validated,
+    notification
+  };
 
-  return encoded;
+  const json = JSON.stringify(payload);
+  const compressed = LZString.compressToEncodedURIComponent(json);
+
+  return `${window.location.origin}${window.location.pathname}#d=${compressed}`;
 }
 
-export function decryptGameState(encoded: string): GameState {
+export function decodePayload(hashFragment: string): DeltaPayload | FullStatePayload | ResyncRequestPayload {
   try {
-    const encrypted = atob(encoded);
-    const decrypted = CryptoJS.AES.decrypt(encrypted, GAME_SECRET)
-      .toString(CryptoJS.enc.Utf8);
-    const json = LZString.decompressFromEncodedURIComponent(decrypted);
+    // Extract data after '#d='
+    const compressed = hashFragment.replace(/^#d=/, '');
+    const json = LZString.decompressFromEncodedURIComponent(compressed);
 
     if (!json) throw new Error('Decompression failed');
 
@@ -1123,38 +1138,62 @@ npm run lint
 npm test -- src/lib/chess/ --coverage
 ```
 
-### Phase 3: URL Encoding & Security (Week 2)
+### Phase 3: URL State Synchronization & History Viewer (Week 2)
 
-**Goal:** Secure state encryption and URL handling
+**Goal:** Delta-based URL state sync with checksum verification and divergence resolution UI
 
-**Tasks:**
-1. Implement AES encryption with crypto-js
-2. Add LZ-String compression
-3. Create URL encoding/decoding utilities
-4. Write Zod validators for URL parameters
-5. Implement checksum validation
-6. Add error handling for corrupted data
-7. Write integration tests for full encode/decode cycle
-8. Test with malformed/malicious inputs
+**Documentation:** See `PRPs/phase-3-url-state-sync-flows.md` for complete flow diagrams
 
-**Security Requirements:**
-- [ ] Game state encrypted with AES
-- [ ] Compressed before encryption
-- [ ] Validated with Zod after decryption
-- [ ] Checksum prevents tampering
-- [ ] Errors handled gracefully
-- [ ] No sensitive data in URLs
+**Core Tasks:**
+1. Add LZ-String compression for URL payloads
+2. Create URL encoding/decoding utilities (delta vs full state)
+3. Implement payload type system (delta, full_state, resync_request)
+4. Expose checksum verification (already exists in Phase 2)
+5. Add move history storage in localStorage
+6. Build History Comparison Modal (divergence UI)
+7. Build in-game History Viewer (collapsible panel)
+8. Add Export JSON functionality
+9. Add error handling for corrupted/malformed URLs
+10. Write integration tests for encode/decode/sync cycles
+
+**State Sync Requirements:**
+- [ ] URLs contain only deltas (one move + metadata), not full state
+- [ ] Full game state lives in localStorage on each device
+- [ ] Checksums verify state synchronization between players
+- [ ] Compressed payloads in `#d=[data]` format (human-unreadable)
+- [ ] First URL contains full state, subsequent URLs are deltas
+- [ ] Turn number validation detects skipped moves
+- [ ] Validated with Zod after decompression
+- [ ] Errors handled gracefully with clear user actions
+
+**History Viewer Requirements:**
+- [ ] Side-by-side move history comparison on divergence
+- [ ] Highlight exact turn where checksums differ
+- [ ] Four action buttons: Send My State / Accept Their State / Review / Cancel
+- [ ] Always-visible collapsible history panel during gameplay
+- [ ] Export full history as JSON for debugging
+- [ ] Full game history stored (no limits)
 
 **Deliverables:**
-- [ ] URL encoding/decoding works
-- [ ] Security tests pass
+- [ ] Delta URL encoding/decoding works
+- [ ] Full state URL handling works
+- [ ] Resync request flow functional
+- [ ] History Comparison Modal complete
+- [ ] In-game History Viewer complete
+- [ ] Checksum verification prevents state divergence
 - [ ] Error handling comprehensive
-- [ ] Validation prevents bad data
+- [ ] Integration tests pass (80%+ coverage)
 
 **Validation:**
 ```bash
-npm test -- src/lib/state/ --coverage
+pnpm test -- src/lib/urlEncoding/
+pnpm test -- src/lib/history/
+pnpm run test:integration -- --grep "state sync"
 ```
+
+**Deferred to Phase 6:**
+- Visual board state comparison at divergence point ("Review Boards" feature)
+- Move history chain validation (hash of all previous moves)
 
 ### Phase 4: UI Components (Week 2-3)
 
@@ -1677,12 +1716,13 @@ All files                   |   82.45 |    78.33 |   84.62 |   82.45 |
 - Validation at API boundaries (localStorage, URLs)
 - Prevents corrupted data issues
 
-### Why crypto-js + lz-string?
-- Mature, well-tested libraries
-- AES encryption prevents casual tampering
-- LZ-String specifically designed for URLs
-- Good compression ratio for JSON
-- Small bundle size impact
+### Why lz-string?
+- Mature, well-tested library
+- Specifically designed for URL-safe compression
+- Good compression ratio for JSON payloads
+- Small bundle size impact (~3KB)
+- Makes URLs unreadable to casual users (obfuscation benefit)
+- Paired with checksums for state verification
 
 ---
 
