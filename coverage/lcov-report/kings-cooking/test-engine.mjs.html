@@ -3,15 +3,15 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for kings-cooking/kings-cooking-docs/update-tests.js</title>
+    <title>Code coverage report for kings-cooking/test-engine.mjs</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="../../prettify.css" />
-    <link rel="stylesheet" href="../../base.css" />
-    <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style type='text/css'>
         .coverage-summary .sorter {
-            background-image: url(../../sort-arrow-sprite.png);
+            background-image: url(../sort-arrow-sprite.png);
         }
     </style>
 </head>
@@ -19,13 +19,13 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">kings-cooking/kings-cooking-docs</a> update-tests.js</h1>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">kings-cooking</a> test-engine.mjs</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/27</span>
+                <span class='fraction'>0/23</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/27</span>
+                <span class='fraction'>0/23</span>
             </div>
         
             
@@ -93,28 +93,10 @@
 <a name='L28'></a><a href='#L28'>28</a>
 <a name='L29'></a><a href='#L29'>29</a>
 <a name='L30'></a><a href='#L30'>30</a>
-<a name='L31'></a><a href='#L31'>31</a>
-<a name='L32'></a><a href='#L32'>32</a>
-<a name='L33'></a><a href='#L33'>33</a>
-<a name='L34'></a><a href='#L34'>34</a>
-<a name='L35'></a><a href='#L35'>35</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L31'></a><a href='#L31'>31</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -124,47 +106,53 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >// Quick script to bulk-update test files to new schema<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
-<span class="cstat-no" title="statement not covered" >const fs = require('fs');</span>
-<span class="cstat-no" title="statement not covered" >const path = require('path');</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import { KingsChessEngine } from './src/lib/chess/KingsChessEngine.js';</span></span></span>
+<span class="cstat-no" title="statement not covered" >import { PlayerIdSchema } from './src/lib/validation/schemas.js';</span>
+<span class="cstat-no" title="statement not covered" >import { v4 as uuid } from 'uuid';</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >const testsDir = path.join(__dirname, '__tests__');</span>
+<span class="cstat-no" title="statement not covered" >const whitePlayer = {</span>
+<span class="cstat-no" title="statement not covered" >  id: PlayerIdSchema.parse(uuid()),</span>
+<span class="cstat-no" title="statement not covered" >  name: 'Alice',</span>
+<span class="cstat-no" title="statement not covered" >};</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >// Files to update</span>
-<span class="cstat-no" title="statement not covered" >const files = [</span>
-<span class="cstat-no" title="statement not covered" >  'tic-tac-toe-url-encoder.test.ts',</span>
-<span class="cstat-no" title="statement not covered" >  'tic-tac-toe-delta.test.ts',</span>
-<span class="cstat-no" title="statement not covered" >  'tic-tac-toe-storage.test.ts',</span>
-<span class="cstat-no" title="statement not covered" >];</span>
+<span class="cstat-no" title="statement not covered" >const blackPlayer = {</span>
+<span class="cstat-no" title="statement not covered" >  id: PlayerIdSchema.parse(uuid()),</span>
+<span class="cstat-no" title="statement not covered" >  name: 'Bob',</span>
+<span class="cstat-no" title="statement not covered" >};</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >files.forEach(file =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  const filePath = path.join(testsDir, file);</span>
-<span class="cstat-no" title="statement not covered" >  let content = fs.readFileSync(filePath, 'utf8');</span>
+<span class="cstat-no" title="statement not covered" >const engine = new KingsChessEngine(whitePlayer, blackPlayer);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  // Replace player1Name: 'X' with player1: { id: crypto.randomUUID(), name: 'X' }</span>
-<span class="cstat-no" title="statement not covered" >  content = content.replace(/player1Name:\s*'([^']+)'/g, "player1: { id: crypto.randomUUID(), name: '$1' }");</span>
-<span class="cstat-no" title="statement not covered" >  content = content.replace(/player1Name:\s*"([^"]+)"/g, 'player1: { id: crypto.randomUUID(), name: "$1" }');</span>
-<span class="cstat-no" title="statement not covered" >  content = content.replace(/player1Name:\s*''/g, "player1: { id: '', name: '' }");</span>
-<span class="cstat-no" title="statement not covered" >  content = content.replace(/player1Name:\s*""/g, 'player1: { id: "", name: "" }');</span>
+<span class="cstat-no" title="statement not covered" >console.log('Initial state:', JSON.stringify(engine.getGameState(), null, 2));</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  // Replace player2Name: 'X' with player2: { id: crypto.randomUUID(), name: 'X' }</span>
-<span class="cstat-no" title="statement not covered" >  content = content.replace(/player2Name:\s*'([^']+)'/g, "player2: { id: crypto.randomUUID(), name: '$1' }");</span>
-<span class="cstat-no" title="statement not covered" >  content = content.replace(/player2Name:\s*"([^"]+)"/g, 'player2: { id: crypto.randomUUID(), name: "$1" }');</span>
-<span class="cstat-no" title="statement not covered" >  content = content.replace(/player2Name:\s*''/g, "player2: { id: '', name: '' }");</span>
-<span class="cstat-no" title="statement not covered" >  content = content.replace(/player2Name:\s*""/g, 'player2: { id: "", name: "" }');</span>
+<span class="cstat-no" title="statement not covered" >// Move 1: White rook forward</span>
+<span class="cstat-no" title="statement not covered" >console.log('\n--- Move 1: White rook forward ---');</span>
+<span class="cstat-no" title="statement not covered" >let result = engine.makeMove([2, 0], [1, 0]);</span>
+<span class="cstat-no" title="statement not covered" >console.log('Result:', result.success ? 'Success' : result.error);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  fs.writeFileSync(filePath, content, 'utf8');</span>
-<span class="cstat-no" title="statement not covered" >  console.log(`Updated: ${file}`);</span>
-<span class="cstat-no" title="statement not covered" >});</span>
+<span class="cstat-no" title="statement not covered" >// Move 2: Black rook forward</span>
+<span class="cstat-no" title="statement not covered" >console.log('\n--- Move 2: Black rook forward ---');</span>
+<span class="cstat-no" title="statement not covered" >result = engine.makeMove([0, 0], [1, 1]);</span>
+<span class="cstat-no" title="statement not covered" >console.log('Result:', result.success ? 'Success' : result.error);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >console.log('Done!');</span>
+<span class="cstat-no" title="statement not covered" >console.log('\nFinal state pieces on board:', engine.getGameState().board);</span>
+<span class="cstat-no" title="statement not covered" >console.log('\nVictory check:', engine.checkGameEnd());</span>
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -174,14 +162,14 @@
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
                 at 2025-10-15T21:19:02.449Z
             </div>
-        <script src="../../prettify.js"></script>
+        <script src="../prettify.js"></script>
         <script>
             window.onload = function () {
                 prettyPrint();
             };
         </script>
-        <script src="../../sorter.js"></script>
-        <script src="../../block-navigation.js"></script>
+        <script src="../sorter.js"></script>
+        <script src="../block-navigation.js"></script>
     </body>
 </html>
     

@@ -53,7 +53,7 @@ For complete rules, see **[PRD.md](PRD.md)** (Product Requirements Document)
 **Documentation**: [PRPs/phase-2-chess-engine.md](PRPs/phase-2-chess-engine.md)
 
 **Implemented**:
-- ✅ `KingsChessEngine` class (428 lines)
+- ✅ `KingsChessEngine` class (437 lines)
 - ✅ Piece movement logic (Rook, Knight, Bishop)
 - ✅ Move validation with King's Cooking rules
 - ✅ Off-board movement mechanics
@@ -66,21 +66,21 @@ For complete rules, see **[PRD.md](PRD.md)** (Product Requirements Document)
 **Test Coverage**:
 - **104 tests** written (all passing)
 - **83.48%** chess engine coverage ✅
-- **95.74%** overall coverage ✅
+- **95.64%** overall coverage ✅
 
 **Validation**:
 - Level 1: TypeScript (0 errors) + ESLint (0 warnings) ✅
 - Level 2: 104/104 tests passing with 80%+ coverage ✅
-- Level 3: Production build successful (252KB) ✅
+- Level 3: Production build successful (252.2KB total) ✅
 
 **Files Created**:
 ```
 src/lib/chess/
-├── KingsChessEngine.ts (428 lines)
-├── types.ts (53 lines)
-├── pieceMovement.ts (285 lines)
-├── moveValidation.ts (213 lines)
-├── victoryConditions.ts (162 lines)
+├── KingsChessEngine.ts (437 lines)
+├── types.ts (51 lines)
+├── pieceMovement.ts (288 lines)
+├── moveValidation.ts (244 lines)
+├── victoryConditions.ts (158 lines)
 ├── KingsChessEngine.test.ts (28 tests)
 ├── pieceMovement.test.ts (33 tests)
 └── victoryConditions.test.ts (10 tests)
@@ -203,105 +203,28 @@ pnpm build
 
 ### Testing the Chess Engine
 
-Create a test script to verify the engine works:
+The chess engine is fully tested with Vitest. To verify it works:
 
 ```bash
-# Create test file
-cat > test-engine.js << 'EOF'
-import { KingsChessEngine } from './src/lib/chess/KingsChessEngine.js';
-import { PlayerIdSchema } from './src/lib/validation/schemas.js';
-import { v4 as uuid } from 'uuid';
+# Run all tests
+pnpm test
 
-const whitePlayer = {
-  id: PlayerIdSchema.parse(uuid()),
-  name: 'Alice',
-};
+# Run with coverage report
+pnpm run test:coverage
 
-const blackPlayer = {
-  id: PlayerIdSchema.parse(uuid()),
-  name: 'Bob',
-};
-
-const engine = new KingsChessEngine(whitePlayer, blackPlayer);
-
-console.log('Initial state:', engine.getGameState());
-
-// Move 1: White rook forward
-console.log('\n--- Move 1: White rook forward ---');
-let result = engine.makeMove([2, 0], [1, 0]);
-console.log('Result:', result.success ? 'Success' : result.error);
-
-// Move 2: Black rook forward
-console.log('\n--- Move 2: Black rook forward ---');
-result = engine.makeMove([0, 0], [1, 1]);
-console.log('Result:', result.success ? 'Success' : result.error);
-
-console.log('\nFinal state:', engine.getGameState());
-console.log('\nVictory check:', engine.checkGameEnd());
-EOF
-
-# Run with Node (requires ES modules support)
-node --input-type=module test-engine.js
+# Run specific test file
+pnpm test src/lib/chess/KingsChessEngine.test.ts
 ```
 
-### Testing Individual Piece Movement
+### Testing Individual Features
 
-```typescript
-import { KingsChessEngine } from './src/lib/chess/KingsChessEngine';
-
-const engine = new KingsChessEngine(whitePlayer, blackPlayer);
-
-// Test rook movement
-console.log('Rook valid moves:', engine.getValidMoves([2, 0]));
-
-// Test knight movement
-console.log('Knight valid moves:', engine.getValidMoves([2, 1]));
-
-// Test bishop movement
-console.log('Bishop valid moves:', engine.getValidMoves([2, 2]));
-```
-
-### Testing Off-Board Moves
-
-```typescript
-// Clear path for white rook to move off-board
-engine.makeMove([2, 0], [1, 0]); // White rook forward
-engine.makeMove([0, 1], [2, 0]); // Black knight moves away
-engine.makeMove([1, 0], [0, 0]); // White rook to edge
-engine.makeMove([2, 0], [0, 1]); // Black knight moves again
-
-// Now white rook can move off-board
-const result = engine.makeMove([0, 0], 'off_board');
-console.log('Off-board result:', result.success); // Should be true
-
-const state = engine.getGameState();
-console.log('White court (scored):', state.whiteCourt); // Should have 1 rook
-```
-
-### Testing Victory Conditions
-
-```typescript
-// Simulate game ending
-const state = engine.getGameState();
-
-// Manually set courts for testing
-state.whiteCourt = [
-  { type: 'rook', owner: 'white', position: null, moveCount: 3, id: uuid() },
-  { type: 'knight', owner: 'white', position: null, moveCount: 2, id: uuid() },
-];
-
-state.blackCourt = [
-  { type: 'bishop', owner: 'black', position: null, moveCount: 4, id: uuid() },
-];
-
-state.board = [[null, null, null], [null, null, null], [null, null, null]];
-
-const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state);
-const victory = engine2.checkGameEnd();
-
-console.log('Victory result:', victory);
-// Should show: { gameOver: true, winner: 'white', score: { white: 2, black: 1 } }
-```
+The test suite covers:
+- **Piece Movement**: Rook, Knight, Bishop movement patterns (33 tests)
+- **Off-Board Movement**: All pieces can move off-board correctly (tested in pieceMovement.test.ts)
+- **Victory Conditions**: Score tracking and game end detection (10 tests)
+- **Move Validation**: Legal/illegal move detection (covered in KingsChessEngine.test.ts)
+- **Capture Mechanics**: Captured pieces go to correct court (28 tests)
+- **State Serialization**: JSON export/import (tested in KingsChessEngine.test.ts)
 
 ### Verifying Test Coverage
 
@@ -309,12 +232,15 @@ console.log('Victory result:', victory);
 # Run coverage report
 pnpm run test:coverage
 
-# Expected output:
-# src/lib/chess: 83.48%+ coverage
-# Overall: 95.74%+ coverage
+# Expected results:
+# Test Files: 6 passed (6)
+# Tests: 104 passed (104)
+# Coverage:
+#   src/lib/chess: 83.48% (Statements)
+#   Overall: 95.64% (Statements)
 
-# View detailed HTML report
-open coverage/index.html
+# View detailed HTML report (if generated)
+# open coverage/index.html
 ```
 
 ---
