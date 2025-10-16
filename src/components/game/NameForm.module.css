@@ -1,0 +1,205 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 0.5rem);
+  width: 100%;
+}
+
+.label {
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: 600;
+  color: var(--text-primary, #212529);
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input {
+  flex: 1;
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+  padding-right: 2.5rem; /* Space for success/error icon */
+
+  font-size: var(--font-size-md, 1rem);
+  color: var(--text-primary, #212529);
+  background-color: var(--bg-input, #ffffff);
+  border: 2px solid var(--border-color, #ced4da);
+  border-radius: var(--border-radius-sm, 0.25rem);
+
+  transition: all 0.2s ease-in-out;
+
+  /* Mobile-friendly tap target */
+  min-height: 44px;
+}
+
+.input::placeholder {
+  color: var(--text-placeholder, #6c757d);
+  opacity: 0.7;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--focus-color, #0056b3);
+  box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+  background-color: var(--bg-input-focus, #ffffff);
+}
+
+/* Valid state */
+.input.valid {
+  border-color: var(--success-border, #28a745);
+  background-color: var(--success-bg-light, #f0f9f4);
+}
+
+.input.valid:focus {
+  border-color: var(--success-border, #28a745);
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+/* Invalid state */
+.input.invalid {
+  border-color: var(--error-border, #dc3545);
+  background-color: var(--error-bg-light, #fef5f6);
+}
+
+.input.invalid:focus {
+  border-color: var(--error-border, #dc3545);
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+/* Success/Error Icons */
+.successIcon,
+.errorIcon {
+  position: absolute;
+  right: var(--spacing-md, 1rem);
+  font-size: var(--font-size-lg, 1.25rem);
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.successIcon {
+  color: var(--success-text, #28a745);
+  animation: fadeIn 0.3s ease-in;
+}
+
+.errorIcon {
+  color: var(--error-text, #dc3545);
+  animation: shake 0.3s ease-in-out;
+}
+
+/* Error message */
+.errorMessage {
+  padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.5rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--error-text, #dc3545);
+  background-color: var(--error-bg, #f8d7da);
+  border: 1px solid var(--error-border, #f5c6cb);
+  border-radius: var(--border-radius-sm, 0.25rem);
+  animation: slideIn 0.2s ease-out;
+}
+
+/* Helper text */
+.helperText {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-secondary, #6c757d);
+  font-style: italic;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .label {
+    --text-primary: #f8f9fa;
+  }
+
+  .input {
+    --text-primary: #f8f9fa;
+    --text-placeholder: #adb5bd;
+    --bg-input: #343a40;
+    --bg-input-focus: #495057;
+    --border-color: #495057;
+    --focus-color: #4da3ff;
+  }
+
+  .input.valid {
+    --success-border: #2d7a3e;
+    --success-bg-light: #1e3a26;
+  }
+
+  .input.invalid {
+    --error-border: #b02a37;
+    --error-bg-light: #3a1f23;
+  }
+
+  .successIcon {
+    --success-text: #4ade80;
+  }
+
+  .errorIcon {
+    --error-text: #f87171;
+  }
+
+  .errorMessage {
+    --error-text: #f5c2c7;
+    --error-bg: #5c1f24;
+    --error-border: #842029;
+  }
+
+  .helperText {
+    --text-secondary: #adb5bd;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  .successIcon,
+  .errorIcon,
+  .errorMessage {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .input {
+    font-size: var(--font-size-sm, 0.875rem);
+  }
+}

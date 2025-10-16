@@ -14,15 +14,19 @@ Build a complete, accessible, mobile-responsive UI for King's Cooking game with 
 
 **Specific Deliverables:**
 1. **GameBoard** - Interactive 3x3 chess board with piece rendering and move selection
-2. **GameCell** - Individual board cell with drag-and-drop and accessibility
+2. **GameCell** - Individual board cell with click-to-move and accessibility
 3. **MoveConfirmButton** - Confirm/Cancel move actions with loading states
-4. **NameForm** - Player name input with validation
-5. **ModeSelector** - Game mode selection (Random, Mirrored, Independent)
-6. **URLSharer** - Share game link with copy-to-clipboard
-7. **HandoffScreen** - Hot-seat turn handoff with privacy
-8. **VictoryScreen** - Game end celebration with stats
-9. **Dark mode** - System preference detection and manual toggle
-10. **Test coverage** - 80%+ coverage with Vitest and React Testing Library
+4. **NameForm** - Player name input with validation (Player 1 on start, Player 2 on first handoff)
+5. **URLSharer** - Share game link with copy-to-clipboard
+6. **HandoffScreen** - Hot-seat turn handoff with privacy
+7. **VictoryScreen** - Game end celebration with stats
+8. **Dark mode** - System preference detection and manual toggle
+9. **Test coverage** - 80%+ coverage with Vitest and React Testing Library
+
+**NOT in Phase 4 (Deferred to v2.0+):**
+- ❌ ModeSelector - Game has fixed setup (Rook, Knight, Bishop) for v1.0
+- ❌ Variable board sizes - 3x3 only for v1.0
+- ❌ Drag-and-drop - Click-to-move only for v1.0 (better mobile support)
 
 **Success Criteria:**
 - ✅ All components render correctly on mobile (320px), tablet (768px), desktop (1024px+)
@@ -69,10 +73,13 @@ Build a complete, accessible, mobile-responsive UI for King's Cooking game with 
 #### 1. GameBoard Component
 **Desktop Experience:**
 - User sees 3x3 chess board with alternating light/dark squares
-- Pieces display as unicode chess symbols (♜ ♞ ♝)
+- Fixed starting position: Rook (A), Knight (B), Bishop (C) for both players
+- Pieces display as unicode chess symbols (♜ ♞ ♝ for black, ♖ ♘ ♗ for white)
 - Click piece → highlights legal moves → click destination → move confirmed
 - Visual feedback: hover effects, selected state, legal move indicators
 - Move history panel shows last 10 moves with notation (A1 → B3)
+
+**Note:** Board size and piece selection are FIXED in v1.0. Variable setup modes deferred to v2.0+.
 
 **Mobile Experience:**
 - Board scales to fit screen (min 320px width)
@@ -99,15 +106,15 @@ Build a complete, accessible, mobile-responsive UI for King's Cooking game with 
 #### 2. GameCell Component
 **States:**
 - Empty: Light (#f0d9b5) or dark (#b58863) square
-- Occupied: Shows piece unicode character
+- Occupied: Shows piece unicode character (♜ ♞ ♝ for black, ♖ ♘ ♗ for white)
 - Selected: Blue highlight (#4a9eff)
 - Legal move: Green dot indicator (#28a745)
 - Last move: Yellow highlight (#ffc107)
 
 **Interactions:**
-- Click/Tap: Select piece or destination
-- Drag: Desktop drag-and-drop (optional enhancement)
+- Click/Tap: Select piece or destination (primary interaction)
 - Keyboard: Arrow navigation + Enter
+- **Note:** Drag-and-drop deferred to v2.0+ (click-to-move is simpler and works better on mobile)
 
 #### 3. MoveConfirmButton
 **States:**
@@ -123,30 +130,29 @@ Build a complete, accessible, mobile-responsive UI for King's Cooking game with 
 - On error: Shows error toast, doesn't clear selection
 
 #### 4. NameForm
+**Purpose:**
+- Player 1 enters name on game start
+- Player 2 enters name on first handoff screen
+- Names stored in localStorage (hot-seat mode)
+
 **Validation:**
 - 1-20 characters
 - No leading/trailing whitespace
 - No special characters except - and _
 - Debounced validation (300ms)
+- XSS protection via React's built-in escaping
 
 **States:**
 - Empty: Placeholder "Enter your name"
-- Valid: Green checkmark
+- Valid: Green checkmark, enables continue button
 - Invalid: Red X with error message
 - Focus: Blue border highlight
 
-#### 5. ModeSelector
-**Options:**
-1. **Random**: "Identical random pieces for both players"
-2. **Playground Mirrored**: "Take turns choosing pieces"
-3. **Playground Independent**: "Choose your own pieces"
+**Storage:**
+- `kings-cooking:player1-name` in localStorage
+- `kings-cooking:player2-name` in localStorage
 
-**Behavior:**
-- Radio button group with keyboard navigation
-- Detailed description expands on focus/hover
-- Selected mode persists in URL state
-
-#### 6. URLSharer
+#### 5. URLSharer
 **Features:**
 - Displays current game URL (read-only input)
 - Copy button with clipboard API
@@ -234,6 +240,233 @@ export const GameBoard = ({
 - Move calculation MUST be memoized with useMemo
 - Event handlers MUST be memoized with useCallback
 - Board re-renders MUST be < 16ms (60fps)
+
+---
+
+## 📚 REFERENCE DOCUMENTATION
+
+**CRITICAL:** Read these documents BEFORE implementing. They contain mandatory patterns and gotchas.
+
+### Project-Specific Documentation
+
+#### CLAUDE-REACT.md (MANDATORY - 954 lines)
+**Location:** `/home/ryankhetlyr/Development/kings-cooking/claude_md_files/CLAUDE-REACT.md`
+
+**Critical Sections:**
+- **Lines 1-100**: React 19 patterns - MUST use `ReactElement` not `JSX.Element`
+- **Lines 101-200**: TypeScript strict mode requirements
+- **Lines 201-300**: Component structure (max 200 lines, JSDoc, single responsibility)
+- **Lines 301-400**: Testing requirements (80% coverage, React Testing Library)
+- **Lines 401-500**: Zod validation patterns for external data
+- **Lines 501-600**: Accessibility patterns (ARIA, keyboard navigation)
+- **Lines 601-700**: Performance patterns (memoization, render optimization)
+- **Lines 701-800**: Error handling and loading states
+- **Lines 801-954**: Common gotchas and anti-patterns
+
+**Key Takeaways:**
+```typescript
+// ✅ CORRECT - React 19 pattern
+import { ReactElement } from 'react';
+function MyComponent(): ReactElement { }
+
+// ❌ WRONG - Will fail ESLint
+function MyComponent(): JSX.Element { }
+
+// ✅ CORRECT - Memoized handler
+const handleClick = useCallback(() => {}, [deps]);
+
+// ❌ WRONG - New function every render
+<button onClick={() => handleClick()}>
+```
+
+#### NAME_COLLECTION_PATTERN.md
+**Location:** `/home/ryankhetlyr/Development/kings-cooking/kings-cooking-docs/NAME_COLLECTION_PATTERN.md`
+
+**Critical for:** NameForm component implementation
+
+**Key Patterns:**
+- ❌ **DON'T** use `prompt()` - Not styleable, no dark mode
+- ✅ **DO** use HTML forms with framework classes
+- Form submission pattern with `preventDefault()`
+- localStorage persistence: `hotSeatStorage.setPlayer1Name()`, `setPlayer2Name()`
+- Validation: trim whitespace, check empty
+- Example component structure (lines 14-80)
+
+#### DARK_MODE_GUIDE.md
+**Location:** `/home/ryankhetlyr/Development/kings-cooking/kings-cooking-docs/DARK_MODE_GUIDE.md`
+
+**Critical for:** All component styling
+
+**Key Requirements:**
+- MUST declare `color-scheme: light dark` in CSS
+- MUST style ALL visual elements for dark mode
+- MUST maintain 4.5:1 contrast for text, 3:1 for UI
+- Use `@media (prefers-color-scheme: dark)` for automatic detection
+- Test with: DevTools → Rendering → Emulate prefers-color-scheme
+- Common pattern: CSS custom properties (see lines 50-150)
+
+**Color Palette:**
+```css
+:root {
+  /* Light mode */
+  --bg-primary: #ffffff;
+  --bg-board-light: #f0d9b5;
+  --bg-board-dark: #b58863;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark mode - use deep grey, not pure black */
+    --bg-primary: #1a1a1a;
+    --bg-board-light: #4a4a4a;
+    --bg-board-dark: #2a2a2a;
+  }
+}
+```
+
+### Codebase References
+
+#### Existing Components (Phase 3)
+**Location:** `/home/ryankhetlyr/Development/kings-cooking/src/components/`
+
+1. **HistoryViewer.tsx (355 lines)** - Component structure reference
+   - JSDoc documentation pattern (lines 1-8)
+   - Props interface with comments (lines 14-26)
+   - Collapsible panel with ARIA (lines 100-125)
+   - Keyboard event handling (lines 71-76)
+   - Auto-scroll with useEffect (lines 58-66)
+   - Modal integration with focus-trap-react (lines 275-283)
+
+2. **HistoryViewer.test.tsx (435 lines)** - Testing reference
+   - Helper functions for test data (lines 17-41)
+   - Test organization with describe blocks (lines 46-434)
+   - userEvent.setup() pattern (lines 50)
+   - Accessibility testing (lines 395-433)
+
+3. **HistoryComparisonModal.tsx (434 lines)** - Modal reference
+   - FocusTrap configuration (lines 198-205)
+   - Body scroll prevention (lines 183-192)
+   - ESC key handler (lines 256-270)
+   - Async action handling with loading states (lines 98-128)
+
+#### Validation Schemas
+**Location:** `/home/ryankhetlyr/Development/kings-cooking/src/lib/validation/schemas.ts`
+
+**Critical Sections:**
+- Lines 15-46: Branded types (PlayerId, GameId, MoveId)
+- Lines 48-100: Piece types and Position validation
+- Lines 102-145: Move schema with off_board support
+- Lines 147-210: Complete GameState schema
+- Lines 212-290: Validation helper functions
+
+**Usage Pattern:**
+```typescript
+import { GameStateSchema, PositionSchema } from '@/lib/validation/schemas';
+
+// ALWAYS validate external data
+const result = GameStateSchema.safeParse(data);
+if (result.success) {
+  const state = result.data; // Fully typed
+} else {
+  console.error(result.error.format());
+}
+```
+
+#### Chess Engine API
+**Location:** `/home/ryankhetlyr/Development/kings-cooking/src/lib/chess/KingsChessEngine.ts`
+
+**Critical Methods:**
+```typescript
+// Get legal moves for a piece
+const moves = engine.getLegalMoves([0, 0]);
+// Returns: [[0,1], [1,0], 'off_board', ...]
+
+// Make a move
+const result = engine.makeMove([0, 0], [1, 1]);
+if (result.success) {
+  const newState = engine.getGameState();
+}
+
+// Check game end
+if (engine.isGameOver()) {
+  const winner = engine.getWinner(); // 'white' | 'black' | null
+}
+```
+
+#### URL State Hook
+**Location:** `/home/ryankhetlyr/Development/kings-cooking/src/hooks/useUrlState.ts`
+
+**API:**
+```typescript
+const { payload, error, updateUrl, copyShareUrl } = useUrlState({
+  debounceMs: 300,
+  onError: (err) => console.error(err),
+});
+
+// Update URL with move
+updateUrl({
+  type: 'delta',
+  move: { from: [0,0], to: [1,1] },
+  turn: 1,
+  checksum: 'abc123',
+});
+
+// Copy to clipboard
+const success = await copyShareUrl();
+```
+
+### External Documentation
+
+#### React 19 Official Docs
+- **React Element Types**: https://react.dev/reference/react/ReactElement
+- **useCallback**: https://react.dev/reference/react/useCallback
+- **useMemo**: https://react.dev/reference/react/useMemo
+- **useEffect cleanup**: https://react.dev/reference/react/useEffect#cleanup
+
+#### Accessibility (WCAG 2.1 AA)
+- **ARIA Grid Pattern**: https://www.w3.org/WAI/ARIA/apg/patterns/grid/
+- **Keyboard Navigation**: https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/
+- **Focus Management**: https://www.w3.org/WAI/ARIA/apg/practices/focus-management/
+- **Color Contrast**: https://webaim.org/resources/contrastchecker/
+
+#### Testing Resources
+- **React Testing Library**: https://testing-library.com/docs/react-testing-library/intro/
+- **User Event**: https://testing-library.com/docs/user-event/intro
+- **Vitest Coverage**: https://vitest.dev/guide/coverage.html
+
+#### Focus Management
+- **focus-trap-react**: https://github.com/focus-trap/focus-trap-react
+- **Modal Dialog Pattern**: https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
+
+### PRD References
+
+**Location:** `/home/ryankhetlyr/Development/kings-cooking/PRD.md`
+
+**Critical Sections:**
+- **Lines 36-178**: Game rules (movement, capture, victory)
+- **Lines 254-300**: Component structure overview
+- **Lines 772-850**: User stories (name collection, URL sharing)
+- **Lines 1198-1234**: Phase 4 task breakdown
+- **Lines 1762-1795**: Future enhancements (v2.0+ scope)
+
+### Common Pitfalls (Cross-Reference)
+
+**From CLAUDE-REACT.md:**
+1. ❌ Using `JSX.Element` instead of `ReactElement`
+2. ❌ Inline event handlers (creates new function every render)
+3. ❌ Missing memoization for expensive calculations
+4. ❌ Testing implementation details instead of user behavior
+5. ❌ Skipping Zod validation for external data
+
+**From NAME_COLLECTION_PATTERN.md:**
+1. ❌ Using `prompt()` for name collection
+2. ❌ Not trimming whitespace in form inputs
+3. ❌ Forgetting localStorage persistence
+
+**From DARK_MODE_GUIDE.md:**
+1. ❌ Using pure black (#000000) - causes eye strain
+2. ❌ Forgetting to test both light and dark modes
+3. ❌ Insufficient contrast ratios
 
 ---
 
@@ -673,6 +906,28 @@ function getPieceUnicode(piece: Piece): string {
 ---
 
 ## 🏗️ IMPLEMENTATION BLUEPRINT
+
+### Pre-Implementation Checklist
+
+**BEFORE writing any code, ensure you have:**
+- [ ] Read CLAUDE-REACT.md (954 lines) - React 19 patterns, testing, accessibility
+- [ ] Read NAME_COLLECTION_PATTERN.md - NameForm implementation reference
+- [ ] Read DARK_MODE_GUIDE.md - Dark mode color palette and testing
+- [ ] Reviewed HistoryViewer.tsx (355 lines) - Component structure example
+- [ ] Reviewed HistoryViewer.test.tsx (435 lines) - Testing patterns
+- [ ] Reviewed useUrlState.ts (299 lines) - URL state integration
+- [ ] Reviewed KingsChessEngine.ts API - getLegalMoves(), makeMove(), isGameOver()
+- [ ] Set up dev environment: `pnpm install && pnpm dev`
+- [ ] Run existing tests to verify setup: `pnpm test`
+
+**Quick Reference During Implementation:**
+- 🎨 **Colors**: Light #f0d9b5/#b58863, Dark #4a4a4a/#2a2a2a (see DARK_MODE_GUIDE.md)
+- ⌨️ **Keys**: Tab (focus), Arrow (navigate), Enter (select), Escape (cancel)
+- ♿ **ARIA**: role="grid/gridcell", aria-label, aria-pressed, aria-describedby
+- 🧪 **Tests**: userEvent.setup(), screen.getByRole(), expect().toHaveAttribute()
+- 📦 **Validation**: GameStateSchema.safeParse(), PositionSchema.parse()
+
+---
 
 ### Phase 4A: Core Game Board (Week 1)
 
@@ -1485,9 +1740,20 @@ pnpm run check:lint
 ### Phase 4B: Game Controls (Week 1-2)
 
 #### Task 2.1: MoveConfirmButton Component
+**File:** `src/components/game/MoveConfirmButton.tsx`
+**Time:** 1-2 hours
+**Details:** See implementation blueprint below
+
 #### Task 2.2: NameForm Component
-#### Task 2.3: ModeSelector Component
-#### Task 2.4: URLSharer Component
+**File:** `src/components/game/NameForm.tsx`
+**Time:** 2-3 hours
+**Purpose:** Collect player names with validation and localStorage persistence
+**Details:** See implementation blueprint below
+
+#### Task 2.3: URLSharer Component
+**File:** `src/components/game/URLSharer.tsx`
+**Time:** 1-2 hours
+**Details:** See implementation blueprint below
 
 *(Continue with similar detail for each component...)*
 
@@ -1634,11 +1900,11 @@ pnpm test:e2e
 
 ### Phase 4B: Game Controls
 - [ ] MoveConfirmButton implemented and tested
-- [ ] NameForm implemented with validation and tests
-- [ ] ModeSelector implemented with tests
+- [ ] NameForm implemented with validation, localStorage, and tests
 - [ ] URLSharer implemented with clipboard API and tests
 - [ ] All controls accessible via keyboard
 - [ ] All controls work in dark mode
+- [ ] XSS protection verified for player names
 
 ### Phase 4C: Game Screens
 - [ ] HandoffScreen implemented with focus trap and tests
@@ -1686,4 +1952,33 @@ pnpm test:coverage && \
 pnpm build
 ```
 
-If all pass → **Phase 4 Complete! 🎉** → Ready for Phase 5 (WebRTC)
+If all pass → **Phase 4 Complete! 🎉** → Ready for Phase 5 (Game Flow Integration)
+
+---
+
+## 📝 NOTES ON v1.0 SCOPE
+
+**What's INCLUDED in Phase 4 (v1.0 MVP):**
+- ✅ Fixed 3x3 board
+- ✅ Fixed piece setup: Rook, Knight, Bishop (mirrored)
+- ✅ Click-to-move interaction (best for mobile + accessibility)
+- ✅ Player name collection (localStorage for hot-seat)
+- ✅ URL sharing for correspondence mode
+- ✅ Dark mode support
+- ✅ Full accessibility (WCAG 2.1 AA)
+
+**What's DEFERRED to v2.0+:**
+- ❌ ModeSelector component (no mode selection needed)
+- ❌ Variable board sizes (3x3 only)
+- ❌ Random/Mirrored/Independent piece selection
+- ❌ Additional pieces (pawns, queen, king)
+- ❌ Drag-and-drop (click-to-move is simpler)
+- ❌ Game replays with navigation
+- ❌ AI opponent
+
+**Rationale for Deferrals:**
+- **Focus on MVP**: Get playable game shipped faster
+- **Simpler testing**: Fixed setup reduces edge cases
+- **Better mobile UX**: Click-to-move works universally
+- **Easier to learn**: One setup to understand
+- **Can add later**: Architecture supports future enhancements

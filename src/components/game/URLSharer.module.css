@@ -1,0 +1,158 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 0.5rem);
+  width: 100%;
+}
+
+.label {
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: 600;
+  color: var(--text-primary, #212529);
+}
+
+.inputGroup {
+  display: flex;
+  gap: var(--spacing-sm, 0.5rem);
+  width: 100%;
+}
+
+.urlInput {
+  flex: 1;
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-family: monospace;
+  color: var(--text-secondary, #495057);
+  background-color: var(--bg-input, #f8f9fa);
+  border: 1px solid var(--border-color, #ced4da);
+  border-radius: var(--border-radius-sm, 0.25rem);
+  cursor: pointer;
+
+  /* Prevent text from wrapping */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.urlInput:focus {
+  outline: 2px solid var(--focus-color, #0056b3);
+  outline-offset: 2px;
+  background-color: var(--bg-input-focus, #ffffff);
+}
+
+.copyButton {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-lg, 1.5rem);
+
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: 600;
+  color: white;
+  background-color: var(--btn-primary-bg, #007bff);
+  border: 2px solid var(--btn-primary-border, #0056b3);
+  border-radius: var(--border-radius-sm, 0.25rem);
+
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.copyButton:hover {
+  background-color: var(--btn-primary-hover, #0056b3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.copyButton:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.copyButton:focus-visible {
+  outline: 3px solid var(--focus-color, #0056b3);
+  outline-offset: 2px;
+}
+
+.successToast,
+.errorToast {
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  border-radius: var(--border-radius-sm, 0.25rem);
+  animation: slideIn 0.3s ease-out;
+}
+
+.successToast {
+  color: var(--success-text, #155724);
+  background-color: var(--success-bg, #d4edda);
+  border: 1px solid var(--success-border, #c3e6cb);
+}
+
+.errorToast {
+  color: var(--error-text, #721c24);
+  background-color: var(--error-bg, #f8d7da);
+  border: 1px solid var(--error-border, #f5c6cb);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .inputGroup {
+    flex-direction: column;
+  }
+
+  .copyButton {
+    width: 100%;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .label {
+    --text-primary: #f8f9fa;
+  }
+
+  .urlInput {
+    --text-secondary: #adb5bd;
+    --bg-input: #343a40;
+    --bg-input-focus: #495057;
+    --border-color: #495057;
+  }
+
+  .copyButton {
+    --btn-primary-bg: #0056b3;
+    --btn-primary-border: #004085;
+    --btn-primary-hover: #004085;
+    --focus-color: #4da3ff;
+  }
+
+  .successToast {
+    --success-text: #a3cfbb;
+    --success-bg: #1e4620;
+    --success-border: #2d5930;
+  }
+
+  .errorToast {
+    --error-text: #f5c2c7;
+    --error-bg: #5c1f24;
+    --error-border: #842029;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .copyButton,
+  .successToast,
+  .errorToast {
+    animation: none;
+    transition: none;
+  }
+}
