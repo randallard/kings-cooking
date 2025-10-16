@@ -417,6 +417,25 @@ export class KingsChessEngine {
   }
 
   /**
+   * Get current game state checksum.
+   *
+   * Used for URL state synchronization to verify both players have identical state.
+   *
+   * @returns Current checksum string
+   *
+   * @example
+   * ```typescript
+   * const engine = new KingsChessEngine(white, black);
+   * engine.makeMove([2, 0], [1, 0]);
+   * const checksum = engine.getChecksum();
+   * // Use checksum in URL payload
+   * ```
+   */
+  public getChecksum(): string {
+    return this.gameState.checksum;
+  }
+
+  /**
    * Generate checksum for state validation.
    */
   private generateChecksum(
