@@ -1,0 +1,214 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.blurOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  pointer-events: none;
+}
+
+.container {
+  position: relative;
+  z-index: 1001;
+
+  max-width: 500px;
+  width: 90%;
+  padding: var(--spacing-xl, 2rem);
+
+  background-color: var(--bg-modal, #ffffff);
+  border-radius: var(--border-radius-lg, 1rem);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+  text-align: center;
+  animation: slideIn 0.4s ease-out;
+}
+
+.title {
+  margin: 0 0 var(--spacing-md, 1rem) 0;
+  font-size: var(--font-size-2xl, 2rem);
+  font-weight: 700;
+  color: var(--text-primary, #212529);
+}
+
+.description {
+  margin: 0 0 var(--spacing-xl, 2rem) 0;
+  font-size: var(--font-size-md, 1rem);
+  line-height: 1.6;
+  color: var(--text-secondary, #495057);
+}
+
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--spacing-xl, 2rem);
+}
+
+.countdownNumber {
+  font-size: 6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-primary, #007bff);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.countdownLabel {
+  margin-top: var(--spacing-sm, 0.5rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary, #6c757d);
+}
+
+.skipButton {
+  min-height: 44px;
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-xl, 2rem);
+
+  font-size: var(--font-size-md, 1rem);
+  font-weight: 600;
+  color: white;
+
+  background-color: var(--btn-primary-bg, #007bff);
+  border: 2px solid var(--btn-primary-border, #0056b3);
+  border-radius: var(--border-radius-md, 0.5rem);
+
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.skipButton:hover {
+  background-color: var(--btn-primary-hover, #0056b3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.skipButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
+}
+
+.skipButton:focus-visible {
+  outline: 3px solid var(--focus-color, #0056b3);
+  outline-offset: 2px;
+}
+
+.hint {
+  margin-top: var(--spacing-md, 1rem);
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-tertiary, #6c757d);
+}
+
+.hint kbd {
+  padding: 0.125rem 0.375rem;
+  font-family: monospace;
+  font-size: 0.875em;
+  color: var(--text-primary, #212529);
+  background-color: var(--bg-kbd, #f8f9fa);
+  border: 1px solid var(--border-color, #ced4da);
+  border-radius: 0.25rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .overlay {
+    background-color: rgba(0, 0, 0, 0.95);
+  }
+
+  .container {
+    --bg-modal: #1e1e1e;
+    --text-primary: #f8f9fa;
+    --text-secondary: #adb5bd;
+    --text-tertiary: #868e96;
+    --btn-primary-bg: #0056b3;
+    --btn-primary-border: #004085;
+    --btn-primary-hover: #004085;
+    --focus-color: #4da3ff;
+    --bg-kbd: #343a40;
+    --border-color: #495057;
+  }
+
+  .countdownNumber {
+    --color-primary: #4da3ff;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .container,
+  .countdownNumber,
+  .skipButton {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .container {
+    padding: var(--spacing-lg, 1.5rem);
+  }
+
+  .title {
+    font-size: var(--font-size-xl, 1.5rem);
+  }
+
+  .countdownNumber {
+    font-size: 4rem;
+  }
+
+  .skipButton {
+    width: 100%;
+  }
+}

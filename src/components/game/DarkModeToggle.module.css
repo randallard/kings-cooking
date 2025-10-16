@@ -1,0 +1,86 @@
+.toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--spacing-sm, 0.5rem);
+
+  color: var(--text-primary, #212529);
+  background-color: var(--bg-secondary, #f8f9fa);
+  border: 2px solid var(--border-color, #ced4da);
+  border-radius: var(--border-radius-md, 0.5rem);
+
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.toggle:hover {
+  background-color: var(--bg-hover, #e9ecef);
+  border-color: var(--border-hover, #adb5bd);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.toggle:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.toggle:focus-visible {
+  outline: 3px solid var(--focus-color, #0056b3);
+  outline-offset: 2px;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.toggle:hover .icon {
+  transform: rotate(20deg) scale(1.1);
+}
+
+/* Dark mode styles */
+[data-theme='dark'] .toggle {
+  --text-primary: #f8f9fa;
+  --bg-secondary: #343a40;
+  --border-color: #495057;
+  --bg-hover: #495057;
+  --border-hover: #6c757d;
+  --focus-color: #4da3ff;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .toggle,
+  .icon {
+    transition: none;
+  }
+
+  .toggle:hover .icon {
+    transform: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .toggle {
+    border-width: 3px;
+  }
+
+  .toggle:focus-visible {
+    outline-width: 4px;
+  }
+}
+
+/* Mobile touch optimization */
+@media (max-width: 768px) {
+  .toggle {
+    min-width: 48px;
+    min-height: 48px;
+  }
+}
