@@ -107,6 +107,8 @@ Wire up unified state machine to connect all Phase 1-4 components into a complet
 - Handoff countdown prevents accidental viewing of opponent's position
 - Names displayed prominently so players know orientation
 - Victory screen shows clear winner and stats
+- **URL State Flow**: First URL contains full game state, subsequent URLs contain only deltas (move + checksum)
+- **State Verification**: Checksums verify localStorage sync between players on each URL load
 
 #### 2. URL Sharing Game Flow (Correspondence Mode)
 
@@ -116,37 +118,53 @@ Wire up unified state machine to connect all Phase 1-4 components into a complet
 2. Enters name: "Alice" → clicks "Start Game"
 3. Game board appears
 4. Alice makes first move → clicks "Confirm Move"
-5. URL sharer appears with long URL containing game state
+5. URL sharer appears with FULL STATE URL (type: 'full_state')
+   - Long URL containing complete game state
+   - Includes Alice's name and first move
 6. Alice clicks "Copy Link" → success toast appears
 7. Alice shares URL via messaging app to Bob
 8. Alice waits for Bob to join and make move
-9. Bob sends back new URL after his move
-10. Alice opens Bob's URL → game state restored → Alice's turn
-11. Repeat URL exchange until game ends
+9. Bob sends back new DELTA URL after his move (type: 'delta')
+   - Shorter URL containing only: move + turn + checksum
+   - Alice's localStorage already has full state
+10. Alice opens Bob's URL → delta applied + checksum verified → Alice's turn
+11. Repeat URL exchange (all deltas now) until game ends
 12. Victory screen appears
 ```
 
 **Player 2 Journey:**
 ```
-1. Bob receives URL from Alice
+1. Bob receives FULL STATE URL from Alice (type: 'full_state')
 2. Bob opens URL in browser
-3. Name form appears: "Enter your name to join game"
-4. Bob enters "Bob" → clicks "Join Game"
-5. Board appears showing Alice's first move
-6. Turn indicator shows "Your turn (Black)"
-7. Bob makes move → clicks "Confirm Move"
-8. URL sharer appears with updated URL
-9. Bob copies URL and sends to Alice
-10. Repeat URL exchange until game ends
+3. URL decompressed → gameState validated with Zod → saved to localStorage
+4. Name form appears: "Enter your name to join game"
+5. Bob enters "Bob" → clicks "Join Game"
+6. Board appears showing Alice's first move
+7. Turn indicator shows "Your turn (Black)"
+8. Bob makes move → clicks "Confirm Move"
+9. URL sharer appears with DELTA URL (type: 'delta')
+   - Contains: Bob's move + turn number + checksum
+   - NOT full game state (already in Alice's localStorage)
+10. Bob copies URL and sends to Alice
+11. Repeat URL exchange (all deltas) until game ends
 ```
 
 **Key UX Details:**
 - URLs generated **only after move confirmation** (not on piece selection)
-- First move creates full-state URL (long)
-- Subsequent moves use delta encoding (shorter)
+- **First move creates full-state URL** (long, ~500-1000 chars)
+  - Type: `'full_state'`
+  - Contains: Complete GameState object
+  - Player 2 uses this to initialize their localStorage
+- **Subsequent moves use delta encoding** (short, ~100-200 chars)
+  - Type: `'delta'`
+  - Contains: `{ move, turn, checksum }` only
+  - Player applies delta to their existing localStorage state
+- **Checksum verification on every URL load**
+  - If checksum matches: delta applied successfully
+  - If checksum mismatches: triggers resync flow (request full state)
 - Player 2 name collected on URL load (not known to Player 1 beforehand)
 - Clear indication of whose turn it is
-- URL always has latest game state (no merge conflicts)
+- **State consistency maintained via**: localStorage (primary) + checksums (verification) + deltas (sync)
 
 #### 3. Page Refresh / Browser Back Behavior
 
@@ -334,6 +352,7 @@ type GameFlowState = {
 - **Lines 1235-1268**: Phase 5 task breakdown and requirements
 - **Lines 1078-1227**: Complete implementation phases (context for Phase 5)
 - **Lines 772-850**: User stories for name collection, URL sharing, game flow
+- **Lines 1160-1167**: State sync requirements (critical for URL encoding)
 
 **Key Requirements:**
 - Both hot-seat and URL modes share same state flow
@@ -342,6 +361,15 @@ type GameFlowState = {
 - URLs generated after confirmation only (not on piece selection)
 - History saved on game end
 - Can refresh page without losing state
+
+**URL State Sync Requirements (from PRD lines 1160-1167):**
+- ✅ **URLs contain only deltas** (one move + metadata), not full state
+- ✅ **Full game state lives in localStorage** on each device
+- ✅ **Checksums verify state synchronization** between players
+- ✅ **First URL contains full state**, subsequent URLs are deltas
+- ✅ Turn number validation detects skipped moves
+- ✅ Validated with Zod after decompression
+- ✅ Errors handled gracefully with clear user actions
 
 ### Codebase References
 
@@ -422,11 +450,32 @@ const {
 3. **Cleanup listeners and timers on unmount** - Prevents memory leaks (lines 157-161, 193-197)
 4. **replaceState not pushState** - Prevents history pollution (line 88)
 
+**URL Payload Types** (from Phase 3 PRP):
+```typescript
+// Full State (first move only)
+interface FullStatePayload {
+  type: 'full_state';
+  gameState: GameState;     // Complete game state
+  notification?: string;
+}
+
+// Delta Move (all subsequent moves)
+interface DeltaPayload {
+  type: 'delta';
+  move: { from: Position; to: Position | 'off_board' };
+  turn: number;
+  checksum: string;         // SHA-256 of current state
+  playerName?: string;      // Only on first delta from Player 2
+}
+```
+
 **When to Use:**
-- On mount: Parses URL hash, loads game state
-- On move: Updates URL with delta payload (debounced)
-- On share: Copies current URL to clipboard
-- On browser back/forward: Syncs state with URL
+- **First move**: Use `updateUrlImmediate()` with `type: 'full_state'`
+- **Subsequent moves**: Use `updateUrl()` (debounced) with `type: 'delta'`
+- **On mount**: Parses URL hash, loads game state (full_state or delta)
+- **On share**: Copies current URL to clipboard
+- **On browser back/forward**: Syncs state with URL
+- **Checksum verification**: On every delta load, verify checksum matches before applying
 
 #### Phase 2 Chess Engine API
 **Location:** `/home/ryankhetlyr/Development/kings-cooking/src/lib/chess/KingsChessEngine.ts`
@@ -790,19 +839,66 @@ test('should complete hot-seat game from start to victory', async ({ page }) => 
 
 **Hook Integration:**
 
-**useUrlState:**
+**useUrlState with Full-State and Delta:**
 ```typescript
-const { payload, updateUrl, copyShareUrl } = useUrlState({
+const { payload, updateUrl, updateUrlImmediate, copyShareUrl } = useUrlState({
   onPayloadReceived: (payload) => {
-    if (payload.type === 'full') {
-      // Restore complete game
-      dispatch({ type: 'RESTORE_GAME', gameState: payload.gameState });
+    if (payload.type === 'full_state') {
+      // Restore complete game (Player 2 initial join)
+      // Validate with Zod, save to localStorage, dispatch RESTORE_GAME
+      const validated = GameStateSchema.safeParse(payload.gameState);
+      if (validated.success) {
+        storage.setGameState(validated.data);
+        dispatch({ type: 'RESTORE_GAME', gameState: validated.data });
+      }
     } else if (payload.type === 'delta') {
-      // Apply move
-      dispatch({ type: 'APPLY_MOVE', move: payload.move });
+      // Apply move delta (subsequent moves)
+      // 1. Load current state from localStorage
+      const currentState = storage.getGameState();
+      if (!currentState) {
+        console.error('No localStorage state - need full_state resync');
+        return;
+      }
+
+      // 2. Verify checksum matches
+      const engine = KingsChessEngine.fromJSON(currentState);
+      if (engine.getChecksum() !== payload.checksum) {
+        console.error('Checksum mismatch - states diverged');
+        // TODO: Trigger resync flow
+        return;
+      }
+
+      // 3. Apply move
+      const result = engine.makeMove(payload.move.from, payload.move.to);
+      if (result.success) {
+        const newState = engine.getGameState();
+        storage.setGameState(newState);
+        dispatch({ type: 'MOVE_SUCCESS', gameState: newState });
+      }
     }
   },
 });
+
+// Generate URL after move
+const handleMoveComplete = () => {
+  const isFirstMove = gameState.moveHistory.length === 1;
+
+  if (isFirstMove) {
+    // First move: full-state URL (immediate)
+    updateUrlImmediate({
+      type: 'full_state',
+      gameState: engine.getGameState(),
+    });
+  } else {
+    // Subsequent: delta URL (debounced)
+    updateUrl({
+      type: 'delta',
+      move: lastMove,
+      turn: gameState.currentTurn,
+      checksum: engine.getChecksum(),
+    });
+  }
+};
 ```
 
 **Chess Engine Integration:**
@@ -1611,16 +1707,43 @@ export function App(): ReactElement {
   const { state, actions } = useGameFlow();
 
   // URL state synchronization (Phase 3)
-  const { updateUrl, getShareUrl, copyShareUrl } = useUrlState({
+  const { updateUrl, updateUrlImmediate, getShareUrl, copyShareUrl } = useUrlState({
     debounceMs: 300,
     onPayloadReceived: (payload) => {
-      if (payload.type === 'full') {
-        // Restore complete game from URL
-        // Note: useGameFlow handles RESTORE_GAME event
-        console.log('Game restored from URL', payload.gameState);
+      if (payload.type === 'full_state') {
+        // Restore complete game from URL (Player 2 initial load)
+        // Verify checksum, save to localStorage, restore game
+        const validated = GameStateSchema.safeParse(payload.gameState);
+        if (validated.success) {
+          // TODO: dispatch RESTORE_GAME event to useGameFlow
+          storage.setGameState(validated.data);
+          console.log('Game restored from full_state URL', validated.data);
+        }
       } else if (payload.type === 'delta') {
-        // Apply move delta from URL
-        console.log('Move applied from URL', payload.move);
+        // Apply move delta from URL (subsequent moves)
+        // 1. Load current state from localStorage
+        // 2. Verify checksum matches
+        // 3. Apply delta (engine.makeMove)
+        // 4. Save updated state to localStorage
+        const currentState = storage.getGameState();
+        if (currentState) {
+          const engine = new KingsChessEngine();
+          engine.loadGameState(currentState);
+
+          // Verify checksum before applying delta
+          if (engine.getChecksum() === payload.checksum) {
+            const result = engine.makeMove(payload.move.from, payload.move.to);
+            if (result.success) {
+              const newState = engine.getGameState();
+              storage.setGameState(newState);
+              // TODO: dispatch MOVE_SUCCESS event to useGameFlow
+              console.log('Delta applied successfully');
+            }
+          } else {
+            console.error('Checksum mismatch - states diverged, need resync');
+            // TODO: Trigger resync flow
+          }
+        }
       }
     },
     onError: (error) => {
@@ -1656,21 +1779,33 @@ export function App(): ReactElement {
   /**
    * Handle move confirmation
    * - Validates move with chess engine
-   * - Updates URL with delta payload
+   * - Updates URL with FULL STATE (first move) or DELTA (subsequent)
    * - Checks for victory condition
    * - Triggers handoff if hot-seat mode
    */
   const handleConfirmMove = (): void => {
     actions.confirmMove();
 
-    // After successful move, update URL (debounced)
+    // After successful move, update URL
     if (state.phase === 'playing') {
-      updateUrl({
-        type: 'delta',
-        move: state.pendingMove,
-        turn: state.gameState.currentTurn + 1,
-        checksum: state.engine.getChecksum(),
-      });
+      const isFirstMove = state.gameState.moveHistory.length === 1;
+
+      if (isFirstMove) {
+        // First move: Generate full-state URL (immediate, not debounced)
+        updateUrlImmediate({
+          type: 'full_state',
+          gameState: state.gameState,
+          notification: 'Join my game!',
+        });
+      } else {
+        // Subsequent moves: Generate delta URL (debounced)
+        updateUrl({
+          type: 'delta',
+          move: state.pendingMove,
+          turn: state.gameState.currentTurn,
+          checksum: state.engine.getChecksum(),
+        });
+      }
     }
   };
 
