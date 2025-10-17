@@ -23,7 +23,6 @@ describe('VictoryScreen', () => {
       [null, null, null],
       [null, null, null],
     ],
-    onNewGame: vi.fn(),
   };
 
   describe('Rendering', () => {
@@ -107,41 +106,58 @@ describe('VictoryScreen', () => {
   });
 
   describe('Action Buttons', () => {
-    it('should render New Game button', () => {
+    it('should not render New Game button', () => {
       render(<VictoryScreen {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /start a new game/i })).toBeInTheDocument();
+      expect(screen.queryByText('New Game')).not.toBeInTheDocument();
     });
 
-    it('should call onNewGame when New Game is clicked', () => {
-      const onNewGame = vi.fn();
-      render(<VictoryScreen {...defaultProps} onNewGame={onNewGame} />);
-
-      fireEvent.click(screen.getByRole('button', { name: /start a new game/i }));
-
-      expect(onNewGame).toHaveBeenCalledTimes(1);
-    });
-
-    it('should render Share Result button when onShare is provided', () => {
+    it('should render Share Result button when onShare and shareUrl are provided', () => {
       const onShare = vi.fn();
-      render(<VictoryScreen {...defaultProps} onShare={onShare} />);
+      const shareUrl = 'https://example.com/game#abc123';
+      render(<VictoryScreen {...defaultProps} onShare={onShare} shareUrl={shareUrl} />);
 
       expect(screen.getByRole('button', { name: /share game result/i })).toBeInTheDocument();
     });
 
-    it('should call onShare when Share Result is clicked', () => {
+    it('should not render Share Result button when shareUrl is not provided', () => {
       const onShare = vi.fn();
       render(<VictoryScreen {...defaultProps} onShare={onShare} />);
+
+      expect(screen.queryByRole('button', { name: /share game result/i })).not.toBeInTheDocument();
+    });
+
+    it('should not render Share Result button when onShare is not provided', () => {
+      const shareUrl = 'https://example.com/game#abc123';
+      render(<VictoryScreen {...defaultProps} shareUrl={shareUrl} />);
+
+      expect(screen.queryByRole('button', { name: /share game result/i })).not.toBeInTheDocument();
+    });
+
+    it('should show URLSharer when Share Result is clicked', () => {
+      const onShare = vi.fn();
+      const shareUrl = 'https://example.com/game#abc123';
+      render(<VictoryScreen {...defaultProps} onShare={onShare} shareUrl={shareUrl} />);
+
+      // URLSharer should not be visible initially
+      expect(screen.queryByText('Share this game:')).not.toBeInTheDocument();
+
+      // Click Share Result button
+      fireEvent.click(screen.getByRole('button', { name: /share game result/i }));
+
+      // URLSharer should now be visible
+      expect(screen.getByText('Share this game:')).toBeInTheDocument();
+      expect(screen.getByDisplayValue(shareUrl)).toBeInTheDocument();
+    });
+
+    it('should call onShare callback when Share Result is clicked', () => {
+      const onShare = vi.fn();
+      const shareUrl = 'https://example.com/game#abc123';
+      render(<VictoryScreen {...defaultProps} onShare={onShare} shareUrl={shareUrl} />);
 
       fireEvent.click(screen.getByRole('button', { name: /share game result/i }));
 
       expect(onShare).toHaveBeenCalledTimes(1);
-    });
-
-    it('should not render Share Result button when onShare is not provided', () => {
-      render(<VictoryScreen {...defaultProps} />);
-
-      expect(screen.queryByRole('button', { name: /share game result/i })).not.toBeInTheDocument();
     });
 
     it('should render Review Moves button when onReviewMoves is provided', () => {
@@ -168,17 +184,18 @@ describe('VictoryScreen', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('should render all buttons when all callbacks are provided', () => {
+    it('should render Share Result and Review Moves buttons when callbacks are provided', () => {
+      const shareUrl = 'https://example.com/game#abc123';
       render(
         <VictoryScreen
           {...defaultProps}
-          onNewGame={vi.fn()}
+          shareUrl={shareUrl}
           onShare={vi.fn()}
           onReviewMoves={vi.fn()}
         />
       );
 
-      expect(screen.getAllByRole('button')).toHaveLength(3);
+      expect(screen.getAllByRole('button')).toHaveLength(2);
     });
   });
 
@@ -297,16 +314,16 @@ describe('VictoryScreen', () => {
     });
 
     it('should have accessible button labels', () => {
+      const shareUrl = 'https://example.com/game#abc123';
       render(
         <VictoryScreen
           {...defaultProps}
-          onNewGame={vi.fn()}
+          shareUrl={shareUrl}
           onShare={vi.fn()}
           onReviewMoves={vi.fn()}
         />
       );
 
-      expect(screen.getByRole('button', { name: 'Start a new game' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Share game result' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Review game moves' })).toBeInTheDocument();
     });
@@ -376,7 +393,6 @@ describe('VictoryScreen', () => {
             [null, null, null],
             [null, null, null],
           ]}
-          onNewGame={vi.fn()}
         />
       );
 

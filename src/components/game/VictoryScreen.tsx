@@ -3,8 +3,9 @@
  * @module components/game/VictoryScreen
  */
 
-import { type ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import type { Piece } from '@/lib/validation/schemas';
+import { URLSharer } from './URLSharer';
 import styles from './VictoryScreen.module.css';
 
 interface VictoryScreenProps {
@@ -28,8 +29,8 @@ interface VictoryScreenProps {
   capturedBlack: Piece[];
   /** Game board to check for auto-scored pieces */
   board: (Piece | null)[][];
-  /** Callback for starting a new game */
-  onNewGame: () => void;
+  /** Shareable URL for game result */
+  shareUrl?: string;
   /** Callback for sharing the result */
   onShare?: () => void;
   /** Callback for reviewing moves */
@@ -81,10 +82,13 @@ export const VictoryScreen = ({
   capturedWhite,
   capturedBlack,
   board,
-  onNewGame,
+  shareUrl,
   onShare,
   onReviewMoves,
 }: VictoryScreenProps): ReactElement => {
+  // URL sharing state
+  const [showUrlSharer, setShowUrlSharer] = useState(false);
+
   // Extract auto-scored pieces (pieces still on board when game ended)
   const getAutoScoredPieces = (owner: 'white' | 'black'): Piece[] => {
     const pieces: Piece[] = [];
@@ -284,20 +288,14 @@ export const VictoryScreen = ({
 
         {/* Action Buttons */}
         <div className={styles.actions}>
-          <button
-            type="button"
-            onClick={onNewGame}
-            className={`${styles.button} ${styles.primaryButton}`}
-            aria-label="Start a new game"
-          >
-            New Game
-          </button>
-
-          {onShare && (
+          {onShare && shareUrl && (
             <button
               type="button"
-              onClick={onShare}
-              className={`${styles.button} ${styles.secondaryButton}`}
+              onClick={() => {
+                onShare();  // Call parent callback if provided
+                setShowUrlSharer(true);  // Show URLSharer
+              }}
+              className={`${styles.button} ${styles.primaryButton}`}
               aria-label="Share game result"
             >
               Share Result
@@ -315,6 +313,18 @@ export const VictoryScreen = ({
             </button>
           )}
         </div>
+
+        {/* URL Sharing */}
+        {showUrlSharer && shareUrl && (
+          <div style={{ marginTop: 'var(--spacing-lg)' }}>
+            <URLSharer
+              url={shareUrl}
+              onCopy={() => {
+                console.log('Victory URL copied successfully');
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
