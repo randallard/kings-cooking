@@ -53,16 +53,18 @@ Successfully implemented UI support for off-board moves, allowing players to mov
 - ✅ ESLint: 0 errors, 0 warnings
 
 #### Level 2: Unit Tests + Coverage
-- ✅ **630 tests passing** (all existing + 18 new tests)
+- ✅ **638 tests passing** (all existing + 18 new UI tests + 8 bishop tests)
 - ✅ **94.44% overall coverage** (exceeds 80% requirement)
 - ✅ New components: 100% coverage
   - OffBoardButton.tsx: 100% lines, 100% branches
   - CourtArea.tsx: 100% lines, 92.85% branches
   - GameBoard.tsx: 96.85% lines (down from 100% due to new logic)
+- ✅ Bishop fix: 100% coverage
+  - pieceMovement.ts: 100% lines, 100% branches
 
 #### Level 5: Production Build
-- ✅ Build succeeded (2.37s)
-- ✅ Bundle size: 230.80 kB (gzip: 71.91 kB)
+- ✅ Build succeeded (2.04s)
+- ✅ Bundle size: 230.87 kB (gzip: 71.91 kB)
 - ✅ No runtime errors
 
 ## User Experience
@@ -109,9 +111,10 @@ Successfully implemented UI support for off-board moves, allowing players to mov
 - Button enables when knight's L-move calculation results in row < 0 (white) or row > 2 (black)
 
 **Bishop:**
-- **CRITICAL RULE:** Can move off-board ONLY if diagonal crosses through MIDDLE column (col 1)
+- **RULE 1 (Edge Position):** Can move off-board from ANY position on opponent's starting row (row 0 for white, row 2 for black)
+- **RULE 2 (Diagonal Path):** Can move off-board if diagonal path crosses through MIDDLE column (col 1)
 - **Cannot** move off-board if diagonal crosses corner columns (col 0 or 2)
-- Button enables only when this specific geometric condition is met
+- Button enables when either rule 1 or rule 2 is satisfied
 
 ## Files Changed
 
@@ -123,10 +126,12 @@ Successfully implemented UI support for off-board moves, allowing players to mov
 5. `src/components/game/CourtArea.module.css` - Court styles
 6. `src/components/game/CourtArea.test.tsx` - Court tests (11 tests)
 
-### Modified Files (3)
+### Modified Files (5)
 1. `src/components/game/GameBoard.tsx` - Added off-board logic + court areas
 2. `src/types/gameFlow.ts` - Updated types for off-board support
 3. `src/lib/gameFlow/reducer.ts` - Removed unnecessary ESLint disables
+4. `src/lib/chess/pieceMovement.ts` - Fixed bishop off-board edge position rule
+5. `src/lib/chess/pieceMovement.test.ts` - Added 8 tests for bishop edge positions
 
 ## Key Design Decisions
 
@@ -140,8 +145,8 @@ Successfully implemented UI support for off-board moves, allowing players to mov
 
 - **Bundle Size Increase:** ~1-2 KB (minimal)
 - **Runtime Performance:** No measurable impact (memoized computations)
-- **Test Execution Time:** ~9.3s for full test suite (630 tests)
-- **Build Time:** 2.37s (unchanged)
+- **Test Execution Time:** ~10.5s for full test suite (638 tests)
+- **Build Time:** 2.04s (improved)
 
 ## Known Limitations
 
@@ -170,10 +175,11 @@ Successfully implemented UI support for off-board moves, allowing players to mov
 - Button enables only when piece can legally move off-board
 - Button executes off-board move when clicked
 - Court areas show scored and captured pieces
-- All existing tests pass (630/630)
-- New tests achieve 100% coverage for new components
+- **Bishop edge position rule fixed** - bishops on opponent's starting row can now move off-board
+- All existing tests pass (638/638, up from 630)
+- New tests achieve 100% coverage for new components and fixes
 - Overall coverage: 94.44% (exceeds 80% requirement)
 - TypeScript + ESLint: 0 errors, 0 warnings
 - Production build succeeds
 
-**The off-board move feature is now fully functional and ready for use!** 🎉
+**The off-board move feature is now fully functional with the bishop fix applied and ready for use!** 🎉

@@ -14,8 +14,15 @@ describe('VictoryScreen', () => {
     loserName: 'Bob',
     totalMoves: 42,
     gameDuration: 1234,
-    whiteCaptured: 5,
-    blackCaptured: 3,
+    whiteCourt: [],
+    blackCourt: [],
+    capturedWhite: [],
+    capturedBlack: [],
+    board: [
+      [null, null, null],
+      [null, null, null],
+      [null, null, null],
+    ],
     onNewGame: vi.fn(),
   };
 
@@ -74,18 +81,16 @@ describe('VictoryScreen', () => {
       expect(screen.getByText('1:05')).toBeInTheDocument();
     });
 
-    it('should display white captured count', () => {
-      render(<VictoryScreen {...defaultProps} whiteCaptured={5} />);
+    it('should display white player stats section', () => {
+      render(<VictoryScreen {...defaultProps} />);
 
-      expect(screen.getByText('White Captured')).toBeInTheDocument();
-      expect(screen.getByText('5')).toBeInTheDocument();
+      expect(screen.getByText('White Player (Player 1)')).toBeInTheDocument();
     });
 
-    it('should display black captured count', () => {
-      render(<VictoryScreen {...defaultProps} blackCaptured={3} />);
+    it('should display black player stats section', () => {
+      render(<VictoryScreen {...defaultProps} />);
 
-      expect(screen.getByText('Black Captured')).toBeInTheDocument();
-      expect(screen.getByText('3')).toBeInTheDocument();
+      expect(screen.getByText('Black Player (Player 2)')).toBeInTheDocument();
     });
 
     it('should handle zero duration', () => {
@@ -335,11 +340,12 @@ describe('VictoryScreen', () => {
       expect(screen.getByText('0')).toBeInTheDocument();
     });
 
-    it('should handle zero captures', () => {
-      render(<VictoryScreen {...defaultProps} whiteCaptured={0} blackCaptured={0} />);
+    it('should handle empty piece arrays', () => {
+      render(<VictoryScreen {...defaultProps} whiteCourt={[]} blackCourt={[]} capturedWhite={[]} capturedBlack={[]} />);
 
-      const zeros = screen.getAllByText('0');
-      expect(zeros.length).toBeGreaterThanOrEqual(2);
+      // Should display "0 pieces" for each stat
+      const zeros = screen.getAllByText(/0 piece/);
+      expect(zeros.length).toBeGreaterThanOrEqual(4);
     });
 
     it('should handle very large numbers', () => {
@@ -348,8 +354,6 @@ describe('VictoryScreen', () => {
           {...defaultProps}
           totalMoves={9999}
           gameDuration={99999}
-          whiteCaptured={999}
-          blackCaptured={999}
         />
       );
 
@@ -363,8 +367,15 @@ describe('VictoryScreen', () => {
           winner="white"
           totalMoves={10}
           gameDuration={60}
-          whiteCaptured={2}
-          blackCaptured={1}
+          whiteCourt={[]}
+          blackCourt={[]}
+          capturedWhite={[]}
+          capturedBlack={[]}
+          board={[
+            [null, null, null],
+            [null, null, null],
+            [null, null, null],
+          ]}
           onNewGame={vi.fn()}
         />
       );

@@ -160,12 +160,13 @@
 }
 
 /* Dark mode support */
+/* Dark mode - system preference */
 @media (prefers-color-scheme: dark) {
-  .overlay {
+.overlay {
     background-color: rgba(0, 0, 0, 0.95);
   }
 
-  .container {
+  :global(:root:not([data-theme=\'light\'])) .container {
     --bg-modal: #1e1e1e;
     --text-primary: #f8f9fa;
     --text-secondary: #adb5bd;
@@ -178,10 +179,32 @@
     --border-color: #495057;
   }
 
-  .countdownNumber {
+  :global(:root:not([data-theme=\'light\'])) .countdownNumber {
     --color-primary: #4da3ff;
   }
 }
+
+/* Dark mode - manual toggle */
+.overlay {
+    background-color: rgba(0, 0, 0, 0.95);
+  }
+
+  :global([data-theme=\'dark\']) .container {
+    --bg-modal: #1e1e1e;
+    --text-primary: #f8f9fa;
+    --text-secondary: #adb5bd;
+    --text-tertiary: #868e96;
+    --btn-primary-bg: #0056b3;
+    --btn-primary-border: #004085;
+    --btn-primary-hover: #004085;
+    --focus-color: #4da3ff;
+    --bg-kbd: #343a40;
+    --border-color: #495057;
+  }
+
+  :global([data-theme=\'dark\']) .countdownNumber {
+    --color-primary: #4da3ff;
+  }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {

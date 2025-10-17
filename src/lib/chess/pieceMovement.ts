@@ -227,26 +227,25 @@ export function canKnightJumpOffBoard(
 }
 
 /**
- * Check if bishop can move off-board based on diagonal trajectory.
+ * Check if bishop can move off-board based on position or diagonal trajectory.
  *
- * CRITICAL KING'S COOKING RULE:
- * - Bishops can move off-board if diagonal path crosses MIDDLE column (col 1) of opponent's row
- * - Bishops must STOP if diagonal path crosses CORNER columns (col 0 or 2)
+ * KING'S COOKING RULES:
+ * 1. Bishops already on opponent's starting row can move off-board
+ * 2. Bishops can move off-board if diagonal path crosses MIDDLE column (col 1) of opponent's row
  *
  * @param from - Starting position
  * @param piece - Piece to check (must be bishop)
  * @param getPiece - Function to get piece at position
- * @returns True if bishop can continue off-board in current move
+ * @returns True if bishop can move off-board
  *
  * @example
- * // White bishop at (1,0) moving diagonally
- * // Path: (1,0) → (0,1) → off-board
- * // Crosses opponent row through middle column → CAN move off-board
+ * // Rule 1: Bishop on opponent's starting row
+ * canBishopMoveOffBoard([0, 0], whiteBishop, getPiece); // true
  *
  * @example
- * // White bishop at (1,1) moving diagonally
- * // Path: (1,1) → (0,0) → would exit through side edge
- * // Crosses opponent row through corner → MUST STOP at (0,0)
+ * // Rule 2: Diagonal through middle column
+ * // White bishop at (1,0) with clear path through (0,1)
+ * canBishopMoveOffBoard([1, 0], whiteBishop, getPiece); // true if path clear
  */
 export function canBishopMoveOffBoard(
   from: Position,
@@ -255,6 +254,16 @@ export function canBishopMoveOffBoard(
 ): boolean {
   if (!from || piece.type !== 'bishop') return false;
 
+  // Rule 1: Bishop already on opponent's starting row
+  // White bishops score on row 0 (black's starting row)
+  // Black bishops score on row 2 (white's starting row)
+  const onOpponentStartingRow =
+    (piece.owner === 'white' && from[0] === 0) ||
+    (piece.owner === 'black' && from[0] === 2);
+
+  if (onOpponentStartingRow) return true;
+
+  // Rule 2: Diagonal path through middle column
   const diagonals: Direction[] = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
 
   for (const [dr, dc] of diagonals) {

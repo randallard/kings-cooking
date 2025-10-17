@@ -65,17 +65,30 @@
   z-index: 1;
 }
 
-/* Dark mode overrides */
+/* Dark mode overrides - system preference */
 @media (prefers-color-scheme: dark) {
-  .lightSquare {
+  :global(:root:not([data-theme='light'])) .lightSquare {
     background-color: var(--bg-board-light-dark, #4a4a4a);
   }
 
-  .darkSquare {
+  :global(:root:not([data-theme='light'])) .darkSquare {
     background-color: var(--bg-board-dark-dark, #2a2a2a);
   }
 
-  .selected {
+  :global(:root:not([data-theme='light'])) .selected {
     background-color: var(--bg-selected-dark, #66b3ff);
   }
+}
+
+/* Dark mode overrides - manual toggle */
+:global([data-theme='dark']) .lightSquare {
+  background-color: var(--bg-board-light-dark, #4a4a4a);
+}
+
+:global([data-theme='dark']) .darkSquare {
+  background-color: var(--bg-board-dark-dark, #2a2a2a);
+}
+
+:global([data-theme='dark']) .selected {
+  background-color: var(--bg-selected-dark, #66b3ff);
 }

@@ -65,24 +65,42 @@
   margin-top: 0.5rem;
 }
 
-/* Dark mode */
+/* Dark mode - system preference */
 @media (prefers-color-scheme: dark) {
-  .courtArea {
+  :global(:root:not([data-theme='light'])) .courtArea {
     background: var(--bg-secondary-dark, #343a40);
     border-color: var(--border-color-dark, #495057);
   }
 
-  .courtLabel {
+  :global(:root:not([data-theme='light'])) .courtLabel {
     color: var(--text-primary-dark, #f8f9fa);
   }
 
-  .sectionLabel {
+  :global(:root:not([data-theme='light'])) .sectionLabel {
     color: var(--text-secondary-dark, #adb5bd);
   }
 
-  .emptyText {
+  :global(:root:not([data-theme='light'])) .emptyText {
     color: var(--text-secondary-dark, #adb5bd);
   }
+}
+
+/* Dark mode - manual toggle */
+:global([data-theme='dark']) .courtArea {
+  background: var(--bg-secondary-dark, #343a40);
+  border-color: var(--border-color-dark, #495057);
+}
+
+:global([data-theme='dark']) .courtLabel {
+  color: var(--text-primary-dark, #f8f9fa);
+}
+
+:global([data-theme='dark']) .sectionLabel {
+  color: var(--text-secondary-dark, #adb5bd);
+}
+
+:global([data-theme='dark']) .emptyText {
+  color: var(--text-secondary-dark, #adb5bd);
 }
 
 /* Tablet */

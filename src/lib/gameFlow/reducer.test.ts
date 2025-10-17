@@ -1075,6 +1075,10 @@ describe('gameFlowReducer', () => {
       it('should load full state and transition to playing phase', () => {
         const initialState: GameFlowState = { phase: 'mode-selection' };
         const gameState = createMockGameState();
+
+        // Mock localStorage to return Player 2's name
+        (storage.getMyName as Mock).mockReturnValue('Bob');
+
         const action: GameFlowAction = {
           type: 'LOAD_FROM_URL',
           payload: {
@@ -1098,9 +1102,13 @@ describe('gameFlowReducer', () => {
         });
       });
 
-      it('should load full state without playerName', () => {
+      it('should load full state without playerName and transition to handoff for name collection', () => {
         const initialState: GameFlowState = { phase: 'mode-selection' };
         const gameState = createMockGameState();
+
+        // Mock localStorage to return null (no saved name)
+        (storage.getMyName as Mock).mockReturnValue(null);
+
         const action: GameFlowAction = {
           type: 'LOAD_FROM_URL',
           payload: {
@@ -1112,14 +1120,14 @@ describe('gameFlowReducer', () => {
         const result = gameFlowReducer(initialState, action);
 
         expect(result).toMatchObject({
-          phase: 'playing',
+          phase: 'handoff',
           mode: 'url',
           player1Name: 'Player 1',
-          player2Name: null,
+          player2Name: '',
           gameState,
-          selectedPosition: null,
-          legalMoves: [],
-          pendingMove: null,
+          lastMove: { from: [0, 0], to: [0, 1] },
+          countdown: 0,
+          generatedUrl: null,
         });
       });
 
@@ -1131,6 +1139,10 @@ describe('gameFlowReducer', () => {
             name: 'CustomPlayer1',
           },
         });
+
+        // Mock localStorage to return Player 2's name
+        (storage.getMyName as Mock).mockReturnValue('Bob');
+
         const action: GameFlowAction = {
           type: 'LOAD_FROM_URL',
           payload: {
@@ -1344,7 +1356,7 @@ describe('gameFlowReducer', () => {
         const result = gameFlowReducer(initialState, action);
 
         expect(result).toBe(initialState);
-        expect(consoleSpy).toHaveBeenCalledWith('State diverged - checksums do not match');
+        expect(consoleSpy).toHaveBeenCalledWith('❌ State diverged - checksums do not match');
 
         consoleSpy.mockRestore();
       });

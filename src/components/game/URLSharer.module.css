@@ -115,37 +115,69 @@
 }
 
 /* Dark mode support */
+/* Dark mode - system preference */
 @media (prefers-color-scheme: dark) {
-  .label {
+.label {
     --text-primary: #f8f9fa;
   }
 
-  .urlInput {
+  :global(:root:not([data-theme=\'light\'])) .urlInput {
     --text-secondary: #adb5bd;
     --bg-input: #343a40;
     --bg-input-focus: #495057;
     --border-color: #495057;
   }
 
-  .copyButton {
+  :global(:root:not([data-theme=\'light\'])) .copyButton {
     --btn-primary-bg: #0056b3;
     --btn-primary-border: #004085;
     --btn-primary-hover: #004085;
     --focus-color: #4da3ff;
   }
 
-  .successToast {
+  :global(:root:not([data-theme=\'light\'])) .successToast {
     --success-text: #a3cfbb;
     --success-bg: #1e4620;
     --success-border: #2d5930;
   }
 
-  .errorToast {
+  :global(:root:not([data-theme=\'light\'])) .errorToast {
     --error-text: #f5c2c7;
     --error-bg: #5c1f24;
     --error-border: #842029;
   }
 }
+
+/* Dark mode - manual toggle */
+.label {
+    --text-primary: #f8f9fa;
+  }
+
+  :global([data-theme=\'dark\']) .urlInput {
+    --text-secondary: #adb5bd;
+    --bg-input: #343a40;
+    --bg-input-focus: #495057;
+    --border-color: #495057;
+  }
+
+  :global([data-theme=\'dark\']) .copyButton {
+    --btn-primary-bg: #0056b3;
+    --btn-primary-border: #004085;
+    --btn-primary-hover: #004085;
+    --focus-color: #4da3ff;
+  }
+
+  :global([data-theme=\'dark\']) .successToast {
+    --success-text: #a3cfbb;
+    --success-bg: #1e4620;
+    --success-border: #2d5930;
+  }
+
+  :global([data-theme=\'dark\']) .errorToast {
+    --error-text: #f5c2c7;
+    --error-bg: #5c1f24;
+    --error-border: #842029;
+  }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {

@@ -102,8 +102,9 @@
 }
 
 /* Dark mode support */
+/* Dark mode - system preference */
 @media (prefers-color-scheme: dark) {
-  .confirmButton {
+.confirmButton {
     --btn-confirm-bg: #2d7a3e;
     --btn-confirm-border: #246633;
     --btn-confirm-hover: #246633;
@@ -116,12 +117,32 @@
     --focus-color: #4da3ff;
   }
 
-  .errorMessage {
+  :global(:root:not([data-theme=\'light\'])) .errorMessage {
     --error-text: #f5c2c7;
     --error-bg: #5c1f24;
     --error-border: #842029;
   }
 }
+
+/* Dark mode - manual toggle */
+.confirmButton {
+    --btn-confirm-bg: #2d7a3e;
+    --btn-confirm-border: #246633;
+    --btn-confirm-hover: #246633;
+    --btn-disabled-bg: #495057;
+    --btn-disabled-border: #343a40);
+    --btn-processing-bg: #117a8b;
+    --btn-processing-border: #0e6674;
+    --btn-error-bg: #b02a37;
+    --btn-error-border: #9a2530;
+    --focus-color: #4da3ff;
+  }
+
+  :global([data-theme=\'dark\']) .errorMessage {
+    --error-text: #f5c2c7;
+    --error-bg: #5c1f24;
+    --error-border: #842029;
+  }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {

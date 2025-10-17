@@ -94,6 +94,9 @@ export function useUrlState(options: UseUrlStateOptions = {}): {
    *
    * This effect runs ONCE on component mount to load initial state
    * from URL hash fragment. Validates payload with multi-layer pipeline.
+   *
+   * CRITICAL: Empty dependency array to prevent infinite loops.
+   * Callbacks are captured from initial render and won't update.
    */
   useEffect(() => {
     const hash = window.location.hash.slice(1); // Remove '#' prefix
@@ -119,7 +122,8 @@ export function useUrlState(options: UseUrlStateOptions = {}): {
     }
 
     setIsLoading(false);
-  }, [onError, onPayloadReceived]); // Empty deps - run ONCE on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - run ONCE on mount
 
   /**
    * Listen for hash changes (back/forward navigation).
@@ -128,6 +132,7 @@ export function useUrlState(options: UseUrlStateOptions = {}): {
    * and updates state when hash changes externally.
    *
    * CRITICAL: Empty dependency array prevents exponential listener growth.
+   * Callbacks are captured from initial render and won't update.
    */
   useEffect(() => {
     const handleHashChange = (): void => {
@@ -158,7 +163,8 @@ export function useUrlState(options: UseUrlStateOptions = {}): {
 
     // CRITICAL: Clean up listener on unmount
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [onError, onPayloadReceived]); // Empty deps - listener is stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - listener is stable
 
   /**
    * Debounced URL update function.

@@ -51,24 +51,43 @@
 }
 
 /* Dark mode support */
+/* Dark mode - system preference */
 @media (prefers-color-scheme: dark) {
-  .enabled {
+.enabled {
     background: #28a745;
     border-color: #28a745;
     color: white;
   }
 
-  .enabled:hover {
+  :global(:root:not([data-theme=\'light\'])) .enabled:hover {
     background: #218838;
     border-color: #1e7e34;
   }
 
-  .disabled {
+  :global(:root:not([data-theme=\'light\'])) .disabled {
     background: #495057;
     border-color: #495057;
     color: #adb5bd;
   }
 }
+
+/* Dark mode - manual toggle */
+.enabled {
+    background: #28a745;
+    border-color: #28a745;
+    color: white;
+  }
+
+  :global([data-theme=\'dark\']) .enabled:hover {
+    background: #218838;
+    border-color: #1e7e34;
+  }
+
+  :global([data-theme=\'dark\']) .disabled {
+    background: #495057;
+    border-color: #495057;
+    color: #adb5bd;
+  }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {

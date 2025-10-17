@@ -41,20 +41,101 @@ function handleUrlLoad(
   state: GameFlowState,
   payload: FullStatePayload | DeltaPayload
 ): GameFlowState {
-  if (payload.type === 'full_state') {
-    // Full state: Restore complete game
-    const player1Name = payload.gameState.whitePlayer.name;
+  // Localhost debugging
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    console.log('🔄 LOAD_FROM_URL Action:', {
+      payloadType: payload.type,
+      currentPhase: state.phase,
+    });
+  }
 
-    return {
-      phase: 'playing',
-      mode: 'url',
-      player1Name,
-      player2Name: payload.playerName || null,
-      gameState: payload.gameState,
-      selectedPosition: null,
-      legalMoves: [],
-      pendingMove: null,
-    };
+  if (payload.type === 'full_state') {
+    // Full state: Restore complete game (Player 2 receiving first URL, or Player 1 returning)
+    let player1Name = payload.gameState.whitePlayer.name;
+    let player2Name = payload.gameState.blackPlayer.name;
+
+    // Check localStorage for saved name
+    const myName = storage.getMyName();
+
+    // Localhost debugging
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      console.log('📥 Received FULL_STATE:', {
+        playerName: payload.playerName,
+        myName: myName,
+        player1Name: player1Name,
+        player2Name: player2Name,
+        currentTurn: payload.gameState.currentTurn,
+        checksum: payload.gameState.checksum,
+        board: payload.gameState.board,
+      });
+    }
+
+    // CRITICAL: If payload has playerName AND it's different from myName,
+    // it's from the OTHER player sending us their move
+    // We need to update the gameState with the correct player name
+    if (payload.playerName && payload.playerName !== myName) {
+      // The playerName in the payload is from the OTHER player
+      // Check if we are Player 1 (white) or Player 2 (black)
+      if (myName === player1Name) {
+        // We are Player 1, so the playerName is Player 2's name
+        player2Name = payload.playerName;
+        // Update the gameState to have Player 2's correct name
+        payload.gameState.blackPlayer.name = payload.playerName;
+
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+          console.log('  ✅ Identified as Player 1 receiving Player 2 name:', payload.playerName);
+        }
+      } else {
+        // We are Player 2, so the playerName is Player 1's name
+        player1Name = payload.playerName;
+        payload.gameState.whitePlayer.name = payload.playerName;
+
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+          console.log('  ✅ Identified as Player 2 receiving Player 1 name:', payload.playerName);
+        }
+      }
+    }
+
+    if (myName) {
+      // Check if saved name matches Player 1 (white)
+      if (myName === player1Name) {
+        // This is Player 1 returning to the game - go directly to playing
+        return {
+          phase: 'playing',
+          mode: 'url',
+          player1Name,
+          player2Name,
+          gameState: payload.gameState,
+          selectedPosition: null,
+          legalMoves: [],
+          pendingMove: null,
+        };
+      } else {
+        // This is Player 2 with a saved name - go directly to playing
+        return {
+          phase: 'playing',
+          mode: 'url',
+          player1Name,
+          player2Name: myName,
+          gameState: payload.gameState,
+          selectedPosition: null,
+          legalMoves: [],
+          pendingMove: null,
+        };
+      }
+    } else {
+      // No saved name - must be Player 2's first time - go to handoff phase
+      return {
+        phase: 'handoff',
+        mode: 'url',
+        player1Name,
+        player2Name: '', // Empty triggers name collection in App.tsx
+        gameState: payload.gameState,
+        lastMove: { from: [0, 0], to: [0, 1] }, // Placeholder for "Player 1 just moved"
+        countdown: 0, // No countdown in URL mode
+        generatedUrl: null, // Player 2 doesn't generate URL yet
+      };
+    }
   } else {
     // Delta: Apply move to existing state
     const currentState = storage.getGameState();
@@ -69,12 +150,57 @@ function handleUrlLoad(
       currentState
     );
 
-    // Verify checksum before applying
+    // Get current checksum
     const currentChecksum = engine.getChecksum();
+
+    // Localhost debugging
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      console.log('📥 Received DELTA:', {
+        playerName: payload.playerName,
+        move: payload.move,
+        turn: payload.turn,
+        checksumInPayload: payload.checksum,
+        myCurrentChecksum: currentChecksum,
+        myCurrentTurn: currentState.currentTurn,
+        myCurrentPlayer: currentState.currentPlayer,
+        myWhitePlayer: currentState.whitePlayer.name,
+        myBlackPlayer: currentState.blackPlayer.name,
+        myBoard: currentState.board,
+      });
+    }
+
+    // CRITICAL: Check if this delta has already been applied
+    // If our current turn equals the payload turn, the move was already applied
+    if (currentState.currentTurn === payload.turn) {
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        console.log('  ⏭️ Delta already applied (turn matches), skipping...');
+      }
+      // Delta already applied - transition to playing phase with current state
+      return {
+        phase: 'playing',
+        mode: 'url',
+        player1Name: currentState.whitePlayer.name,
+        player2Name: currentState.blackPlayer.name,
+        gameState: currentState,
+        selectedPosition: null,
+        legalMoves: [],
+        pendingMove: null,
+      };
+    }
+
+    // Verify checksum before applying
     if (currentChecksum !== payload.checksum) {
-      console.error('State diverged - checksums do not match');
+      console.error('❌ State diverged - checksums do not match');
+      console.error('  Expected (from payload):', payload.checksum);
+      console.error('  Actual (my current state):', currentChecksum);
+      console.error('  My current turn:', currentState.currentTurn);
+      console.error('  Payload turn:', payload.turn);
       // TODO: Show History Comparison Modal (Phase 3 resync flow)
       return state;
+    }
+
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      console.log('  ✅ Checksum verified! Applying move...');
     }
 
     // Apply delta move
@@ -86,6 +212,24 @@ function handleUrlLoad(
 
     const newGameState = engine.getGameState();
     storage.setGameState(newGameState);
+
+    // Localhost debugging
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      console.log('  ✅ Move applied successfully:', {
+        newTurn: newGameState.currentTurn,
+        newChecksum: newGameState.checksum,
+        newCurrentPlayer: newGameState.currentPlayer,
+      });
+    }
+
+    // CRITICAL: Clear the URL hash after successfully applying a delta
+    // This prevents the same delta from being applied twice
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      if (window.location.hostname === 'localhost') {
+        console.log('  🧹 Cleared URL hash to prevent duplicate application');
+      }
+    }
 
     // Check for game over
     const victoryResult = engine.checkGameEnd();

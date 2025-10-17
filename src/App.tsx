@@ -32,7 +32,6 @@ export default function App(): ReactElement {
 
   // URL state hook (Task 7) - enabled only in URL mode
   const {
-    updateUrl,
     updateUrlImmediate,
     getShareUrl,
   } = useUrlState({
@@ -186,6 +185,9 @@ export default function App(): ReactElement {
     const handleConfirmMove = (): void => {
       if (!state.pendingMove) return;
 
+      // CRITICAL: Get checksum BEFORE making the move (for delta verification)
+      const checksumBeforeMove = state.gameState.checksum;
+
       // Create engine and load current game state
       const engine = new KingsChessEngine(
         state.gameState.whitePlayer,
@@ -215,34 +217,76 @@ export default function App(): ReactElement {
         if (state.mode === 'url' && state.pendingMove) {
           const isFirstMove = newState.currentTurn === 1;
 
+          console.log('🔍 URL Generation Debug:');
+          console.log('  currentTurn:', newState.currentTurn);
+          console.log('  isFirstMove:', isFirstMove);
+          console.log('  currentPlayer:', newState.currentPlayer);
+          console.log('  player1Name:', state.player1Name);
+          console.log('  player2Name:', state.player2Name);
+          console.log('  checksumBeforeMove:', checksumBeforeMove);
+          console.log('  checksumAfterMove:', engine.getChecksum());
+
+          // Ensure from/to are valid positions (not null)
+          const from = state.pendingMove.from;
+          const to = state.pendingMove.to;
+
           if (isFirstMove) {
             // First move: Send full game state
-            updateUrlImmediate({
-              type: 'full_state',
+            console.log('  ➡️ Generating FULL_STATE URL');
+            const fullStatePayload = {
+              type: 'full_state' as const,
               gameState: newState,
               playerName: state.player1Name || undefined,
-            });
+            };
+            updateUrlImmediate(fullStatePayload);
+
+            // Detailed logging for localhost
+            if (window.location.hostname === 'localhost') {
+              console.log('📦 FULL_STATE Payload:', {
+                type: fullStatePayload.type,
+                playerName: fullStatePayload.playerName,
+                currentTurn: newState.currentTurn,
+                checksum: newState.checksum,
+                whitePlayer: newState.whitePlayer.name,
+                blackPlayer: newState.blackPlayer.name,
+                board: newState.board,
+              });
+            }
           } else {
             // Subsequent moves: Send delta with checksum
-            // Ensure from/to are valid positions (not null)
-            const from = state.pendingMove.from;
-            const to = state.pendingMove.to;
-
+            // CRITICAL: Use checksum from BEFORE the move, so receiver can verify their state
+            console.log('  ➡️ Generating DELTA URL');
             if (from && to) {
-              updateUrl({
-                type: 'delta',
+              const deltaPayload = {
+                type: 'delta' as const,
                 move: {
                   from,
                   to,
                 },
                 turn: newState.currentTurn,
-                checksum: engine.getChecksum(),
+                checksum: checksumBeforeMove, // Checksum BEFORE move for verification
                 playerName: state.player2Name || undefined,
-              });
+              };
+              updateUrlImmediate(deltaPayload);
+
+              // Detailed logging for localhost
+              if (window.location.hostname === 'localhost') {
+                console.log('📦 DELTA Payload:', {
+                  type: deltaPayload.type,
+                  playerName: deltaPayload.playerName,
+                  move: deltaPayload.move,
+                  turn: deltaPayload.turn,
+                  checksumInPayload: deltaPayload.checksum,
+                  checksumBeforeMove: checksumBeforeMove,
+                  checksumAfterMove: engine.getChecksum(),
+                  currentTurn: newState.currentTurn,
+                });
+              }
             }
           }
 
           // Get the share URL and dispatch URL_GENERATED
+          // IMPORTANT: getShareUrl() reads from window.location.hash, which is updated by updateUrlImmediate
           const shareUrl = getShareUrl();
           dispatch({ type: 'URL_GENERATED', url: shareUrl });
         }
@@ -376,7 +420,49 @@ export default function App(): ReactElement {
         />
       );
     } else {
-      // URL mode: Show URLSharer with generated URL
+      // URL mode: Determine if this is Player 1 sharing URL or Player 2 entering name
+      // Player 2 case: generatedUrl is null (came from LOAD_FROM_URL, hasn't clicked "Start Playing" yet)
+      // Player 1 case: generatedUrl is set (came from CONFIRM_MOVE)
+      const isPlayer2EnteringName = !state.generatedUrl;
+
+      if (isPlayer2EnteringName) {
+        return (
+          <div style={{
+            maxWidth: '600px',
+            margin: '0 auto',
+            padding: 'var(--spacing-xl)',
+          }}>
+            <h1 style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
+              Welcome Player 2!
+            </h1>
+            <div className="card">
+              <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Enter Your Name</h2>
+              <p style={{ marginBottom: 'var(--spacing-md)', color: 'var(--text-secondary)' }}>
+                Before you start playing, please enter your name.
+              </p>
+              <NameForm
+                storageKey="my-name"
+                onNameChange={(name) => {
+                  dispatch({ type: 'SET_PLAYER2_NAME', name });
+                }}
+              />
+              <button
+                onClick={() => {
+                  if (state.player2Name && state.player2Name.trim().length > 0) {
+                    dispatch({ type: 'COMPLETE_HANDOFF' });
+                  }
+                }}
+                disabled={!state.player2Name || state.player2Name.trim().length === 0}
+                style={{ marginTop: 'var(--spacing-md)', width: '100%' }}
+              >
+                Start Playing
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      // URL mode: Show URLSharer with generated URL (Player 1 sharing their move)
       const shareUrl = state.generatedUrl || getShareUrl();
 
       return (
@@ -417,22 +503,15 @@ export default function App(): ReactElement {
   // ===========================
   if (state.phase === 'victory') {
     // Build VictoryScreen props conditionally to satisfy exactOptionalPropertyTypes
-    const victoryProps: {
-      winner: 'white' | 'black' | 'draw';
-      winnerName?: string;
-      loserName?: string;
-      totalMoves: number;
-      gameDuration: number;
-      whiteCaptured: number;
-      blackCaptured: number;
-      onNewGame: () => void;
-      onShare?: () => void;
-    } = {
+    const victoryProps: Parameters<typeof VictoryScreen>[0] = {
       winner: state.winner,
       totalMoves: state.gameState.currentTurn,
       gameDuration: 0, // TODO: Track game duration in state
-      whiteCaptured: state.gameState.capturedWhite.length,
-      blackCaptured: state.gameState.capturedBlack.length,
+      whiteCourt: state.gameState.whiteCourt,
+      blackCourt: state.gameState.blackCourt,
+      capturedWhite: state.gameState.capturedWhite,
+      capturedBlack: state.gameState.capturedBlack,
+      board: state.gameState.board,
       onNewGame: () => {
         dispatch({ type: 'NEW_GAME' });
         storage.clearAll();

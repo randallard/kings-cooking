@@ -143,12 +143,13 @@
 }
 
 /* Dark mode support */
+/* Dark mode - system preference */
 @media (prefers-color-scheme: dark) {
-  .label {
+.label {
     --text-primary: #f8f9fa;
   }
 
-  .input {
+  :global(:root:not([data-theme=\'light\'])) .input {
     --text-primary: #f8f9fa;
     --text-placeholder: #adb5bd;
     --bg-input: #343a40;
@@ -157,34 +158,76 @@
     --focus-color: #4da3ff;
   }
 
-  .input.valid {
+  :global(:root:not([data-theme=\'light\'])) .input.valid {
     --success-border: #2d7a3e;
     --success-bg-light: #1e3a26;
   }
 
-  .input.invalid {
+  :global(:root:not([data-theme=\'light\'])) .input.invalid {
     --error-border: #b02a37;
     --error-bg-light: #3a1f23;
   }
 
-  .successIcon {
+  :global(:root:not([data-theme=\'light\'])) .successIcon {
     --success-text: #4ade80;
   }
 
-  .errorIcon {
+  :global(:root:not([data-theme=\'light\'])) .errorIcon {
     --error-text: #f87171;
   }
 
-  .errorMessage {
+  :global(:root:not([data-theme=\'light\'])) .errorMessage {
     --error-text: #f5c2c7;
     --error-bg: #5c1f24;
     --error-border: #842029;
   }
 
-  .helperText {
+  :global(:root:not([data-theme=\'light\'])) .helperText {
     --text-secondary: #adb5bd;
   }
 }
+
+/* Dark mode - manual toggle */
+.label {
+    --text-primary: #f8f9fa;
+  }
+
+  :global([data-theme=\'dark\']) .input {
+    --text-primary: #f8f9fa;
+    --text-placeholder: #adb5bd;
+    --bg-input: #343a40;
+    --bg-input-focus: #495057;
+    --border-color: #495057;
+    --focus-color: #4da3ff;
+  }
+
+  :global([data-theme=\'dark\']) .input.valid {
+    --success-border: #2d7a3e;
+    --success-bg-light: #1e3a26;
+  }
+
+  :global([data-theme=\'dark\']) .input.invalid {
+    --error-border: #b02a37;
+    --error-bg-light: #3a1f23;
+  }
+
+  :global([data-theme=\'dark\']) .successIcon {
+    --success-text: #4ade80;
+  }
+
+  :global([data-theme=\'dark\']) .errorIcon {
+    --error-text: #f87171;
+  }
+
+  :global([data-theme=\'dark\']) .errorMessage {
+    --error-text: #f5c2c7;
+    --error-bg: #5c1f24;
+    --error-border: #842029;
+  }
+
+  :global([data-theme=\'dark\']) .helperText {
+    --text-secondary: #adb5bd;
+  }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {

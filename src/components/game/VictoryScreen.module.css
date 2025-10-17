@@ -259,12 +259,13 @@
 }
 
 /* Dark mode support */
+/* Dark mode - system preference */
 @media (prefers-color-scheme: dark) {
-  .overlay {
+  :global(:root:not([data-theme='light'])) .overlay {
     background-color: rgba(0, 0, 0, 0.95);
   }
 
-  .container {
+  :global(:root:not([data-theme='light'])) .container {
     --bg-modal: #1e1e1e;
     --bg-secondary: #2d2d2d;
     --text-primary: #f8f9fa;
@@ -280,9 +281,34 @@
     --focus-color: #4da3ff;
   }
 
-  .title {
+  :global(:root:not([data-theme='light'])) .title {
     --color-primary: #4da3ff;
   }
+}
+
+/* Dark mode - manual toggle */
+:global([data-theme='dark']) .overlay {
+  background-color: rgba(0, 0, 0, 0.95);
+}
+
+:global([data-theme='dark']) .container {
+  --bg-modal: #1e1e1e;
+  --bg-secondary: #2d2d2d;
+  --text-primary: #f8f9fa;
+  --text-secondary: #adb5bd;
+  --text-tertiary: #868e96;
+  --btn-primary-bg: #0056b3;
+  --btn-primary-border: #004085;
+  --btn-primary-hover: #004085;
+  --btn-secondary-bg: #343a40;
+  --btn-secondary-border: #495057;
+  --btn-secondary-hover: #495057;
+  --btn-secondary-color: #f8f9fa;
+  --focus-color: #4da3ff;
+}
+
+:global([data-theme='dark']) .title {
+  --color-primary: #4da3ff;
 }
 
 /* Reduced motion */
@@ -336,4 +362,69 @@
   .title {
     font-size: var(--font-size-2xl, 2.5rem);
   }
+}
+
+/* Player Statistics Sections */
+.playerStats {
+  margin-top: var(--spacing-lg, 1.5rem);
+  padding: var(--spacing-md, 1rem);
+  background: var(--surface-secondary, rgba(255, 255, 255, 0.05));
+  border-radius: var(--border-radius-md, 8px);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.playerStatsTitle {
+  font-size: var(--font-size-lg, 1.25rem);
+  font-weight: 600;
+  margin-bottom: var(--spacing-md, 1rem);
+  color: var(--text-primary, #fff);
+}
+
+.courtSection,
+.autoScoredSection,
+.capturedSection {
+  margin-bottom: var(--spacing-md, 1rem);
+}
+
+.courtSection:last-child,
+.autoScoredSection:last-child,
+.capturedSection:last-child {
+  margin-bottom: 0;
+}
+
+.courtLabel,
+.autoScoredLabel,
+.capturedLabel {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  margin-bottom: var(--spacing-sm, 0.5rem);
+}
+
+.autoScoredLabel {
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.piecesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm, 0.5rem);
+  margin-top: var(--spacing-sm, 0.5rem);
+}
+
+.piece {
+  font-size: 2rem;
+  display: inline-block;
+  padding: var(--spacing-xs, 0.25rem);
+  background: var(--surface-tertiary, rgba(255, 255, 255, 0.1));
+  border-radius: var(--border-radius-sm, 4px);
+  min-width: 2.5rem;
+  text-align: center;
+  cursor: help;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.piece:hover {
+  transform: scale(1.1);
+  background: var(--surface-hover, rgba(255, 255, 255, 0.15));
 }

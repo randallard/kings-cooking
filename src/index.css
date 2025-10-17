@@ -48,9 +48,9 @@
   --transition-base: 250ms ease-in-out;
 }
 
-/* Dark Mode */
+/* Dark Mode - Both system preference AND manual toggle via data-theme */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     /* Colors */
     --color-bg: #1a1a1a;
     --color-bg-secondary: #2d2d2d;
@@ -68,6 +68,26 @@
     --color-square-selected: #ecc94b;
     --color-square-valid-move: rgba(0, 255, 0, 0.4);
   }
+}
+
+/* Manual dark mode override via data-theme attribute */
+:root[data-theme='dark'] {
+  /* Colors */
+  --color-bg: #1a1a1a;
+  --color-bg-secondary: #2d2d2d;
+  --color-text: #f5f5f5;
+  --color-text-secondary: #a0a0a0;
+  --color-border: #404040;
+  --color-primary: #60a5fa;
+  --color-primary-hover: #3b82f6;
+  --color-error: #f87171;
+  --color-success: #34d399;
+
+  /* Chess board colors - adjusted for dark mode */
+  --color-square-light: #4a5568;
+  --color-square-dark: #2d3748;
+  --color-square-selected: #ecc94b;
+  --color-square-valid-move: rgba(0, 255, 0, 0.4);
 }
 
 /* Base styles */

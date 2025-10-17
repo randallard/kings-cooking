@@ -112,8 +112,21 @@
   margin-right: var(--spacing-xs, 0.25rem);
 }
 
-/* Dark mode */
-[data-theme='dark'] .container {
+/* Dark mode - system preference */
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .container {
+    --text-primary: #f8f9fa;
+    --text-secondary: #adb5bd;
+    --bg-secondary: #343a40;
+    --border-color: #495057;
+    --bg-hover: #495057;
+    --border-hover: #6c757d;
+    --focus-color: #4da3ff;
+  }
+}
+
+/* Dark mode - manual toggle */
+:global([data-theme='dark']) .container {
   --text-primary: #f8f9fa;
   --text-secondary: #adb5bd;
   --bg-secondary: #343a40;

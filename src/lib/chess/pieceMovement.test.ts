@@ -310,5 +310,64 @@ describe('pieceMovement', () => {
 
       expect(result).toBe(false);
     });
+
+    // Rule 1: Bishop on opponent's starting row tests
+    describe('edge position rule', () => {
+      test('white bishop at [0, 0] (black starting row, left corner) can move off-board', () => {
+        const whiteBishop = createMockPiece('bishop', 'white', [0, 0]);
+        const result = canBishopMoveOffBoard([0, 0], whiteBishop, emptyBoard());
+
+        expect(result).toBe(true);
+      });
+
+      test('white bishop at [0, 1] (black starting row, middle) can move off-board', () => {
+        const whiteBishop = createMockPiece('bishop', 'white', [0, 1]);
+        const result = canBishopMoveOffBoard([0, 1], whiteBishop, emptyBoard());
+
+        expect(result).toBe(true);
+      });
+
+      test('white bishop at [0, 2] (black starting row, right corner) can move off-board', () => {
+        const whiteBishop = createMockPiece('bishop', 'white', [0, 2]);
+        const result = canBishopMoveOffBoard([0, 2], whiteBishop, emptyBoard());
+
+        expect(result).toBe(true);
+      });
+
+      test('black bishop at [2, 0] (white starting row, left corner) can move off-board', () => {
+        const blackBishop = createMockPiece('bishop', 'black', [2, 0]);
+        const result = canBishopMoveOffBoard([2, 0], blackBishop, emptyBoard());
+
+        expect(result).toBe(true);
+      });
+
+      test('black bishop at [2, 1] (white starting row, middle) can move off-board', () => {
+        const blackBishop = createMockPiece('bishop', 'black', [2, 1]);
+        const result = canBishopMoveOffBoard([2, 1], blackBishop, emptyBoard());
+
+        expect(result).toBe(true);
+      });
+
+      test('black bishop at [2, 2] (white starting row, right corner) can move off-board', () => {
+        const blackBishop = createMockPiece('bishop', 'black', [2, 2]);
+        const result = canBishopMoveOffBoard([2, 2], blackBishop, emptyBoard());
+
+        expect(result).toBe(true);
+      });
+
+      test('white bishop at [2, 0] (own starting row) cannot move off-board', () => {
+        const whiteBishop = createMockPiece('bishop', 'white', [2, 0]);
+        const result = canBishopMoveOffBoard([2, 0], whiteBishop, emptyBoard());
+
+        expect(result).toBe(false);
+      });
+
+      test('black bishop at [0, 0] (own starting row) cannot move off-board', () => {
+        const blackBishop = createMockPiece('bishop', 'black', [0, 0]);
+        const result = canBishopMoveOffBoard([0, 0], blackBishop, emptyBoard());
+
+        expect(result).toBe(false);
+      });
+    });
   });
 });

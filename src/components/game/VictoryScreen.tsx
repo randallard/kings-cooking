@@ -4,6 +4,7 @@
  */
 
 import { type ReactElement } from 'react';
+import type { Piece } from '@/lib/validation/schemas';
 import styles from './VictoryScreen.module.css';
 
 interface VictoryScreenProps {
@@ -17,10 +18,16 @@ interface VictoryScreenProps {
   totalMoves: number;
   /** Game duration in seconds */
   gameDuration: number;
-  /** White player's captured pieces count */
-  whiteCaptured: number;
-  /** Black player's captured pieces count */
-  blackCaptured: number;
+  /** White pieces in Black's court (scored by white) */
+  whiteCourt: Piece[];
+  /** Black pieces in White's court (scored by black) */
+  blackCourt: Piece[];
+  /** White player's captured pieces */
+  capturedWhite: Piece[];
+  /** Black player's captured pieces */
+  capturedBlack: Piece[];
+  /** Game board to check for auto-scored pieces */
+  board: (Piece | null)[][];
   /** Callback for starting a new game */
   onNewGame: () => void;
   /** Callback for sharing the result */
@@ -69,12 +76,34 @@ export const VictoryScreen = ({
   loserName,
   totalMoves,
   gameDuration,
-  whiteCaptured,
-  blackCaptured,
+  whiteCourt,
+  blackCourt,
+  capturedWhite,
+  capturedBlack,
+  board,
   onNewGame,
   onShare,
   onReviewMoves,
 }: VictoryScreenProps): ReactElement => {
+  // Extract auto-scored pieces (pieces still on board when game ended)
+  const getAutoScoredPieces = (owner: 'white' | 'black'): Piece[] => {
+    const pieces: Piece[] = [];
+    for (let row = 0; row < board.length; row++) {
+      const boardRow = board[row];
+      if (!boardRow) continue;
+      for (let col = 0; col < boardRow.length; col++) {
+        const piece = boardRow[col];
+        if (piece && piece.owner === owner) {
+          pieces.push(piece);
+        }
+      }
+    }
+    return pieces;
+  };
+
+  const whiteAutoScored = getAutoScoredPieces('white');
+  const blackAutoScored = getAutoScoredPieces('black');
+
   // Format duration from seconds to MM:SS
   const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -101,6 +130,19 @@ export const VictoryScreen = ({
     }
     const winnerColor = winner === 'white' ? 'White' : 'Black';
     return `${winnerColor} is victorious!`;
+  };
+
+  // Get piece symbol for display
+  const getPieceSymbol = (piece: Piece): string => {
+    const symbols: Record<string, string> = {
+      king: '♔',
+      queen: '♕',
+      rook: '♖',
+      bishop: '♗',
+      knight: '♘',
+      pawn: '♙',
+    };
+    return symbols[piece.type] || '?';
   };
 
   return (
@@ -143,13 +185,99 @@ export const VictoryScreen = ({
               <span className={styles.statLabel}>Duration</span>
               <span className={styles.statValue}>{formatDuration(gameDuration)}</span>
             </div>
-            <div className={styles.statItem}>
-              <span className={styles.statLabel}>White Captured</span>
-              <span className={styles.statValue}>{whiteCaptured}</span>
+          </div>
+
+          {/* White Player Stats */}
+          <div className={styles.playerStats}>
+            <h3 className={styles.playerStatsTitle}>White Player (Player 1)</h3>
+            <div className={styles.courtSection}>
+              <div className={styles.courtLabel}>
+                <strong>Scored in Black's Court:</strong> {whiteCourt.length} piece{whiteCourt.length !== 1 ? 's' : ''}
+              </div>
+              {whiteCourt.length > 0 && (
+                <div className={styles.piecesList}>
+                  {whiteCourt.map((piece, idx) => (
+                    <span key={`white-court-${idx}`} className={styles.piece} title={piece.type}>
+                      {getPieceSymbol(piece)}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className={styles.statItem}>
-              <span className={styles.statLabel}>Black Captured</span>
-              <span className={styles.statValue}>{blackCaptured}</span>
+            {whiteAutoScored.length > 0 && (
+              <div className={styles.autoScoredSection}>
+                <div className={styles.autoScoredLabel}>
+                  <strong>Auto-scored (on board at game end):</strong> {whiteAutoScored.length} piece{whiteAutoScored.length !== 1 ? 's' : ''}
+                </div>
+                <div className={styles.piecesList}>
+                  {whiteAutoScored.map((piece, idx) => (
+                    <span key={`white-auto-${idx}`} className={styles.piece} title={piece.type}>
+                      {getPieceSymbol(piece)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className={styles.capturedSection}>
+              <div className={styles.capturedLabel}>
+                <strong>Captured:</strong> {capturedWhite.length} piece{capturedWhite.length !== 1 ? 's' : ''}
+              </div>
+              {capturedWhite.length > 0 && (
+                <div className={styles.piecesList}>
+                  {capturedWhite.map((piece, idx) => (
+                    <span key={`white-captured-${idx}`} className={styles.piece} title={piece.type}>
+                      {getPieceSymbol(piece)}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Black Player Stats */}
+          <div className={styles.playerStats}>
+            <h3 className={styles.playerStatsTitle}>Black Player (Player 2)</h3>
+            <div className={styles.courtSection}>
+              <div className={styles.courtLabel}>
+                <strong>Scored in White's Court:</strong> {blackCourt.length} piece{blackCourt.length !== 1 ? 's' : ''}
+              </div>
+              {blackCourt.length > 0 && (
+                <div className={styles.piecesList}>
+                  {blackCourt.map((piece, idx) => (
+                    <span key={`black-court-${idx}`} className={styles.piece} title={piece.type}>
+                      {getPieceSymbol(piece)}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            {blackAutoScored.length > 0 && (
+              <div className={styles.autoScoredSection}>
+                <div className={styles.autoScoredLabel}>
+                  <strong>Auto-scored (on board at game end):</strong> {blackAutoScored.length} piece{blackAutoScored.length !== 1 ? 's' : ''}
+                </div>
+                <div className={styles.piecesList}>
+                  {blackAutoScored.map((piece, idx) => (
+                    <span key={`black-auto-${idx}`} className={styles.piece} title={piece.type}>
+                      {getPieceSymbol(piece)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className={styles.capturedSection}>
+              <div className={styles.capturedLabel}>
+                <strong>Captured:</strong> {capturedBlack.length} piece{capturedBlack.length !== 1 ? 's' : ''}
+              </div>
+              {capturedBlack.length > 0 && (
+                <div className={styles.piecesList}>
+                  {capturedBlack.map((piece, idx) => (
+                    <span key={`black-captured-${idx}`} className={styles.piece} title={piece.type}>
+                      {getPieceSymbol(piece)}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
