@@ -171,7 +171,7 @@ Transform App.tsx from a Phase 4 component showcase into a production-ready ches
 
 **Phase 1: Name Entry + Warning**
 - Player 1 (Alice) enters name
-- ⚠️ Warning: "Keep this browser tab open and don't clear cache during the game"
+- ⚠️ Warning: "Don't clear cache during the game"
 - Alice makes first move
 
 **Phase 2: URL Generation (First Move)**
@@ -674,6 +674,24 @@ export function App(): ReactElement {
 - `VictoryScreen.tsx` (lines 9-30): Complete props
 - `URLSharer.tsx` (lines 9-14): URL + onCopy callback
 - `NameForm.tsx` (lines 10-17): Storage key + validation
+
+### Project-Specific Documentation (MUST READ)
+
+**CRITICAL**: `/home/ryankhetlyr/Development/kings-cooking/claude_md_files/CLAUDE-REACT.md`
+- **Lines 100-122**: MANDATORY React 19 TypeScript patterns
+  - MUST use `ReactElement` instead of `JSX.Element`
+  - MUST import `ReactElement` from 'react' explicitly
+  - All function components MUST have explicit return types
+- **Lines 23-28**: Design principles (Vertical Slice Architecture, Composition, Fail Fast)
+- **Lines 89-91**: React Compiler - no manual memoization needed
+- **Lines 124-150**: Actions API examples with documentation patterns
+- **Line 47**: TDD requirement - create tests BEFORE implementation
+
+**Phase 3 Decision Documentation**:
+- `/home/ryankhetlyr/Development/kings-cooking/PRPs/phase-3-decisions-summary.md`
+  - **Lines 226, 232-244**: Hot-seat vs URL mode separation
+  - Hot-seat: localStorage ONLY, NO URL generation
+  - URL mode: URLs generated after every move
 
 ### External Research References
 
@@ -1316,7 +1334,7 @@ curl http://localhost:4173/kings-cooking/ | grep "King's Cooking"
 - [ ] Page refresh resumes hot-seat game
 
 ### URL Mode Specific
-- [ ] Warning shown: "Keep browser tab open..."
+- [ ] Warning shown: "Don't clear browser cache..."
 - [ ] First move generates full-state URL (~500-1000 chars)
 - [ ] Subsequent moves generate delta URLs (~100-200 chars)
 - [ ] URLSharer component shows with copy button

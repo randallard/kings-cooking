@@ -1,252 +1,467 @@
-import { ReactElement, useState } from 'react';
+import { ReactElement, useReducer, useEffect } from 'react';
+import { gameFlowReducer } from './lib/gameFlow/reducer';
 import { storage } from './lib/storage/localStorage';
-import { GameIdSchema } from './lib/validation/schemas';
-import { GameBoard } from './components/game/GameBoard';
-import { KingsChessEngine } from './lib/chess/KingsChessEngine';
-import { MoveConfirmButton } from './components/game/MoveConfirmButton';
-import { URLSharer } from './components/game/URLSharer';
+import { useUrlState } from './hooks/useUrlState';
+import { ModeSelector } from './components/game/ModeSelector';
 import { NameForm } from './components/game/NameForm';
-import type { GameState, Position } from './lib/validation/schemas';
+import { GameBoard } from './components/game/GameBoard';
+import { MoveConfirmButton } from './components/game/MoveConfirmButton';
+import { HandoffScreen } from './components/game/HandoffScreen';
+import { VictoryScreen } from './components/game/VictoryScreen';
+import { URLSharer } from './components/game/URLSharer';
+import { KingsChessEngine } from './lib/chess/KingsChessEngine';
 
 /**
- * Main App component demonstrating Phase 1-4 implementation
- * Shows validation status, dark mode support, and interactive game board
+ * Main App component for King's Cooking Chess Game.
+ *
+ * Implements a dual-mode chess game using the gameFlowReducer state machine:
+ * - Hot-seat mode: Local multiplayer on same device
+ * - URL mode: Remote multiplayer via shareable URLs
+ *
+ * Phase flow:
+ * 1. mode-selection: Choose game mode
+ * 2. setup: Player 1 enters name
+ * 3. playing: Active gameplay with move confirmation
+ * 4. handoff: Transition between players (mode-specific UI)
+ * 5. victory: Game end with statistics
  *
  * @returns App component
  */
-function App(): ReactElement {
-  // Create initial game state
-  const [gameState, setGameState] = useState<GameState>(() => {
-    const whitePlayer = { id: crypto.randomUUID() as never, name: 'Player 1' };
-    const blackPlayer = { id: crypto.randomUUID() as never, name: 'Player 2' };
-    const engine = new KingsChessEngine(whitePlayer, blackPlayer);
-    return engine.getGameState();
+export default function App(): ReactElement {
+  const [state, dispatch] = useReducer(gameFlowReducer, { phase: 'mode-selection' });
+
+  // URL state hook (Task 7) - enabled only in URL mode
+  const {
+    updateUrl,
+    updateUrlImmediate,
+    getShareUrl,
+  } = useUrlState({
+    onPayloadReceived: (payload) => {
+      // When URL payload is received, dispatch LOAD_FROM_URL action
+      // Filter to only full_state and delta types (exclude resync_request)
+      if (payload.type === 'full_state' || payload.type === 'delta') {
+        dispatch({ type: 'LOAD_FROM_URL', payload });
+      }
+    },
+    onError: (error) => {
+      console.error('URL state error:', error);
+      // TODO: Show error toast to user
+    },
   });
 
-  // Phase 4B component demo states
-  const [pendingMove, setPendingMove] = useState<{ from: Position; to: Position } | null>(null);
-  const [isProcessingMove, setIsProcessingMove] = useState(false);
-  const [moveError, setMoveError] = useState<string | null>(null);
-  const [currentUrl] = useState(() => `${window.location.origin}/game/${gameState.gameId}`);
+  // Task 10: Restore game state from localStorage on page refresh
+  useEffect(() => {
+    const savedMode = storage.getGameMode();
+    const savedGameState = storage.getGameState();
+    const savedPlayer1 = storage.getPlayer1Name();
 
-  const handleMove = (from: Position, to: Position): void => {
-    // Store pending move for confirmation
-    setPendingMove({ from, to });
-    setMoveError(null);
-  };
+    // Only restore if we're in mode-selection phase (initial mount)
+    if (state.phase === 'mode-selection' && savedMode && savedGameState) {
+      // We have a saved game - restore it
+      console.log('Restoring saved game from localStorage');
 
-  const handleConfirmMove = (): void => {
-    if (!pendingMove) return;
+      // Check if game is over
+      const isGameOver = savedGameState.status === 'white_wins' ||
+                        savedGameState.status === 'black_wins' ||
+                        savedGameState.status === 'draw';
 
-    setIsProcessingMove(true);
-    setMoveError(null);
+      if (isGameOver) {
+        // Game is over - let user start a new game instead of restoring victory screen
+        // Clear the saved state
+        storage.clearAll();
+        console.log('Cleared saved game (game was over)');
+      } else {
+        // Game is in progress - restore to playing phase
+        // We need to build the full playing state
+        dispatch({ type: 'SELECT_MODE', mode: savedMode });
 
-    // Simulate async move processing
-    setTimeout(() => {
+        if (savedPlayer1) {
+          dispatch({ type: 'SET_PLAYER1_NAME', name: savedPlayer1 });
+        }
+
+        dispatch({ type: 'START_GAME' });
+
+        // The START_GAME will create initial state, but we need to replace it with saved state
+        // This is handled by the reducer's LOAD_FROM_URL action for URL mode
+        // For hot-seat mode, we need the game state to be restored after START_GAME
+        // TODO: Add a RESTORE_GAME action for cleaner restoration
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only run on mount
+
+  // Task 9: Browser back button handling
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent): void => {
+      if (state.phase === 'playing' || state.phase === 'handoff') {
+        // Try to prevent navigation during active game
+        event.preventDefault();
+
+        // Push state back to keep user on page
+        window.history.pushState(null, '', window.location.href);
+
+        // Fallback: Reload from localStorage
+        const savedState = storage.getGameState();
+        if (savedState) {
+          console.log('Browser back button pressed - reloading game state from localStorage');
+          // TODO: Show toast notification: "Loaded current game state from device"
+        }
+      }
+    };
+
+    // Add listener
+    window.addEventListener('popstate', handlePopState);
+
+    // Prevent back navigation by pushing a state entry
+    if (state.phase === 'playing' || state.phase === 'handoff') {
+      window.history.pushState(null, '', window.location.href);
+    }
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [state.phase]);
+
+  // ===========================
+  // Phase 1: Mode Selection
+  // ===========================
+  if (state.phase === 'mode-selection') {
+    return (
+      <ModeSelector
+        onModeSelected={(mode) => {
+          dispatch({ type: 'SELECT_MODE', mode });
+          storage.setGameMode(mode);
+        }}
+      />
+    );
+  }
+
+  // ===========================
+  // Phase 2: Setup
+  // ===========================
+  if (state.phase === 'setup') {
+    return (
+      <div style={{
+        maxWidth: '600px',
+        margin: '0 auto',
+        padding: 'var(--spacing-xl)',
+      }}>
+        <h1 style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
+          King's Cooking Chess
+        </h1>
+        <div className="card">
+          <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Game Setup</h2>
+          <p style={{ marginBottom: 'var(--spacing-md)', color: 'var(--text-secondary)' }}>
+            {state.mode === 'hotseat'
+              ? 'Enter your name to start a hot-seat game. You\'ll pass the device back and forth.'
+              : 'Enter your name to start a URL-based game. You\'ll share a link after each move.'}
+          </p>
+          <NameForm
+            storageKey="player1"
+            onNameChange={(name) => {
+              dispatch({ type: 'SET_PLAYER1_NAME', name });
+            }}
+          />
+          <button
+            onClick={() => {
+              if (state.player1Name && state.player1Name.trim().length > 0) {
+                dispatch({ type: 'START_GAME' });
+              }
+            }}
+            disabled={!state.player1Name || state.player1Name.trim().length === 0}
+            style={{ marginTop: 'var(--spacing-md)', width: '100%' }}
+          >
+            Start Game
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ===========================
+  // Phase 3: Playing
+  // ===========================
+  if (state.phase === 'playing') {
+    const handleConfirmMove = (): void => {
+      if (!state.pendingMove) return;
+
+      // Create engine and load current game state
       const engine = new KingsChessEngine(
-        gameState.whitePlayer,
-        gameState.blackPlayer,
-        gameState
+        state.gameState.whitePlayer,
+        state.gameState.blackPlayer,
+        state.gameState
       );
 
-      const result = engine.makeMove(pendingMove.from, pendingMove.to);
+      // Execute the move
+      const result = engine.makeMove(state.pendingMove.from, state.pendingMove.to);
+
       if (result.success) {
-        setGameState(engine.getGameState());
-        setPendingMove(null);
-      } else {
-        setMoveError(result.error ?? 'Invalid move');
+        const newState = engine.getGameState();
+
+        // Save game state to localStorage
+        storage.setGameState(newState);
+
+        // Dispatch CONFIRM_MOVE with result
+        dispatch({
+          type: 'CONFIRM_MOVE',
+          result: {
+            newState,
+            engine,
+          },
+        });
+
+        // Task 7: Generate URL if in URL mode
+        if (state.mode === 'url' && state.pendingMove) {
+          const isFirstMove = newState.currentTurn === 1;
+
+          if (isFirstMove) {
+            // First move: Send full game state
+            updateUrlImmediate({
+              type: 'full_state',
+              gameState: newState,
+              playerName: state.player1Name || undefined,
+            });
+          } else {
+            // Subsequent moves: Send delta with checksum
+            // Ensure from/to are valid positions (not null)
+            const from = state.pendingMove.from;
+            const to = state.pendingMove.to;
+
+            if (from && to) {
+              updateUrl({
+                type: 'delta',
+                move: {
+                  from,
+                  to,
+                },
+                turn: newState.currentTurn,
+                checksum: engine.getChecksum(),
+                playerName: state.player2Name || undefined,
+              });
+            }
+          }
+
+          // Get the share URL and dispatch URL_GENERATED
+          const shareUrl = getShareUrl();
+          dispatch({ type: 'URL_GENERATED', url: shareUrl });
+        }
       }
-      setIsProcessingMove(false);
-    }, 500);
-  };
+    };
 
-  const handleNewGame = (): void => {
-    const whitePlayer = { id: crypto.randomUUID() as never, name: 'Player 1' };
-    const blackPlayer = { id: crypto.randomUUID() as never, name: 'Player 2' };
-    const engine = new KingsChessEngine(whitePlayer, blackPlayer);
-    setGameState(engine.getGameState());
-  };
-  const handleTestValidation = (): void => {
-    // Test Zod validation
-    const validGameId = GameIdSchema.safeParse('123e4567-e89b-12d3-a456-426614174000');
-    const invalidGameId = GameIdSchema.safeParse('invalid-id');
+    return (
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: 'var(--spacing-xl)',
+      }}>
+        <h1 style={{ textAlign: 'center', marginBottom: 'var(--spacing-md)' }}>
+          King's Cooking Chess
+        </h1>
 
-    console.log('Valid Game ID:', validGameId.success);
-    console.log('Invalid Game ID:', invalidGameId.success);
+        <div className="card" style={{ marginBottom: 'var(--spacing-md)' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 'var(--spacing-md)',
+          }}>
+            <div>
+              <strong>Current Turn:</strong>{' '}
+              {state.gameState.currentPlayer === 'white' ? (
+                state.player1Name || 'White'
+              ) : (
+                state.player2Name || 'Black'
+              )}
+            </div>
+            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
+              Move {state.gameState.currentTurn} | Mode: {state.mode}
+            </div>
+          </div>
 
-    // Test localStorage
-    const saved = storage.setMyName('Test Player');
-    const retrieved = storage.getMyName();
+          <GameBoard
+            gameState={state.gameState}
+            onMove={(from, to) => {
+              dispatch({ type: 'STAGE_MOVE', from, to });
+            }}
+            isPlayerTurn={true}
+          />
 
-    console.log('localStorage saved:', saved);
-    console.log('localStorage retrieved:', retrieved);
-
-    alert('Check console for validation results');
-  };
-
-  return (
-    <div style={{
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: 'var(--spacing-xl)'
-    }}>
-      <h1>King's Cooking - Phase 4 Demo</h1>
-
-      <div className="card" style={{ marginBottom: 'var(--spacing-lg)' }}>
-        <h2>🎮 Interactive Game Board</h2>
-        <p style={{ marginBottom: 'var(--spacing-md)' }}>
-          Click a piece to select it, then click a highlighted square to move.
-          Try making moves! Current turn: <strong>{gameState.currentPlayer}</strong>
-        </p>
-
-        <GameBoard
-          gameState={gameState}
-          onMove={handleMove}
-          isPlayerTurn={true}
-        />
-
-        <div style={{
-          marginTop: 'var(--spacing-md)',
-          display: 'flex',
-          gap: 'var(--spacing-sm)',
-          justifyContent: 'center'
-        }}>
-          <button onClick={handleNewGame}>
-            New Game
-          </button>
-          <button onClick={handleTestValidation}>
-            Test Validation
-          </button>
-        </div>
-
-        <div style={{ marginTop: 'var(--spacing-md)', fontSize: 'var(--font-size-sm)' }}>
-          <strong>Game Stats:</strong> Turn {gameState.currentTurn} |
-          White in court: {gameState.whiteCourt.length} |
-          Black in court: {gameState.blackCourt.length}
-          {(gameState.status === 'white_wins' || gameState.status === 'black_wins' || gameState.status === 'draw') && (
-            <div style={{ color: 'var(--color-success)', fontWeight: 'bold', marginTop: '0.5rem' }}>
-              🎉 Game Over! Winner: {gameState.winner ?? 'Draw'}
+          {state.pendingMove && (
+            <div style={{ marginTop: 'var(--spacing-md)' }}>
+              <MoveConfirmButton
+                onConfirm={handleConfirmMove}
+                disabled={false}
+                isProcessing={false}
+              />
             </div>
           )}
-        </div>
-      </div>
 
-      <div className="card" style={{ marginBottom: 'var(--spacing-lg)' }}>
-        <h2>🎯 Phase 4B: Game Controls Demo</h2>
-        <p style={{ marginBottom: 'var(--spacing-md)' }}>
-          Interactive demonstration of all 3 Phase 4B components with full accessibility support.
-        </p>
-
-        {/* MoveConfirmButton Demo */}
-        <div style={{
-          marginBottom: 'var(--spacing-lg)',
-          padding: 'var(--spacing-md)',
-          border: '1px solid var(--border-color, #e0e0e0)',
-          borderRadius: 'var(--border-radius-md, 0.5rem)',
-          backgroundColor: 'var(--bg-secondary, #f9f9f9)'
-        }}>
-          <h3 style={{ fontSize: 'var(--font-size-md)', marginBottom: 'var(--spacing-sm)' }}>
-            1. MoveConfirmButton
-          </h3>
-          <p style={{ fontSize: 'var(--font-size-sm)', marginBottom: 'var(--spacing-md)', color: 'var(--text-secondary)' }}>
-            Select a piece and move to see the confirm button in action. Features loading states, error handling, and retry.
-          </p>
-          <MoveConfirmButton
-            onConfirm={handleConfirmMove}
-            disabled={!pendingMove}
-            isProcessing={isProcessingMove}
-            error={moveError}
-          />
-          {pendingMove && !isProcessingMove && !moveError && (
-            <p style={{ fontSize: 'var(--font-size-sm)', marginTop: 'var(--spacing-sm)', color: 'var(--color-info)' }}>
-              Move pending: Click "Confirm Move" to apply
-            </p>
-          )}
-        </div>
-
-        {/* NameForm Demo */}
-        <div style={{
-          marginBottom: 'var(--spacing-lg)',
-          padding: 'var(--spacing-md)',
-          border: '1px solid var(--border-color, #e0e0e0)',
-          borderRadius: 'var(--border-radius-md, 0.5rem)',
-          backgroundColor: 'var(--bg-secondary, #f9f9f9)'
-        }}>
-          <h3 style={{ fontSize: 'var(--font-size-md)', marginBottom: 'var(--spacing-sm)' }}>
-            2. NameForm (localStorage Integration)
-          </h3>
-          <p style={{ fontSize: 'var(--font-size-sm)', marginBottom: 'var(--spacing-md)', color: 'var(--text-secondary)' }}>
-            Real-time validation with debounced localStorage persistence. Try special characters to see validation errors.
-          </p>
-          <div style={{ display: 'grid', gap: 'var(--spacing-md)', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
-            <NameForm
-              storageKey="my-name"
-              onNameChange={(name) => console.log('My name changed:', name)}
-            />
-            <NameForm
-              storageKey="player1"
-              onNameChange={(name) => console.log('Player 1 name changed:', name)}
-            />
-            <NameForm
-              storageKey="player2"
-              onNameChange={(name) => console.log('Player 2 name changed:', name)}
-            />
+          <div style={{
+            marginTop: 'var(--spacing-md)',
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--text-secondary)',
+          }}>
+            <strong>Game Stats:</strong> White in court: {state.gameState.whiteCourt.length} |
+            Black in court: {state.gameState.blackCourt.length}
           </div>
         </div>
-
-        {/* URLSharer Demo */}
-        <div style={{
-          marginBottom: 'var(--spacing-lg)',
-          padding: 'var(--spacing-md)',
-          border: '1px solid var(--border-color, #e0e0e0)',
-          borderRadius: 'var(--border-radius-md, 0.5rem)',
-          backgroundColor: 'var(--bg-secondary, #f9f9f9)'
-        }}>
-          <h3 style={{ fontSize: 'var(--font-size-md)', marginBottom: 'var(--spacing-sm)' }}>
-            3. URLSharer (Clipboard API)
-          </h3>
-          <p style={{ fontSize: 'var(--font-size-sm)', marginBottom: 'var(--spacing-md)', color: 'var(--text-secondary)' }}>
-            Copy game link to clipboard with modern Clipboard API + execCommand fallback. Toast notifications on success/error.
-          </p>
-          <URLSharer
-            url={currentUrl}
-            onCopy={() => console.log('Game URL copied to clipboard!')}
-          />
-        </div>
-
-        <div style={{
-          padding: 'var(--spacing-sm)',
-          backgroundColor: 'var(--bg-info, #e3f2fd)',
-          borderRadius: 'var(--border-radius-sm)',
-          fontSize: 'var(--font-size-sm)',
-          color: 'var(--text-info, #1976d2)'
-        }}>
-          <strong>✨ Features:</strong> All components support dark mode, mobile responsive design,
-          keyboard navigation, screen readers (WCAG 2.1 AA), and have 80%+ test coverage.
-        </div>
       </div>
+    );
+  }
 
-      <div className="card" style={{ marginBottom: 'var(--spacing-lg)' }}>
-        <h2>✅ Implementation Status</h2>
-        <ul style={{
-          listStyle: 'none',
-          padding: 0,
-          marginBottom: 'var(--spacing-md)'
+  // ===========================
+  // Phase 4: Handoff
+  // ===========================
+  if (state.phase === 'handoff') {
+    // Hot-seat mode: Show privacy screen with "I'm Ready" button
+    if (state.mode === 'hotseat') {
+      // If player2Name is empty on first handoff, prompt for name
+      if (!state.player2Name || state.player2Name.trim().length === 0) {
+        return (
+          <div style={{
+            maxWidth: '600px',
+            margin: '0 auto',
+            padding: 'var(--spacing-xl)',
+          }}>
+            <h1 style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
+              Player 2's Turn
+            </h1>
+            <div className="card">
+              <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Enter Your Name</h2>
+              <p style={{ marginBottom: 'var(--spacing-md)', color: 'var(--text-secondary)' }}>
+                Before we continue, Player 2 needs to enter their name.
+              </p>
+              <NameForm
+                storageKey="player2"
+                onNameChange={(name) => {
+                  dispatch({ type: 'SET_PLAYER2_NAME', name });
+                }}
+              />
+              <button
+                onClick={() => {
+                  if (state.player2Name && state.player2Name.trim().length > 0) {
+                    dispatch({ type: 'COMPLETE_HANDOFF' });
+                  }
+                }}
+                disabled={!state.player2Name || state.player2Name.trim().length === 0}
+                style={{ marginTop: 'var(--spacing-md)', width: '100%' }}
+              >
+                Continue to Game
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      // Show HandoffScreen with countdown
+      const previousPlayer = state.gameState.currentPlayer === 'white' ? 'black' : 'white';
+      const previousPlayerName = previousPlayer === 'white'
+        ? (state.player1Name || 'White')
+        : (state.player2Name || 'Black');
+      const nextPlayerName = state.gameState.currentPlayer === 'white'
+        ? (state.player1Name || 'White')
+        : (state.player2Name || 'Black');
+
+      return (
+        <HandoffScreen
+          nextPlayer={state.gameState.currentPlayer}
+          nextPlayerName={nextPlayerName}
+          previousPlayer={previousPlayer}
+          previousPlayerName={previousPlayerName}
+          onContinue={() => {
+            dispatch({ type: 'COMPLETE_HANDOFF' });
+          }}
+          countdownSeconds={3}
+        />
+      );
+    } else {
+      // URL mode: Show URLSharer with generated URL
+      const shareUrl = state.generatedUrl || getShareUrl();
+
+      return (
+        <div style={{
+          maxWidth: '600px',
+          margin: '0 auto',
+          padding: 'var(--spacing-xl)',
         }}>
-          <li className="text-success">✓ Phase 1: Foundation (React 19, TypeScript, Testing)</li>
-          <li className="text-success">✓ Phase 2: Chess Engine (Move validation, Victory conditions)</li>
-          <li className="text-success">✓ Phase 3: URL State Synchronization</li>
-          <li className="text-success">✓ Phase 4A: GameBoard & GameCell Components (93.33% test coverage)</li>
-          <li className="text-success">✓ Phase 4B: Game Controls (89 tests, 98%+ coverage)</li>
-          <li style={{ color: 'var(--color-warning)' }}>⏳ Phase 4C: Remaining UI components (upcoming)</li>
-        </ul>
+          <h1 style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
+            Share Your Move
+          </h1>
+          <div className="card">
+            <p style={{ marginBottom: 'var(--spacing-md)' }}>
+              Copy the URL below and send it to your opponent to continue the game.
+            </p>
+            <URLSharer
+              url={shareUrl}
+              onCopy={() => {
+                console.log('URL copied to clipboard');
+                // TODO (Task 8): Add toast notification
+              }}
+            />
+            <p style={{
+              marginTop: 'var(--spacing-md)',
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--text-secondary)',
+            }}>
+              ⏳ Waiting for your opponent to make their move...
+            </p>
+          </div>
+        </div>
+      );
+    }
+  }
 
-        <p style={{ fontSize: 'var(--font-size-sm)' }}>
-          <strong>Dark Mode:</strong> Toggle your OS dark mode to see theme changes.
-        </p>
-      </div>
-    </div>
-  );
+  // ===========================
+  // Phase 5: Victory
+  // ===========================
+  if (state.phase === 'victory') {
+    // Build VictoryScreen props conditionally to satisfy exactOptionalPropertyTypes
+    const victoryProps: {
+      winner: 'white' | 'black' | 'draw';
+      winnerName?: string;
+      loserName?: string;
+      totalMoves: number;
+      gameDuration: number;
+      whiteCaptured: number;
+      blackCaptured: number;
+      onNewGame: () => void;
+      onShare?: () => void;
+    } = {
+      winner: state.winner,
+      totalMoves: state.gameState.currentTurn,
+      gameDuration: 0, // TODO: Track game duration in state
+      whiteCaptured: state.gameState.capturedWhite.length,
+      blackCaptured: state.gameState.capturedBlack.length,
+      onNewGame: () => {
+        dispatch({ type: 'NEW_GAME' });
+        storage.clearAll();
+      },
+    };
+
+    // Add optional props only if they have values
+    if (state.winner !== 'draw') {
+      const winnerName = state.winner === 'white' ? state.player1Name : state.player2Name;
+      const loserName = state.winner === 'white' ? state.player2Name : state.player1Name;
+
+      if (winnerName) {
+        victoryProps.winnerName = winnerName;
+      }
+      if (loserName) {
+        victoryProps.loserName = loserName;
+      }
+    }
+
+    if (state.mode === 'url') {
+      victoryProps.onShare = () => {
+        // TODO: Generate victory URL for sharing
+        console.log('Share victory result');
+      };
+    }
+
+    return <VictoryScreen {...victoryProps} />;
+  }
+
+  // This should never be reached due to exhaustive phase checking
+  throw new Error('Invalid game flow state: Unknown phase');
 }
-
-export default App;

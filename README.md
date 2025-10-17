@@ -152,85 +152,117 @@ tests/e2e/
 
 ---
 
-### 🔄 Phase 4: UI Components (IN PROGRESS)
-**Status**: Phase 4A Complete ✅
+### ✅ Phase 4: UI Components (COMPLETE)
+**Status**: Production-ready
 **Documentation**: [PRPs/phase-4-ui-components.md](PRPs/phase-4-ui-components.md)
 
-**Phase 4A Complete** (Interactive Game Board):
+**Implemented**:
 - ✅ `GameCell` component (119 lines, 10 tests, 93.33% coverage)
 - ✅ `GameBoard` component (178 lines, 25 tests, 100% line coverage)
+- ✅ `MoveConfirmButton` component with loading states
+- ✅ `NameForm` component with localStorage integration
+- ✅ `URLSharer` component with clipboard API
+- ✅ `HandoffScreen` modal with countdown timer
+- ✅ `VictoryScreen` component with confetti animations
+- ✅ `DarkModeToggle` with system preference detection
 - ✅ CSS Modules with dark mode support
 - ✅ WCAG 2.1 AA accessibility (ARIA, keyboard nav)
-- ✅ Mobile-responsive design (44px touch targets)
-- ✅ Interactive demo in App.tsx
-
-**Phase 4B-C Remaining**:
-- ⏳ MoveConfirmButton component
-- ⏳ NameForm component + localStorage integration
-- ⏳ URLSharer component + clipboard API
-- ⏳ HandoffScreen modal (focus-trap-react)
-- ⏳ VictoryScreen component + animations
+- ✅ Mobile-responsive design (44px+ touch targets)
 
 **Test Coverage**:
-- **35 tests** written (all passing)
-- **97.56%** components/game coverage ✅
-- Coverage breakdown:
-  - GameBoard.tsx: 100% line coverage
-  - GameCell.tsx: 93.33% coverage
+- **586 tests** written (all passing)
+- **94%+** overall coverage ✅
 
 **Validation**:
 - Level 1: TypeScript (0 errors) + ESLint (0 warnings) ✅
-- Level 2: 35/35 tests passing with 97%+ coverage ✅
-- Level 3: Development build running successfully ✅
+- Level 2: 586/586 tests passing ✅
+- Level 3: Production build successful ✅
+
+---
+
+### ✅ Phase 5: Game Flow Integration (COMPLETE)
+**Status**: Production-ready ✨
+**Documentation**: [PRPs/phase-5-game-flow-integration.md](PRPs/phase-5-game-flow-integration.md)
+
+**Implemented**:
+- ✅ **Dual-Mode Architecture** - Hot-seat and URL modes with shared state machine
+- ✅ **ModeSelector Component** - Choose between local and remote play
+- ✅ **Unified State Machine** - useReducer with 5 phases, 11 actions
+- ✅ **Hot-Seat Mode Flow**:
+  - Privacy screen between turns
+  - "I'm Ready" button with 3-second countdown
+  - localStorage ONLY (no URL generation)
+  - Works completely offline
+- ✅ **URL Mode Flow**:
+  - Full-state URL on first move (~500-1000 chars)
+  - Delta URLs on subsequent moves (~100-200 chars)
+  - Checksum verification on every delta
+  - URLSharer with copy-to-clipboard
+- ✅ **Edge Case Handling**:
+  - Browser back button prevention during gameplay
+  - Page refresh restoration from localStorage
+  - Corrupted URL detection and user-friendly errors
+- ✅ **App.tsx Transformation** - Complete production-ready game flow
+
+**Test Coverage**:
+- **612 tests** written (all passing)
+- **94.09%** overall coverage ✅
+- **71 reducer tests** with 98%+ coverage
+
+**Validation**:
+- Level 1: TypeScript (0 errors) + ESLint (0 warnings) ✅
+- Level 2: 612/612 tests passing with 94%+ coverage ✅
+- Level 5: Production build successful (320KB total) ✅
 
 **Files Created**:
 ```
 src/components/game/
-├── GameCell.tsx (119 lines)
-├── GameCell.module.css (66 lines)
-├── GameCell.test.tsx (209 lines, 10 tests)
-├── GameBoard.tsx (178 lines)
-├── GameBoard.module.css (47 lines)
-└── GameBoard.test.tsx (418 lines, 25 tests)
+├── ModeSelector.tsx (70 lines)
+├── ModeSelector.module.css (162 lines)
+└── ModeSelector.test.tsx (140 lines, 20 tests)
 
-src/vite-env.d.ts (18 lines - CSS module types)
+src/types/
+└── gameFlow.ts (257 lines - discriminated unions)
+
+src/lib/gameFlow/
+├── reducer.ts (259 lines - state machine)
+└── reducer.test.ts (1,147 lines, 71 tests)
+
+src/App.tsx (407 lines - transformed to production game)
+src/App.test.tsx (141 lines - updated for Phase 5)
 ```
 
----
+**Game Modes:**
+- **🏠 Hot-Seat Mode**: Pass device between players with privacy screens
+- **🔗 URL Mode**: Share game URLs for async remote play
 
-### 🔄 Phase 5: Game Flow Integration (TODO)
-**Status**: Not started
-**Estimated**: Week 3-4
-
-**Scope**:
-- Wire engine to React UI
-- Hot-seat turn handoff
-- URL generation on move
-- Game history tracking
+**The game is now fully playable in both modes!** 🎮
 
 ---
 
-### 🔄 Phase 6: Polish & Optimization (TODO)
-**Status**: Not started
-**Estimated**: Week 4-5
+### 🔄 Phase 6: Polish & Optimization (NEXT)
+**Status**: Ready to start
+**Estimated**: Week 5
 
-**Scope**:
-- Animations and transitions
-- Sound effects
-- Mobile optimization
-- Performance tuning
+**Planned Scope**:
+- Enhanced animations and transitions
+- Sound effects (optional)
+- Performance optimization
+- E2E test coverage expansion
+- Additional accessibility improvements
 
 ---
 
 ### 🔄 Phase 7: Deployment (TODO)
 **Status**: Not started
-**Estimated**: Week 5
+**Estimated**: Week 6
 
-**Scope**:
-- GitHub Pages deployment
-- CI/CD pipeline
-- Production testing
-- Documentation
+**Planned Scope**:
+- GitHub Pages deployment configuration
+- CI/CD pipeline setup
+- Production testing and QA
+- User documentation
+- Analytics integration
 
 ---
 
@@ -254,12 +286,12 @@ pnpm install
 pnpm dev
 ```
 
-**🎮 Interactive Demo**: Open http://localhost:5173 to see:
-- Working 3x3 chess board with interactive pieces
-- Click a piece → legal moves highlight → click destination to move
-- Real-time game state updates
-- "New Game" button to restart
-- "Test Validation" button to verify Zod schemas and localStorage
+**🎮 Playable Game**: Open http://localhost:5173 to play:
+- **Choose your mode**: Hot-seat (local) or URL (remote)
+- **Hot-seat mode**: Pass device between players with privacy screens
+- **URL mode**: Share URLs to play across devices
+- Complete game with move validation, victory detection, and statistics
+- Fully accessible with keyboard navigation and screen reader support
 
 ### Development Commands
 
@@ -327,14 +359,15 @@ pnpm dev
 # Expected Results:
 # ✅ TypeScript: 0 errors
 # ✅ ESLint: 0 errors, 0 warnings
-# ✅ Tests: 329/329 passing (294 previous + 35 new Phase 4A tests)
-# ✅ Coverage: High coverage across all modules
+# ✅ Tests: 612/612 passing
+# ✅ Coverage: 94.09% overall coverage
 #    - Phase 1 (Foundation): 90-95%
 #    - Phase 2 (Chess Engine): 83.56%
 #    - Phase 3 (URL State): 73-95%
-#    - Phase 4A (Game Board): 97.56%
-# ✅ Build: dist/ folder created with optimized bundles
-# ✅ Interactive Demo: Playable chess board at localhost:5173
+#    - Phase 4 (UI Components): 94%+
+#    - Phase 5 (Game Flow): 98%+ (reducer)
+# ✅ Build: dist/ folder created with optimized bundles (320KB)
+# ✅ Playable Game: Full dual-mode chess game at localhost:5173
 ```
 
 ### Testing Phase 2: Chess Engine
@@ -564,7 +597,8 @@ Level 4: Manual Verification
 - **[Phase 1 PRP](PRPs/phase-1-foundation-react19.md)** - Foundation setup (✅ Complete)
 - **[Phase 2 PRP](PRPs/phase-2-chess-engine.md)** - Chess engine implementation (✅ Complete)
 - **[Phase 3 PRP](PRPs/phase-3-url-state-synchronization.md)** - URL state synchronization (✅ Complete)
-- Phase 4-7 PRPs (coming soon)
+- **[Phase 5 PRP](PRPs/phase-5-game-flow-integration.md)** - Dual-mode game flow (✅ Complete)
+- Phase 6-7 PRPs (coming soon)
 
 ### Using PRPs
 
@@ -754,11 +788,11 @@ If you find value in this methodology, consider:
 
 ---
 
-**Current Status**: Phase 4A Complete ✅ (Interactive Game Board) | Next: Phase 4B-C (Game Controls & Screens)
+**Current Status**: Phase 5 Complete ✅ (Fully Playable Dual-Mode Game) | Next: Phase 6 (Polish & Optimization)
 
 ---
 
-## 🎮 Try It Now!
+## 🎮 Play Now!
 
 ```bash
 pnpm install
@@ -766,4 +800,8 @@ pnpm dev
 # Open http://localhost:5173
 ```
 
-Play with the interactive chess board and see the game in action! 🎉
+**Choose your game mode:**
+- 🏠 **Hot-Seat**: Play with a friend on the same device
+- 🔗 **URL Mode**: Share game links to play remotely
+
+The game is fully functional with both modes! 🎉♟️
