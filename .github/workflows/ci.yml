@@ -117,19 +117,29 @@ jobs:
       - name: 📚 Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: 🗂️ Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm list @playwright/test --depth=0 --json | jq -r '.[0].devDependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
+
+      - name: 💾 Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
       - name: 🎭 Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install --with-deps
+
+      - name: 🎭 Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps
 
       - name: 🏗️ Build for testing
         run: pnpm run build
-
-      - name: 🚀 Start preview server
-        run: pnpm run preview &
-        env:
-          CI: true
-
-      - name: ⏳ Wait for server
-        run: npx wait-on http://localhost:4321 --timeout 60000
 
       - name: 🎭 Run E2E tests
         run: pnpm run test:e2e
