@@ -79,6 +79,7 @@ This is **King's Cooking** - a custom chess variant board game built with **Astr
 
 - `PRPs/ai_docs/` contains curated Claude Code documentation for context injection
 - `claude_md_files/` provides framework-specific CLAUDE.md examples
+- **MANDATORY**: Reference `/home/ryankhetlyr/Development/kings-cooking/claude_md_files/CLAUDE-REACT.md` for React/TypeScript patterns and best practices
 
 ## Development Commands
 
@@ -154,7 +155,7 @@ pnpm build && pnpm preview
 ### When Creating new PRPs
 
 1. **Context Process**: New PRPs must consist of context sections, Context is King!
-2.
+2. **Reference CLAUDE-REACT.md**: Always consult `/home/ryankhetlyr/Development/kings-cooking/claude_md_files/CLAUDE-REACT.md` for React/TypeScript patterns
 
 ### When Executing PRPs
 
@@ -171,6 +172,233 @@ pnpm build && pnpm preview
 - Commands are self-documenting with argument placeholders
 - Use parallel creation commands for rapid development
 - Leverage existing review and refactoring commands
+
+## GitHub Issue Workflow (MANDATORY)
+
+When working on GitHub issues, follow this **strict workflow** to ensure proper context gathering, PRP creation, and implementation:
+
+### Quick Reference - Issue to PR Workflow
+
+```
+1. Create branch: git checkout -b issue-{number}-{description}
+2. Ask questions (one at a time): ~/bin/gh issue comment {number} --body "Question..."
+   → WAIT for response (poll every 5s), repeat until full context
+3. Create PRP: /prp-commands:prp-task-create "Fix [component]... Requirements: (1)... Follow TDD."
+4. Commit PRP: git add PRPs/*.md && git commit && git push
+5. Post PRP summary to issue, WAIT for approval (no polling)
+6. Execute PRP: /prp-commands:prp-task-execute "PRPs/task-issue-{number}-{description}.md"
+7. Push & PR: git push && ~/bin/gh pr create
+8. Auto-merge on green CI/CD
+```
+
+### Phase 1: Issue Discovery & Context Gathering
+
+1. **Detect New Issue Assignment**
+   - Monitor for new issues via `~/bin/gh issue list --repo randallard/kings-cooking`
+   - When assigned an issue, immediately create a feature branch:
+     ```bash
+     git checkout -b issue-{issue-number}-{brief-description}
+     ```
+
+2. **Iterative Context Gathering** (CRITICAL: ONE QUESTION AT A TIME)
+   - Post questions to the GitHub issue using `~/bin/gh issue comment {issue-number} --body "QUESTION"`
+   - **Poll for responses every 5 seconds** using this pattern:
+     ```bash
+     # Post question
+     ~/bin/gh issue comment {issue-number} --body "Your question here"
+
+     # Poll for new comments every 5 seconds
+     LAST_COMMENT_COUNT=$(~/bin/gh issue view {issue-number} --json comments --jq '.comments | length')
+     while true; do
+       sleep 5
+       CURRENT_COUNT=$(~/bin/gh issue view {issue-number} --json comments --jq '.comments | length')
+       if [ "$CURRENT_COUNT" -gt "$LAST_COMMENT_COUNT" ]; then
+         # New comment detected - read and process
+         ~/bin/gh issue view {issue-number} --comments | tail -20
+         break
+       fi
+     done
+     ```
+   - Continue until you have ALL necessary context for a comprehensive PRP
+   - Questions should cover:
+     - **User Requirements**: What is the desired user-visible behavior?
+     - **Technical Constraints**: Any performance, accessibility, or compatibility requirements?
+     - **Scope Boundaries**: What is explicitly OUT of scope?
+     - **Success Criteria**: How will we know it's done correctly?
+     - **Test Strategy**: What specific test cases should be included?
+     - **Design Decisions**: Any UI/UX preferences or patterns to follow?
+
+3. **Example Question Flow**:
+   ```
+   Comment 1: "To ensure I implement this correctly, I need to gather some context.
+   First question: What is the primary user-visible behavior you want to see?
+   Please describe the exact interaction flow from the user's perspective."
+
+   [WAIT FOR RESPONSE]
+
+   Comment 2: "Thank you! Next question: Are there any specific accessibility
+   requirements (keyboard navigation, screen reader support, ARIA labels)?"
+
+   [WAIT FOR RESPONSE]
+
+   ... continue until comprehensive understanding achieved ...
+   ```
+
+### Phase 2: Task PRP Creation
+
+4. **Generate Task PRP Using Slash Command**
+   - Use `/prp-commands:prp-task-create "description"` with all gathered context in quotes:
+     ```bash
+     /prp-commands:prp-task-create "Fix [component] to [action]. Bug: [symptom]. Requirements: (1) [req1], (2) [req2], (3) [req3]. Technical context: [key details]. Follow TDD: Red → Green → Refactor."
+     ```
+   - The command will create: `PRPs/task-issue-{issue-number}-{brief-description}.md`
+   - Includes: context, patterns, test strategy, validation gates, implementation blueprint
+
+5. **Commit and Push PRP**
+   - After PRP is created, commit it to the feature branch:
+     ```bash
+     git add PRPs/task-issue-{issue-number}-{brief-description}.md
+     git commit -m "docs: add task PRP for issue #{issue-number}
+
+     Created comprehensive Task PRP with:
+     - Detailed context from issue discussion
+     - Implementation blueprint with validation gates
+     - Test strategy (unit/integration/E2E)
+     - Rollback strategy
+
+     🤖 Generated with Claude Code"
+
+     git push -u origin issue-{issue-number}-{brief-description}
+     ```
+
+6. **Post PRP for Approval**
+   - After pushing, comment on issue with PRP summary and link:
+     ```bash
+     ~/bin/gh issue comment {issue-number} --body "
+     I've created a comprehensive Task PRP based on our discussion: \`PRPs/task-issue-{number}-{description}.md\`
+
+     **Summary:**
+     - Goal: {one-line goal}
+     - Approach: {brief technical approach}
+     - Test Strategy: {test coverage plan}
+     - Validation: {validation gates}
+
+     **Files Changed:** {list of files}
+
+     Please review and confirm approval to proceed with implementation!
+     If any adjustments are needed, let me know and I'll update the PRP.
+     "
+     ```
+   - **WAIT** for explicit approval comment before proceeding
+   - Do NOT poll for approval - this may take time for review
+
+### Phase 3: Implementation & Validation
+
+7. **Execute Task PRP Using Slash Command**
+   - Once approved (check issue comments for approval), use:
+     ```bash
+     /prp-commands:prp-task-execute "PRPs/task-issue-{issue-number}-{brief-description}.md"
+     ```
+   - Provide the local file path to the PRP as parameter in quotes
+   - The command will:
+     - Execute the implementation following the PRP blueprint
+     - Follow TDD: Red → Green → Refactor
+     - Reference `/home/ryankhetlyr/Development/kings-cooking/claude_md_files/CLAUDE-REACT.md` for patterns
+     - Run validation gates continuously:
+       ```bash
+       # Level 1: Type checking
+       pnpm run check
+
+       # Level 2: Linting
+       pnpm run lint
+
+       # Level 3: Unit tests
+       pnpm test
+
+       # Level 4: Integration tests
+       pnpm test:integration
+
+       # Level 5: E2E tests
+       pnpm test:e2e
+
+       # Level 6: Build
+       pnpm build
+       ```
+     - Track progress and report status
+
+8. **Continuous Progress Updates**
+   - The execution command will post progress updates to issue as milestones are reached
+   - Report any blockers or questions immediately via issue comments
+
+### Phase 4: Pull Request & Merge
+
+9. **Create Pull Request**
+   - Once ALL validation gates pass, push branch and create PR:
+     ```bash
+     git push -u origin issue-{issue-number}-{brief-description}
+     ~/bin/gh pr create \
+       --title "feat: {conventional commit title}" \
+       --body "Closes #{issue-number}
+
+     ## Summary
+     {Brief description of changes}
+
+     ## Task PRP
+     Implemented according to \`PRPs/task-issue-{number}-{description}.md\`
+
+     ## Test Coverage
+     - ✅ Unit tests: {coverage %}
+     - ✅ Integration tests: passing
+     - ✅ E2E tests: passing
+     - ✅ Build: successful
+
+     ## Validation Gates
+     - ✅ Type checking: passing
+     - ✅ Linting: passing
+     - ✅ All tests: passing
+     "
+     ```
+
+10. **Automatic Merge on Green**
+   - GitHub Actions will automatically merge PR when all checks pass
+   - Monitor for any CI/CD failures and fix immediately
+
+### Critical Rules for Issue Workflow
+
+- ✅ **ALWAYS create a feature branch** before starting work
+- ✅ **ONE question at a time** in issue comments, WAIT for response
+- ✅ **USE `/prp-commands:prp-task-create`** to create Task PRP before implementation
+- ✅ **GET APPROVAL** on PRP before coding
+- ✅ **USE `/prp-commands:prp-task-execute`** to execute the approved PRP
+- ✅ **REFERENCE CLAUDE-REACT.md** for patterns
+- ✅ **ALL validation gates MUST pass** before PR
+- ✅ **USE conventional commits** for all commits and PR titles
+- ❌ **NEVER start coding** without comprehensive context
+- ❌ **NEVER skip PRP approval** step
+- ❌ **NEVER merge** without passing tests
+- ❌ **NEVER manually create/execute PRPs** - use slash commands
+
+### GitHub CLI Commands Reference
+
+```bash
+# List open issues
+~/bin/gh issue list --repo randallard/kings-cooking
+
+# View specific issue
+~/bin/gh issue view {issue-number} --repo randallard/kings-cooking
+
+# Comment on issue
+~/bin/gh issue comment {issue-number} --body "Your comment here"
+
+# Create pull request
+~/bin/gh pr create --title "feat: title" --body "Description"
+
+# Check PR status
+~/bin/gh pr status
+
+# List pull requests
+~/bin/gh pr list --repo randallard/kings-cooking
+```
 
 ## Project Structure Understanding
 
