@@ -181,12 +181,15 @@ jobs:
 
       - name: 🛡️ Check for vulnerabilities
         run: |
-          if pnpm audit --prod --json | grep -q '"vulnerabilities"'; then
-            echo "Security vulnerabilities found!"
+          # Get total vulnerability count
+          VULN_COUNT=$(pnpm audit --prod --json | jq '.metadata.vulnerabilities | to_entries | map(.value) | add')
+
+          if [[ "$VULN_COUNT" -gt 0 ]]; then
+            echo "❌ Security vulnerabilities found: $VULN_COUNT"
             pnpm audit --prod
             exit 1
           else
-            echo "No security vulnerabilities found."
+            echo "✅ No security vulnerabilities found."
           fi
 
   quality-gate:
