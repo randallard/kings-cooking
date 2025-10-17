@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">98.42% </span>
+                <span class="strong">98.46% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>188/191</span>
+                <span class='fraction'>192/195</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.73% </span>
+                <span class="strong">96.42% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>54/57</span>
+                <span class='fraction'>54/56</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">98.42% </span>
+                <span class="strong">98.46% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>188/191</span>
+                <span class='fraction'>192/195</span>
             </div>
         
             
@@ -326,7 +326,13 @@
 <a name='L261'></a><a href='#L261'>261</a>
 <a name='L262'></a><a href='#L262'>262</a>
 <a name='L263'></a><a href='#L263'>263</a>
-<a name='L264'></a><a href='#L264'>264</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L264'></a><a href='#L264'>264</a>
+<a name='L265'></a><a href='#L265'>265</a>
+<a name='L266'></a><a href='#L266'>266</a>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -483,6 +489,8 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">84x</span>
 <span class="cline-any cline-yes">6x</span>
@@ -529,6 +537,7 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
@@ -587,8 +596,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">84x</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">84x</span>
+<span class="cline-any cline-yes">84x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @fileoverview Game flow state machine reducer
  * @module lib/gameFlow/reducer
@@ -596,6 +606,7 @@
 &nbsp;
 import type { GameFlowState, GameFlowAction } from '../../types/gameFlow';
 import type { DeltaPayload, FullStatePayload } from '../urlEncoding/types';
+import type { GameState } from '../validation/schemas';
 import { KingsChessEngine } from '../chess/KingsChessEngine';
 import { storage } from '../storage/localStorage';
 &nbsp;
@@ -604,7 +615,7 @@ import { storage } from '../storage/localStorage';
  *
  * @returns Initial GameState with Player 1 and Player 2
  */
-function createInitialGameState() {
+function createInitialGameState(): GameState {
   const whitePlayer = {
     id: crypto.randomUUID() as never,
     name: 'Player 1'
@@ -734,18 +745,20 @@ export function gameFlowReducer(
       if (state.phase !== 'setup') return state;
       return { ...state, player1Name: action.name };
 &nbsp;
-    case 'START_GAME':
+    case 'START_GAME': {
       if (state.phase !== 'setup' || !state.player1Name) return state;
+      const gameState = createInitialGameState();
       return {
         phase: 'playing',
         mode: state.mode,
         player1Name: state.player1Name,
         player2Name: null, // Collected later
-        gameState: createInitialGameState(),
+        gameState,
         selectedPosition: null,
         legalMoves: [],
         pendingMove: null,
       };
+    }
 &nbsp;
     case 'SELECT_PIECE':
       if (state.phase !== 'playing') return state;
@@ -771,7 +784,7 @@ export function gameFlowReducer(
         pendingMove: { from: action.from, to: action.to },
       };
 &nbsp;
-    case 'CONFIRM_MOVE':
+    case 'CONFIRM_MOVE': {
       if (state.phase !== 'playing' || !state.pendingMove) return state;
 &nbsp;
       // Check for game over
@@ -798,6 +811,7 @@ export function gameFlowReducer(
         countdown: 3, // Hot-seat countdown
         generatedUrl: null, // URL mode: will be set by URL_GENERATED action
       };
+    }
 &nbsp;
     case 'SET_PLAYER2_NAME':
       // Hot-seat: called from handoff screen if player2Name is empty
@@ -846,12 +860,13 @@ export function gameFlowReducer(
       // URL mode only: restore game from URL on page load
       return handleUrlLoad(state, action.payload);
 &nbsp;
-<span class="branch-0 cbranch-no" title="branch not covered" >    default:</span>
+<span class="branch-0 cbranch-no" title="branch not covered" >    default: {</span>
       // Exhaustive checking: TypeScript ensures all actions are handled
 <span class="cstat-no" title="statement not covered" >      const _exhaustive: never = action;</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error(`Unhandled action: ${JSON.stringify(_exhaustive)}`);</span>
-<span class="branch-0 cbranch-no" title="branch not covered" >  }</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+  }
+}
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -859,7 +874,7 @@ export function gameFlowReducer(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-17T13:26:41.788Z
+                at 2025-10-17T14:37:27.574Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

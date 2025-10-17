@@ -4,16 +4,22 @@
  */
 
 import { useState, useCallback, useMemo, type ReactElement } from 'react';
-import type { GameState, Position } from '@/lib/validation/schemas';
+import type { GameState, Position, Piece } from '@/lib/validation/schemas';
 import { KingsChessEngine } from '@/lib/chess/KingsChessEngine';
+import {
+  hasRookPathToEdge,
+  canKnightJumpOffBoard,
+  canBishopMoveOffBoard,
+} from '@/lib/chess/pieceMovement';
 import { GameCell } from './GameCell';
+import { CourtArea } from './CourtArea';
 import styles from './GameBoard.module.css';
 
 interface GameBoardProps {
   /** Current game state */
   gameState: GameState;
   /** Callback when move is completed */
-  onMove: (from: Position, to: Position) => void;
+  onMove: (from: Position, to: Position | 'off_board') => void;
   /** Is it this player's turn? */
   isPlayerTurn?: boolean;
 }
@@ -60,6 +66,41 @@ export const GameBoard = ({
     if (!selectedPosition) return [];
     return engine.getValidMoves(selectedPosition);
   }, [selectedPosition, engine]);
+
+  // Check if selected piece can move off-board
+  const canSelectedPieceMoveOffBoard = useMemo(() => {
+    if (!selectedPosition) return false;
+
+    const piece = gameState.board[selectedPosition[0]]?.[selectedPosition[1]];
+    if (!piece) return false;
+    if (piece.owner !== gameState.currentPlayer) return false;
+
+    // getPiece callback for helper functions
+    const getPiece = (pos: Position): Piece | null => {
+      if (!pos) return null;
+      const [row, col] = pos;
+      return gameState.board[row]?.[col] ?? null;
+    };
+
+    // Check based on piece type
+    switch (piece.type) {
+      case 'rook':
+        return hasRookPathToEdge(selectedPosition, piece, getPiece);
+      case 'knight':
+        return canKnightJumpOffBoard(selectedPosition, piece);
+      case 'bishop':
+        return canBishopMoveOffBoard(selectedPosition, piece, getPiece);
+      default:
+        return false;
+    }
+  }, [selectedPosition, gameState]);
+
+  // Get selected piece type
+  const selectedPieceType = useMemo(() => {
+    if (!selectedPosition) return null;
+    const piece = gameState.board[selectedPosition[0]]?.[selectedPosition[1]];
+    return piece?.type ?? null;
+  }, [selectedPosition, gameState]);
 
   // Get last move positions for highlighting
   const lastMove = gameState.moveHistory[gameState.moveHistory.length - 1];
@@ -127,8 +168,31 @@ export const GameBoard = ({
     );
   }, [lastMove]);
 
+  // Handle off-board move
+  const handleOffBoardMove = useCallback(() => {
+    if (!selectedPosition) return;
+    if (!canSelectedPieceMoveOffBoard) return;
+
+    onMove(selectedPosition, 'off_board');
+    setSelectedPosition(null);
+  }, [selectedPosition, canSelectedPieceMoveOffBoard, onMove]);
+
   return (
     <div className={styles.gameBoardContainer}>
+      {/* Black King's Court (above board) - White pieces score here */}
+      <CourtArea
+        courtOwner="black"
+        scoredPieces={gameState.whiteCourt}
+        capturedPieces={gameState.capturedBlack}
+        canMoveOffBoard={
+          gameState.currentPlayer === 'white' && canSelectedPieceMoveOffBoard
+        }
+        onOffBoardMove={handleOffBoardMove}
+        currentPlayer={gameState.currentPlayer}
+        selectedPieceType={selectedPieceType}
+      />
+
+      {/* 3x3 Chess Board */}
       <div
         role="grid"
         className={styles.gameBoard}
@@ -160,13 +224,27 @@ export const GameBoard = ({
         ))}
       </div>
 
+      {/* White King's Court (below board) - Black pieces score here */}
+      <CourtArea
+        courtOwner="white"
+        scoredPieces={gameState.blackCourt}
+        capturedPieces={gameState.capturedWhite}
+        canMoveOffBoard={
+          gameState.currentPlayer === 'black' && canSelectedPieceMoveOffBoard
+        }
+        onOffBoardMove={handleOffBoardMove}
+        currentPlayer={gameState.currentPlayer}
+        selectedPieceType={selectedPieceType}
+      />
+
       {/* Screen reader announcements */}
       <div className={styles.srOnly} role="status" aria-live="polite">
         {selectedPosition && (
           `Selected ${
             gameState.board[selectedPosition[0]]?.[selectedPosition[1]]?.type ?? 'piece'
           } at ${String.fromCharCode(65 + selectedPosition[1])}${selectedPosition[0] + 1}.
-          ${legalMoves.length} legal moves available.`
+          ${legalMoves.length} legal moves available.
+          ${canSelectedPieceMoveOffBoard ? 'Can move off-board to score.' : ''}`
         )}
       </div>
     </div>

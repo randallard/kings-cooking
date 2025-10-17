@@ -1,0 +1,80 @@
+/* Off-Board Button Styles */
+
+.offBoardButton {
+  min-width: 120px;
+  min-height: 44px; /* WCAG AA touch target */
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 2px solid;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: inherit;
+}
+
+/* Enabled state - Green */
+.enabled {
+  background: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
+.enabled:hover {
+  background: #218838;
+  border-color: #1e7e34;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.enabled:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.enabled:focus-visible {
+  outline: 3px solid #80d4a0;
+  outline-offset: 2px;
+}
+
+/* Disabled state - Grey */
+.disabled {
+  background: #6c757d;
+  color: #ccc;
+  border-color: #6c757d;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .enabled {
+    background: #28a745;
+    border-color: #28a745;
+    color: white;
+  }
+
+  .enabled:hover {
+    background: #218838;
+    border-color: #1e7e34;
+  }
+
+  .disabled {
+    background: #495057;
+    border-color: #495057;
+    color: #adb5bd;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .offBoardButton {
+    min-width: 100px;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+}

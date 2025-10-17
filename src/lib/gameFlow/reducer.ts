@@ -146,14 +146,12 @@ export function gameFlowReducer(
 
     case 'START_GAME': {
       if (state.phase !== 'setup' || !state.player1Name) return state;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const gameState = createInitialGameState();
       return {
         phase: 'playing',
         mode: state.mode,
         player1Name: state.player1Name,
         player2Name: null, // Collected later
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         gameState,
         selectedPosition: null,
         legalMoves: [],

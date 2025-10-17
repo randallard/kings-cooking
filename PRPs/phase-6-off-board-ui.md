@@ -14,9 +14,10 @@ Add UI support for off-board moves by displaying "Party!" buttons in the king's 
 **Success Criteria:**
 - White pieces can click "Party!" button in Black King's Court (above board)
 - Black pieces can click "Party!" button in White King's Court (below board)
-- Button only appears when a piece is selected that can legally move off-board
+- Button only appears when it is in the goal court for the current player
+- Button is only enabled when a piece is selected that can legally move off-board
 - Button executes off-board move when clicked
-- Court areas show scored pieces
+- Court areas show scored pieces and pieces that were sent back to their king's court (captured)
 - All existing tests pass
 - New tests achieve 80%+ coverage
 
@@ -56,7 +57,7 @@ Add UI support for off-board moves by displaying "Party!" buttons in the king's 
 ┌─────────────────────────────┐
 │ Black King's Court          │
 │ [Party! 🎉] (if white turn) │ ← Button appears when white piece can move off-board
-│ Scored: ♖ ♗                 │ ← Shows scored white pieces
+│ Scored: ♖ ♗  Caught:  ♜     │ ← Shows scored white pieces
 └─────────────────────────────┘
 
 ┌─────────────┐
@@ -68,7 +69,7 @@ Add UI support for off-board moves by displaying "Party!" buttons in the king's 
 ┌─────────────────────────────┐
 │ White King's Court          │
 │ [Party! 🎉] (if black turn) │ ← Button appears when black piece can move off-board
-│ Scored: ♞ ♝                 │ ← Shows scored black pieces
+│ Scored: ♞ ♝    Caught: ♖    │ ← Shows scored black pieces
 └─────────────────────────────┘
 ```
 
@@ -77,7 +78,7 @@ Add UI support for off-board moves by displaying "Party!" buttons in the king's 
 **Scenario 1: White Rook at Edge (Can Move Off-Board)**
 1. User clicks white rook at (0, 0)
 2. Board highlights legal on-board moves
-3. **"Party!" button appears in Black King's Court (above board)** ✨ NEW
+3. **"Party!" button enables in Black King's Court (above board)** ✨ NEW
 4. User clicks "Party!" button
 5. Move executes: rook moves `from: [0, 0]` to `'off_board'`
 6. Rook appears in Black King's Court scored pieces display
@@ -86,14 +87,14 @@ Add UI support for off-board moves by displaying "Party!" buttons in the king's 
 **Scenario 2: White Knight at (1, 1) (Can Jump Off-Board)**
 1. User clicks white knight at (1, 1)
 2. Board highlights legal on-board moves
-3. **"Party!" button appears in Black King's Court** ✨ NEW
+3. **"Party!" button enables in Black King's Court** ✨ NEW
 4. User clicks "Party!" button
 5. Knight jumps off-board to score
 
 **Scenario 3: Black Bishop at (1, 1) (Cannot Move Off-Board Yet)**
 1. User clicks black bishop at (1, 1)
 2. Board highlights legal on-board moves
-3. **NO "Party!" button appears** (diagonal doesn't cross middle column)
+3. **"Party!" button remains disabled** (no clear path off-board)
 4. User must move bishop to edge first
 
 ### Button States
@@ -248,6 +249,7 @@ import styles from './Component.module.css';
    - White King's Court is BELOW the board (black pieces score here)
    - Black King's Court is ABOVE the board (white pieces score here)
    - **Inversion:** White pieces score in BLACK'S court (opponent's court)
+   - **Note:** Black pieces captured go to BLACK'S court captured - no score in BLACK'S court (owner's court)
 
 3. **Button Visibility Rules:**
    - White's turn: Show button in Black King's Court (above)
@@ -319,6 +321,7 @@ import styles from './Component.module.css';
 - Create `src/components/game/CourtArea.module.css`
 - Display court label (e.g., "Black King's Court")
 - Display scored pieces (icons from whiteCourt/blackCourt)
+- Display captured pieces (icons from blackCourt/whiteCourt)
 - Include OffBoardButton as child
 - Responsive layout (stack on mobile)
 

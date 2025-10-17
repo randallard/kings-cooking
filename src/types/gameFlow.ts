@@ -64,8 +64,8 @@ export interface PlayingPhase {
   selectedPosition: Position | null;
   /** Legal moves for selected piece */
   legalMoves: Position[];
-  /** Pending move awaiting confirmation */
-  pendingMove: { from: Position; to: Position } | null;
+  /** Pending move awaiting confirmation (can be off-board) */
+  pendingMove: { from: Position; to: Position | 'off_board' } | null;
 }
 
 /**
@@ -85,8 +85,8 @@ export interface HandoffPhase {
   player2Name: string;
   /** Current game state after move */
   gameState: GameState;
-  /** The move that was just made */
-  lastMove: { from: Position; to: Position };
+  /** The move that was just made (can be off-board) */
+  lastMove: { from: Position; to: Position | 'off_board' };
   /** Countdown timer (hot-seat only, 3 seconds) */
   countdown: number;
   /** Generated URL (URL mode only, set after URL_GENERATED action) */
@@ -183,14 +183,14 @@ export interface DeselectPieceAction {
 
 /**
  * STAGE_MOVE action.
- * User clicks destination square, stage move for confirmation.
+ * User clicks destination square or off-board button, stage move for confirmation.
  */
 export interface StageMoveAction {
   type: 'STAGE_MOVE';
   /** Source position */
   from: Position;
-  /** Destination position */
-  to: Position;
+  /** Destination position or 'off_board' for scoring */
+  to: Position | 'off_board';
 }
 
 /**
