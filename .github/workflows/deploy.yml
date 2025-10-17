@@ -83,8 +83,8 @@ jobs:
           SERVER_PID=$!
           sleep 5
 
-          # Basic health check
-          if curl -f http://localhost:4321/ > /dev/null 2>&1; then
+          # Basic health check - check the correct URL with base path
+          if curl -f http://localhost:4173/kings-cooking/ > /dev/null 2>&1; then
             echo "✅ Production build serves correctly"
           else
             echo "❌ Production build failed to serve"
