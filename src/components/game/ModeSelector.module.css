@@ -23,7 +23,7 @@
 }
 
 .storySection {
-  max-width: 600px;
+  max-width: 700px;
   width: 100%;
   margin: 0 auto var(--spacing-lg, 1.5rem);
   padding: var(--spacing-md, 1rem);
