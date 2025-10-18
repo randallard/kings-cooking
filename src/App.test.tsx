@@ -56,24 +56,27 @@ describe('App Component - Phase 5 Game Flow', () => {
 
   describe('Page Refresh with Saved Game', () => {
     it('should restore game from localStorage if available', () => {
+      // Set storage version to prevent migration
+      localStorage.setItem('kings-cooking:version', '2.0.0');
+
       // Set up saved game state
       localStorage.setItem('kings-cooking:game-mode', JSON.stringify('hotseat'));
       localStorage.setItem('kings-cooking:player1-name', JSON.stringify('Alice'));
 
-      // Create a minimal saved game state
+      // Create a minimal saved game state (v2.0.0 format with light/dark)
       const savedGameState = {
         status: 'playing',
-        version: '1.0.0',
+        version: '2.0.0',
         gameId: 'test-game-id',
         board: [[null, null, null], [null, null, null], [null, null, null]],
-        currentPlayer: 'white',
+        currentPlayer: 'light',
         currentTurn: 1,
-        whitePlayer: { id: 'p1', name: 'Alice' },
-        blackPlayer: { id: 'p2', name: 'Player 2' },
-        whiteCourt: [],
-        blackCourt: [],
-        capturedWhite: [],
-        capturedBlack: [],
+        lightPlayer: { id: 'p1', name: 'Alice' },
+        darkPlayer: { id: 'p2', name: 'Player 2' },
+        lightCourt: [],
+        darkCourt: [],
+        capturedLight: [],
+        capturedDark: [],
         moveHistory: [],
         checksum: 'test-checksum'
       };
@@ -88,22 +91,25 @@ describe('App Component - Phase 5 Game Flow', () => {
     });
 
     it('should clear storage if saved game is completed', () => {
+      // Set storage version to prevent migration
+      localStorage.setItem('kings-cooking:version', '2.0.0');
+
       // Set up completed game state
       localStorage.setItem('kings-cooking:game-mode', JSON.stringify('hotseat'));
 
       const completedGameState = {
-        status: 'white_wins',
-        version: '1.0.0',
+        status: 'light_wins',
+        version: '2.0.0',
         gameId: 'test-game-id',
         board: [[null, null, null], [null, null, null], [null, null, null]],
-        currentPlayer: 'white',
+        currentPlayer: 'light',
         currentTurn: 10,
-        whitePlayer: { id: 'p1', name: 'Alice' },
-        blackPlayer: { id: 'p2', name: 'Bob' },
-        whiteCourt: [],
-        blackCourt: [],
-        capturedWhite: [],
-        capturedBlack: [],
+        lightPlayer: { id: 'p1', name: 'Alice' },
+        darkPlayer: { id: 'p2', name: 'Bob' },
+        lightCourt: [],
+        darkCourt: [],
+        capturedLight: [],
+        capturedDark: [],
         moveHistory: [],
         checksum: 'test-checksum'
       };
