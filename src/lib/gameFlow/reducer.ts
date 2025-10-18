@@ -417,6 +417,8 @@ export function gameFlowReducer(
       };
 
     case 'NEW_GAME':
+      // Clear all localStorage including story flags
+      storage.clearAll();
       return { phase: 'mode-selection' };
 
     case 'LOAD_FROM_URL':

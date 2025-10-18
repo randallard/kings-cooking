@@ -221,7 +221,7 @@ useEffect(() => {
     <li>Click a piece to select, then click the desired square you want them to move to</li>
     <li>Then click confirm to lock in your move</li>
     <li>For URL game: you'll be given a URL to share with your opponent via text or email</li>
-    <li>Or play with someone on the same device (hot-seat mode)</li>
+    <li>Or play use hot seat mode to play with someone on the same device, no url sharing needed</li>
   </ul>
 </section>
 ```
@@ -516,7 +516,7 @@ export function StoryPanel({ isOpen, onClose }: StoryPanelProps): ReactElement |
             <li>Click a piece to select, then click the desired square you want them to move to</li>
             <li>Then click confirm to lock in your move</li>
             <li>For URL game: you'll be given a URL to share with your opponent via text or email</li>
-            <li>Or play with someone on the same device (hot-seat mode)</li>
+            <li>Or choose hot-seat to play with someone on the same device, no url sharing needed</li>
           </ul>
         </section>
       </div>
