@@ -187,8 +187,10 @@ When working on GitHub issues, follow this **strict workflow** to ensure proper 
 4. Commit PRP: git add PRPs/*.md && git commit && git push
 5. Post PRP summary to issue, WAIT for approval (no polling)
 6. Execute PRP: /prp-commands:prp-task-execute "PRPs/task-issue-{number}-{description}.md"
-7. Push & PR: git push && ~/bin/gh pr create
-8. Auto-merge on green CI/CD
+7. RUN ALL TESTS (MANDATORY): pnpm run check && pnpm run lint && pnpm test:coverage && pnpm test:integration && pnpm test:e2e && pnpm build
+   → ALL must pass before pushing
+8. Push & PR: git push && ~/bin/gh pr create
+9. Auto-merge on green CI/CD
 ```
 
 ### Phase 1: Issue Discovery & Context Gathering
@@ -332,7 +334,42 @@ When working on GitHub issues, follow this **strict workflow** to ensure proper 
 
 ### Phase 4: Pull Request & Merge
 
-9. **Create Pull Request**
+9. **Run All Tests Before Pushing** (MANDATORY)
+   - **CRITICAL**: You MUST run the complete test suite locally before pushing to remote
+   - This catches failures early and prevents CI/CD pipeline failures
+   - Run all validation gates in sequence:
+     ```bash
+     # Step 1: Type checking
+     pnpm run check
+     echo "✅ Type checking passed"
+
+     # Step 2: Linting
+     pnpm run lint
+     echo "✅ Linting passed"
+
+     # Step 3: Unit tests with coverage
+     pnpm test:coverage
+     echo "✅ Unit tests passed"
+
+     # Step 4: Integration tests
+     pnpm test:integration
+     echo "✅ Integration tests passed"
+
+     # Step 5: E2E tests
+     pnpm test:e2e
+     echo "✅ E2E tests passed"
+
+     # Step 6: Build verification
+     pnpm build
+     echo "✅ Build successful"
+     ```
+   - **ONLY proceed to push if ALL tests pass locally**
+   - If any test fails:
+     1. Fix the failing test/code
+     2. Re-run the full test suite
+     3. Do NOT push until everything is green
+
+10. **Create Pull Request**
    - **IMPORTANT**: PR title MUST follow conventional commit format:
      - `feat: description` - New feature
      - `fix: description` - Bug fix
@@ -377,9 +414,10 @@ When working on GitHub issues, follow this **strict workflow** to ensure proper 
      "
      ```
 
-10. **Automatic Merge on Green**
+11. **Automatic Merge on Green**
    - GitHub Actions will automatically merge PR when all checks pass
    - Monitor for any CI/CD failures and fix immediately
+   - If CI/CD fails but local tests passed, investigate environment differences
 
 ### Critical Rules for Issue Workflow
 
@@ -389,10 +427,12 @@ When working on GitHub issues, follow this **strict workflow** to ensure proper 
 - ✅ **GET APPROVAL** on PRP before coding
 - ✅ **USE `/prp-commands:prp-task-execute`** to execute the approved PRP
 - ✅ **REFERENCE CLAUDE-REACT.md** for patterns
+- ✅ **RUN ALL TESTS LOCALLY** before every push (type check, lint, unit, integration, E2E, build)
 - ✅ **ALL validation gates MUST pass** before PR
 - ✅ **USE conventional commits** for all commits and PR titles
 - ❌ **NEVER start coding** without comprehensive context
 - ❌ **NEVER skip PRP approval** step
+- ❌ **NEVER push code** without running the complete test suite locally first
 - ❌ **NEVER merge** without passing tests
 - ❌ **NEVER manually create/execute PRPs** - use slash commands
 
