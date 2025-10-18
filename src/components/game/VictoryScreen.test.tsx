@@ -32,7 +32,7 @@ describe('VictoryScreen', () => {
       expect(screen.getByRole('heading', { name: /light wins/i })).toBeInTheDocument();
     });
 
-    it('should render with black winner', () => {
+    it('should render with dark winner', () => {
       render(
         <VictoryScreen {...defaultProps} winner="dark" winnerName="Charlie" loserName="David" />
       );
@@ -200,16 +200,16 @@ describe('VictoryScreen', () => {
   });
 
   describe('Celebration Messages', () => {
-    it('should show celebration for white winner', () => {
+    it('should show celebration for light winner', () => {
       render(<VictoryScreen {...defaultProps} winner="light" />);
 
-      expect(screen.getByText('White Wins!')).toBeInTheDocument();
+      expect(screen.getByText('Light Wins!')).toBeInTheDocument();
     });
 
-    it('should show celebration for black winner', () => {
+    it('should show celebration for dark winner', () => {
       render(<VictoryScreen {...defaultProps} winner="dark" />);
 
-      expect(screen.getByText('Black Wins!')).toBeInTheDocument();
+      expect(screen.getByText('Dark Wins!')).toBeInTheDocument();
     });
 
     it('should show draw message', () => {
@@ -231,7 +231,7 @@ describe('VictoryScreen', () => {
       const { winnerName, loserName, ...propsWithoutNames } = defaultProps;
       render(<VictoryScreen {...propsWithoutNames} />);
 
-      expect(screen.getByText('White is victorious!')).toBeInTheDocument();
+      expect(screen.getByText('Light is victorious!')).toBeInTheDocument();
     });
 
     it('should show draw subtitle', () => {
