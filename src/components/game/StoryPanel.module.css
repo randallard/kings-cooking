@@ -1,0 +1,252 @@
+/* Overlay container - covers entire viewport */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg, 1.5rem);
+}
+
+/* Panel container */
+.container {
+  position: relative;
+  z-index: 101;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background-color: var(--bg-primary, #ffffff);
+  border-radius: var(--border-radius-lg, 1rem);
+  padding: var(--spacing-xl, 2rem);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Backdrop - semi-transparent dark overlay */
+.backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+/* Close button */
+.closeButton {
+  position: absolute;
+  top: var(--spacing-md, 1rem);
+  right: var(--spacing-md, 1rem);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: none;
+  border: 2px solid var(--border-color, #ced4da);
+  border-radius: var(--border-radius-md, 0.5rem);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-secondary, #6c757d);
+  transition: all 0.2s ease-in-out;
+}
+
+.closeButton:hover {
+  background-color: var(--bg-hover, #e9ecef);
+  border-color: var(--border-hover, #adb5bd);
+  color: var(--text-primary, #212529);
+}
+
+.closeButton:focus-visible {
+  outline: 3px solid var(--focus-color, #0056b3);
+  outline-offset: 3px;
+}
+
+/* Main title */
+.mainTitle {
+  font-size: var(--font-size-xl, 1.5rem);
+  font-weight: 700;
+  margin: 0 0 var(--spacing-lg, 1.5rem) 0;
+  color: var(--text-primary, #212529);
+  text-align: center;
+}
+
+/* Story and instructions sections - REUSE from ModeSelector */
+.storySection {
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto var(--spacing-lg, 1.5rem);
+  padding: var(--spacing-md, 1rem);
+  background-color: var(--bg-secondary, #f8f9fa);
+  border: 1px solid var(--border-color, #ced4da);
+  border-radius: var(--border-radius-md, 0.5rem);
+  text-align: left;
+}
+
+.stageDirection {
+  font-style: italic;
+  color: var(--text-secondary, #6c757d);
+  font-size: var(--font-size-sm, 0.875rem);
+  margin: var(--spacing-xs, 0.25rem) 0;
+}
+
+.dialogue {
+  color: var(--text-primary, #212529);
+  font-size: var(--font-size-md, 1rem);
+  margin: var(--spacing-sm, 0.5rem) 0;
+  line-height: 1.5;
+}
+
+.dialogue strong {
+  color: var(--text-primary, #212529);
+  font-weight: 700;
+}
+
+.scrollSignature {
+  display: inline-block;
+  margin-left: var(--spacing-md, 1rem);
+  font-style: italic;
+}
+
+.instructionsSection {
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto var(--spacing-xl, 2rem);
+  padding: var(--spacing-lg, 1.5rem);
+  background-color: var(--bg-secondary, #f8f9fa);
+  border: 1px solid var(--border-color, #ced4da);
+  border-radius: var(--border-radius-md, 0.5rem);
+}
+
+.instructionsTitle {
+  font-size: var(--font-size-lg, 1.25rem);
+  font-weight: 600;
+  margin: 0 0 var(--spacing-md, 1rem) 0;
+  color: var(--text-primary, #212529);
+  text-align: center;
+}
+
+.instructionsList {
+  list-style: disc inside;
+  padding: 0;
+  margin: 0;
+  font-size: var(--font-size-md, 1rem);
+  color: var(--text-primary, #212529);
+  text-align: left;
+  line-height: 1.6;
+}
+
+.instructionsList li {
+  padding: var(--spacing-xs, 0.25rem) 0;
+  margin-left: var(--spacing-md, 1rem);
+}
+
+/* Dark mode - system preference */
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .container {
+    --bg-primary: #212529;
+    --text-primary: #f8f9fa;
+    --text-secondary: #adb5bd;
+    --bg-secondary: #343a40;
+    --border-color: #495057;
+    --bg-hover: #495057;
+    --border-hover: #6c757d;
+    --focus-color: #4da3ff;
+  }
+
+  :global(:root:not([data-theme='light'])) .storySection,
+  :global(:root:not([data-theme='light'])) .instructionsSection {
+    --bg-secondary: #343a40;
+    --border-color: #495057;
+    --text-primary: #f8f9fa;
+    --text-secondary: #adb5bd;
+  }
+}
+
+/* Dark mode - manual toggle */
+:global([data-theme='dark']) .container {
+  --bg-primary: #212529;
+  --text-primary: #f8f9fa;
+  --text-secondary: #adb5bd;
+  --bg-secondary: #343a40;
+  --border-color: #495057;
+  --bg-hover: #495057;
+  --border-hover: #6c757d;
+  --focus-color: #4da3ff;
+}
+
+:global([data-theme='dark']) .storySection,
+:global([data-theme='dark']) .instructionsSection {
+  --bg-secondary: #343a40;
+  --border-color: #495057;
+  --text-primary: #f8f9fa;
+  --text-secondary: #adb5bd;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .container {
+    padding: var(--spacing-md, 1rem);
+    max-height: 95vh;
+  }
+
+  .closeButton {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+
+  .mainTitle {
+    font-size: var(--font-size-lg, 1.25rem);
+    margin-bottom: var(--spacing-md, 1rem);
+  }
+
+  .storySection {
+    padding: var(--spacing-sm, 0.5rem);
+    margin-bottom: var(--spacing-md, 1rem);
+  }
+
+  .dialogue,
+  .stageDirection {
+    font-size: var(--font-size-sm, 0.875rem);
+  }
+
+  .instructionsSection {
+    padding: var(--spacing-md, 1rem);
+    margin-bottom: var(--spacing-lg, 1.5rem);
+  }
+
+  .instructionsTitle {
+    font-size: var(--font-size-md, 1rem);
+  }
+
+  .instructionsList {
+    font-size: var(--font-size-sm, 0.875rem);
+  }
+
+  .instructionsList li {
+    margin-left: var(--spacing-sm, 0.5rem);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .closeButton {
+    transition: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .closeButton {
+    border-width: 3px;
+  }
+
+  .closeButton:focus-visible {
+    outline-width: 4px;
+  }
+}

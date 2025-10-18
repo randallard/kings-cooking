@@ -1,4 +1,4 @@
-import { ReactElement, useReducer, useEffect } from 'react';
+import { ReactElement, useReducer, useEffect, useState } from 'react';
 import { gameFlowReducer } from './lib/gameFlow/reducer';
 import { storage } from './lib/storage/localStorage';
 import { useUrlState } from './hooks/useUrlState';
@@ -9,6 +9,7 @@ import { MoveConfirmButton } from './components/game/MoveConfirmButton';
 import { HandoffScreen } from './components/game/HandoffScreen';
 import { VictoryScreen } from './components/game/VictoryScreen';
 import { URLSharer } from './components/game/URLSharer';
+import { StoryPanel } from './components/game/StoryPanel';
 import { KingsChessEngine } from './lib/chess/KingsChessEngine';
 import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
 
@@ -30,6 +31,9 @@ import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
  */
 export default function App(): ReactElement {
   const [state, dispatch] = useReducer(gameFlowReducer, { phase: 'mode-selection' });
+
+  // Story panel visibility state
+  const [showStoryPanel, setShowStoryPanel] = useState(false);
 
   // URL state hook (Task 7) - enabled only in URL mode
   const {
@@ -123,6 +127,29 @@ export default function App(): ReactElement {
     };
   }, [state.phase]);
 
+  // Check story panel flags and show if needed
+  useEffect(() => {
+    if (state.phase === 'playing') {
+      const player1Seen = storage.getPlayer1SeenStory();
+      const player2Seen = storage.getPlayer2SeenStory();
+      const currentPlayer = state.gameState.currentPlayer;
+      const mode = state.mode;
+
+      // URL mode: Show if BOTH flags are false (first visit on this device)
+      if (mode === 'url' && !player1Seen && !player2Seen) {
+        setShowStoryPanel(true);
+      }
+      // Hot-seat mode: Show if current player hasn't seen it yet
+      else if (mode === 'hotseat') {
+        if (currentPlayer === 'white' && !player1Seen) {
+          setShowStoryPanel(true);
+        } else if (currentPlayer === 'black' && !player2Seen) {
+          setShowStoryPanel(true);
+        }
+      }
+    }
+  }, [state.phase, state]);
+
   // ===========================
   // Phase 1: Mode Selection
   // ===========================
@@ -183,6 +210,26 @@ export default function App(): ReactElement {
   // Phase 3: Playing
   // ===========================
   if (state.phase === 'playing') {
+    const handleCloseStoryPanel = (): void => {
+      setShowStoryPanel(false);
+
+      const currentPlayer = state.gameState.currentPlayer;
+      const mode = state.mode;
+
+      if (mode === 'url') {
+        // URL mode: Set both flags (per-device behavior)
+        storage.setPlayer1SeenStory(true);
+        storage.setPlayer2SeenStory(true);
+      } else if (mode === 'hotseat') {
+        // Hot-seat mode: Set flag for current player only
+        if (currentPlayer === 'white') {
+          storage.setPlayer1SeenStory(true);
+        } else if (currentPlayer === 'black') {
+          storage.setPlayer2SeenStory(true);
+        }
+      }
+    };
+
     const handleConfirmMove = (): void => {
       if (!state.pendingMove) return;
 
@@ -304,6 +351,27 @@ export default function App(): ReactElement {
           King's Cooking Chess
         </h1>
 
+        {/* Story/Instructions toggle */}
+        {!showStoryPanel && (
+          <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-sm)' }}>
+            <button
+              onClick={() => setShowStoryPanel(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontSize: 'var(--font-size-sm)',
+                padding: 'var(--spacing-xs)',
+              }}
+              aria-label="Show game story and instructions"
+            >
+              Show Story/Instructions
+            </button>
+          </div>
+        )}
+
         <div className="card" style={{ marginBottom: 'var(--spacing-md)' }}>
           <div style={{
             display: 'flex',
@@ -351,6 +419,12 @@ export default function App(): ReactElement {
             Black in court: {state.gameState.blackCourt.length}
           </div>
         </div>
+
+        {/* Story/Instructions Panel */}
+        <StoryPanel
+          isOpen={showStoryPanel}
+          onClose={handleCloseStoryPanel}
+        />
       </div>
     );
   }

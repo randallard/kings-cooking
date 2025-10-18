@@ -18,7 +18,8 @@ describe('ModeSelector', () => {
     it('should render subtitle', () => {
       render(<ModeSelector onModeSelected={vi.fn()} />);
 
-      expect(screen.getByRole('heading', { name: /choose your game mode/i })).toBeInTheDocument();
+      const subtitle = screen.getByRole('heading', { name: /choose your game mode/i, level: 3 });
+      expect(subtitle).toBeInTheDocument();
     });
 
     it('should render hot-seat mode button', () => {
@@ -153,14 +154,16 @@ describe('ModeSelector', () => {
       render(<ModeSelector onModeSelected={vi.fn()} />);
 
       const h1 = screen.getByRole('heading', { level: 1 });
-      const h2 = screen.getByRole('heading', { level: 2 });
       const h3s = screen.getAllByRole('heading', { level: 3 });
 
+      // h1: Page title
       expect(h1).toHaveTextContent(/king's cooking chess/i);
-      expect(h2).toHaveTextContent(/choose your game mode/i);
-      expect(h3s).toHaveLength(2);
-      expect(h3s[0]).toHaveTextContent(/hot-seat mode/i);
-      expect(h3s[1]).toHaveTextContent(/url mode/i);
+
+      // h3: Mode selection subtitle + mode titles
+      expect(h3s).toHaveLength(3);
+      expect(h3s[0]).toHaveTextContent(/choose your game mode/i);
+      expect(h3s[1]).toHaveTextContent(/hot-seat mode/i);
+      expect(h3s[2]).toHaveTextContent(/url mode/i);
     });
   });
 

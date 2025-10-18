@@ -33,7 +33,8 @@ export function ModeSelector({ onModeSelected }: ModeSelectorProps): ReactElemen
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>King's Cooking Chess</h1>
-      <h2 className={styles.subtitle}>Choose Your Game Mode:</h2>
+
+      <h3 className={styles.subtitle}>Choose Your Game Mode:</h3>
 
       <div className={styles.buttonContainer}>
         <button

@@ -40,6 +40,12 @@ export const STORAGE_KEYS = {
 
   /** Selected game mode */
   GAME_MODE: 'kings-cooking:game-mode',
+
+  /** Player 1 has seen story/instructions */
+  PLAYER1_SEEN_STORY: 'kings-cooking:player1-seen-story',
+
+  /** Player 2 has seen story/instructions */
+  PLAYER2_SEEN_STORY: 'kings-cooking:player2-seen-story',
 } as const;
 
 // ============================================================================
@@ -151,6 +157,7 @@ export function clearGameStorage(): void {
 const NameSchema = z.string().min(1).max(20);
 const PlayerIdSchema = z.string().uuid();
 const GameModeSchema = z.enum(['hotseat', 'url']);
+const SeenStorySchema = z.boolean();
 
 /**
  * Typed storage interface with validation.
@@ -197,6 +204,19 @@ export const storage = {
 
   setGameState: (state: GameState): boolean =>
     setValidatedItem(STORAGE_KEYS.GAME_STATE, state, GameStateSchema),
+
+  // Story/instructions panel flags
+  getPlayer1SeenStory: (): boolean | null =>
+    getValidatedItem(STORAGE_KEYS.PLAYER1_SEEN_STORY, SeenStorySchema),
+
+  setPlayer1SeenStory: (seen: boolean): boolean =>
+    setValidatedItem(STORAGE_KEYS.PLAYER1_SEEN_STORY, seen, SeenStorySchema),
+
+  getPlayer2SeenStory: (): boolean | null =>
+    getValidatedItem(STORAGE_KEYS.PLAYER2_SEEN_STORY, SeenStorySchema),
+
+  setPlayer2SeenStory: (seen: boolean): boolean =>
+    setValidatedItem(STORAGE_KEYS.PLAYER2_SEEN_STORY, seen, SeenStorySchema),
 
   // Clear all
   clearAll: clearGameStorage,

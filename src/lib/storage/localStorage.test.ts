@@ -110,4 +110,34 @@ describe('localStorage utilities', () => {
       expect(storage.getPlayer1Name()).toBeNull();
     });
   });
+
+  describe('Story/Instructions Flags', () => {
+    it('should get/set player1SeenStory', () => {
+      expect(storage.setPlayer1SeenStory(true)).toBe(true);
+      expect(storage.getPlayer1SeenStory()).toBe(true);
+    });
+
+    it('should get/set player2SeenStory', () => {
+      expect(storage.setPlayer2SeenStory(true)).toBe(true);
+      expect(storage.getPlayer2SeenStory()).toBe(true);
+    });
+
+    it('should return null for unset flags', () => {
+      expect(storage.getPlayer1SeenStory()).toBe(null);
+      expect(storage.getPlayer2SeenStory()).toBe(null);
+    });
+
+    it('should store false value correctly', () => {
+      storage.setPlayer1SeenStory(false);
+      expect(storage.getPlayer1SeenStory()).toBe(false);
+    });
+
+    it('should clear story flags with clearAll', () => {
+      storage.setPlayer1SeenStory(true);
+      storage.setPlayer2SeenStory(true);
+      storage.clearAll();
+      expect(storage.getPlayer1SeenStory()).toBe(null);
+      expect(storage.getPlayer2SeenStory()).toBe(null);
+    });
+  });
 });
