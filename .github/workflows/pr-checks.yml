@@ -34,10 +34,12 @@ jobs:
           PR_TITLE="${{ github.event.pull_request.title }}"
 
           # Check if PR title follows conventional commit format
-          if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+ ]]; then
+          # Regex matches: type(scope)?: description OR type: description
+          if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\([a-zA-Z0-9_-]+\))?: ]]; then
             echo "❌ PR title must follow conventional commit format:"
             echo "   feat: add new feature"
             echo "   fix: resolve bug"
+            echo "   fix(auth): resolve login issue"
             echo "   test: add missing tests"
             echo "   docs: update documentation"
             echo "   Current title: $PR_TITLE"

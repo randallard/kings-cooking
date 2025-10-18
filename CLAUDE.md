@@ -333,9 +333,27 @@ When working on GitHub issues, follow this **strict workflow** to ensure proper 
 ### Phase 4: Pull Request & Merge
 
 9. **Create Pull Request**
+   - **IMPORTANT**: PR title MUST follow conventional commit format:
+     - `feat: description` - New feature
+     - `fix: description` - Bug fix
+     - `fix(component): description` - Bug fix with scope
+     - `docs: description` - Documentation only
+     - `test: description` - Adding tests
+     - `refactor: description` - Code refactoring
+     - `style: description` - Formatting changes
+     - `chore: description` - Maintenance tasks
+     - `perf: description` - Performance improvements
+
    - Once ALL validation gates pass, push branch and create PR:
      ```bash
      git push -u origin issue-{issue-number}-{brief-description}
+
+     # PR title MUST match: type(scope)?: description
+     # Examples:
+     #   "fix: prevent name form auto-closing"
+     #   "feat(chess): add castling move validation"
+     #   "test: add regression tests for issue #13"
+
      ~/bin/gh pr create \
        --title "feat: {conventional commit title}" \
        --body "Closes #{issue-number}
