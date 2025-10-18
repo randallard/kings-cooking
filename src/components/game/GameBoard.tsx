@@ -55,8 +55,8 @@ export const GameBoard = ({
   // Chess engine instance (memoized)
   const engine = useMemo(() => {
     return new KingsChessEngine(
-      gameState.whitePlayer,
-      gameState.blackPlayer,
+      gameState.lightPlayer,
+      gameState.darkPlayer,
       gameState
     );
   }, [gameState]);
@@ -179,13 +179,13 @@ export const GameBoard = ({
 
   return (
     <div className={styles.gameBoardContainer}>
-      {/* Black King's Court (above board) - White pieces score here */}
+      {/* Dark King's Court (above board) - Light pieces score here */}
       <CourtArea
-        courtOwner="black"
-        scoredPieces={gameState.whiteCourt}
-        capturedPieces={gameState.capturedBlack}
+        courtOwner="dark"
+        scoredPieces={gameState.lightCourt}
+        capturedPieces={gameState.capturedDark}
         canMoveOffBoard={
-          gameState.currentPlayer === 'white' && canSelectedPieceMoveOffBoard
+          gameState.currentPlayer === 'light' && canSelectedPieceMoveOffBoard
         }
         onOffBoardMove={handleOffBoardMove}
         currentPlayer={gameState.currentPlayer}
@@ -224,13 +224,13 @@ export const GameBoard = ({
         ))}
       </div>
 
-      {/* White King's Court (below board) - Black pieces score here */}
+      {/* Light King's Court (below board) - Dark pieces score here */}
       <CourtArea
-        courtOwner="white"
-        scoredPieces={gameState.blackCourt}
-        capturedPieces={gameState.capturedWhite}
+        courtOwner="light"
+        scoredPieces={gameState.darkCourt}
+        capturedPieces={gameState.capturedLight}
         canMoveOffBoard={
-          gameState.currentPlayer === 'black' && canSelectedPieceMoveOffBoard
+          gameState.currentPlayer === 'dark' && canSelectedPieceMoveOffBoard
         }
         onOffBoardMove={handleOffBoardMove}
         currentPlayer={gameState.currentPlayer}

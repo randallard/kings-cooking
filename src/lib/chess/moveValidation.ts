@@ -34,7 +34,7 @@ export function validateMove(
   to: Position | 'off_board',
   piece: Piece,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'white' | 'black'
+  currentPlayer: 'light' | 'dark'
 ): ValidationResult {
   // Check it's this piece's turn
   if (piece.owner !== currentPlayer) {
@@ -135,7 +135,7 @@ function validateStandardMove(
   to: Position,
   piece: Piece,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'white' | 'black'
+  currentPlayer: 'light' | 'dark'
 ): ValidationResult {
   // Ensure to is not null
   if (!to) {
@@ -204,7 +204,7 @@ function validateStandardMove(
 export function isStalemate(
   pieces: Piece[],
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'white' | 'black'
+  currentPlayer: 'light' | 'dark'
 ): boolean {
   for (const piece of pieces) {
     if (piece.position === null) continue; // Off-board
@@ -229,7 +229,7 @@ function getValidMovesForPiece(
   from: Position,
   piece: Piece,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'white' | 'black'
+  currentPlayer: 'light' | 'dark'
 ): Position[] {
   switch (piece.type) {
     case 'rook':

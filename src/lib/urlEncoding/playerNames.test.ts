@@ -18,7 +18,7 @@ import { GameIdSchema, PlayerIdSchema } from '@/lib/validation/schemas';
 // Mock game state helper
 const createMockGameState = (
   currentTurn: number = 0,
-  currentPlayer: 'white' | 'black' = 'white'
+  currentPlayer: 'light' | 'dark' = 'light'
 ): GameState => ({
   version: '1.0.0',
   gameId: GameIdSchema.parse('550e8400-e29b-41d4-a716-446655440000'),
@@ -27,17 +27,17 @@ const createMockGameState = (
     [null, null, null],
     [null, null, null],
   ],
-  whiteCourt: [],
-  blackCourt: [],
-  capturedWhite: [],
-  capturedBlack: [],
+  lightCourt: [],
+  darkCourt: [],
+  capturedLight: [],
+  capturedDark: [],
   currentTurn,
   currentPlayer,
-  whitePlayer: {
+  lightPlayer: {
     id: PlayerIdSchema.parse('550e8400-e29b-41d4-a716-446655440001'),
     name: 'Alice'
   },
-  blackPlayer: {
+  darkPlayer: {
     id: PlayerIdSchema.parse('550e8400-e29b-41d4-a716-446655440002'),
     name: 'Bob'
   },
@@ -65,7 +65,7 @@ describe('Player Names Integration', () => {
           gameState,
         };
 
-        const myPlayerId = gameState.blackPlayer.id;
+        const myPlayerId = gameState.darkPlayer.id;
         extractAndSaveOpponentName(payload, myPlayerId);
 
         const saved = localStorage.getItem(OPPONENT_NAME_KEY);
@@ -79,7 +79,7 @@ describe('Player Names Integration', () => {
           gameState,
         };
 
-        const myPlayerId = gameState.whitePlayer.id;
+        const myPlayerId = gameState.lightPlayer.id;
         extractAndSaveOpponentName(payload, myPlayerId);
 
         const saved = localStorage.getItem(OPPONENT_NAME_KEY);
@@ -94,10 +94,10 @@ describe('Player Names Integration', () => {
           playerName: 'Charlie',
         };
 
-        const myPlayerId = gameState.blackPlayer.id;
+        const myPlayerId = gameState.darkPlayer.id;
         extractAndSaveOpponentName(payload, myPlayerId);
 
-        // Should extract from gameState.whitePlayer.name, not playerName field
+        // Should extract from gameState.lightPlayer.name, not playerName field
         const saved = localStorage.getItem(OPPONENT_NAME_KEY);
         expect(saved).toBe('Alice');
       });
@@ -117,7 +117,7 @@ describe('Player Names Integration', () => {
           playerName: 'Bob',
         };
 
-        const myPlayerId = gameState.whitePlayer.id;
+        const myPlayerId = gameState.lightPlayer.id;
         extractAndSaveOpponentName(payload, myPlayerId);
 
         const saved = localStorage.getItem(OPPONENT_NAME_KEY);
@@ -136,7 +136,7 @@ describe('Player Names Integration', () => {
           checksum: 'test-checksum',
         };
 
-        const myPlayerId = gameState.whitePlayer.id;
+        const myPlayerId = gameState.lightPlayer.id;
         extractAndSaveOpponentName(payload, myPlayerId);
 
         const saved = localStorage.getItem(OPPONENT_NAME_KEY);
@@ -158,7 +158,7 @@ describe('Player Names Integration', () => {
           playerName: 'NewName',
         };
 
-        const myPlayerId = gameState.whitePlayer.id;
+        const myPlayerId = gameState.lightPlayer.id;
         extractAndSaveOpponentName(payload, myPlayerId);
 
         const saved = localStorage.getItem(OPPONENT_NAME_KEY);
@@ -180,7 +180,7 @@ describe('Player Names Integration', () => {
           playerName: 'Dave',
         };
 
-        const myPlayerId = gameState.whitePlayer.id;
+        const myPlayerId = gameState.lightPlayer.id;
         extractAndSaveOpponentName(payload, myPlayerId);
 
         const saved = localStorage.getItem(OPPONENT_NAME_KEY);
@@ -199,7 +199,7 @@ describe('Player Names Integration', () => {
           checksum: 'test-checksum',
         };
 
-        const myPlayerId = gameState.whitePlayer.id;
+        const myPlayerId = gameState.lightPlayer.id;
         extractAndSaveOpponentName(payload, myPlayerId);
 
         const saved = localStorage.getItem(OPPONENT_NAME_KEY);
@@ -226,31 +226,31 @@ describe('Player Names Integration', () => {
   describe('shouldIncludePlayerName', () => {
     describe('delta payloads', () => {
       it('should return true for black player on turn 1', () => {
-        const gameState = createMockGameState(1, 'black');
+        const gameState = createMockGameState(1, 'dark');
         const result = shouldIncludePlayerName(gameState, 'delta');
         expect(result).toBe(true);
       });
 
       it('should return false for white player on turn 0', () => {
-        const gameState = createMockGameState(0, 'white');
+        const gameState = createMockGameState(0, 'light');
         const result = shouldIncludePlayerName(gameState, 'delta');
         expect(result).toBe(false);
       });
 
       it('should return false for white player on turn 2', () => {
-        const gameState = createMockGameState(2, 'white');
+        const gameState = createMockGameState(2, 'light');
         const result = shouldIncludePlayerName(gameState, 'delta');
         expect(result).toBe(false);
       });
 
       it('should return false for black player on turn 3', () => {
-        const gameState = createMockGameState(3, 'black');
+        const gameState = createMockGameState(3, 'dark');
         const result = shouldIncludePlayerName(gameState, 'delta');
         expect(result).toBe(false);
       });
 
       it('should return false for black player on turn 0 (edge case)', () => {
-        const gameState = createMockGameState(0, 'black');
+        const gameState = createMockGameState(0, 'dark');
         const result = shouldIncludePlayerName(gameState, 'delta');
         expect(result).toBe(false);
       });
@@ -258,19 +258,19 @@ describe('Player Names Integration', () => {
 
     describe('resync_request payloads', () => {
       it('should always return true for resync_request', () => {
-        const gameState = createMockGameState(0, 'white');
+        const gameState = createMockGameState(0, 'light');
         const result = shouldIncludePlayerName(gameState, 'resync_request');
         expect(result).toBe(true);
       });
 
       it('should return true for resync_request regardless of turn', () => {
-        const gameState = createMockGameState(10, 'black');
+        const gameState = createMockGameState(10, 'dark');
         const result = shouldIncludePlayerName(gameState, 'resync_request');
         expect(result).toBe(true);
       });
 
       it('should return true for resync_request on turn 1', () => {
-        const gameState = createMockGameState(1, 'black');
+        const gameState = createMockGameState(1, 'dark');
         const result = shouldIncludePlayerName(gameState, 'resync_request');
         expect(result).toBe(true);
       });
@@ -278,13 +278,13 @@ describe('Player Names Integration', () => {
 
     describe('edge cases', () => {
       it('should handle turn 1 with white player correctly', () => {
-        const gameState = createMockGameState(1, 'white');
+        const gameState = createMockGameState(1, 'light');
         const result = shouldIncludePlayerName(gameState, 'delta');
         expect(result).toBe(false);
       });
 
       it('should handle large turn numbers', () => {
-        const gameState = createMockGameState(100, 'black');
+        const gameState = createMockGameState(100, 'dark');
         const result = shouldIncludePlayerName(gameState, 'delta');
         expect(result).toBe(false);
       });
@@ -355,7 +355,7 @@ describe('Player Names Integration', () => {
         gameState,
       };
 
-      extractAndSaveOpponentName(payload, gameState.blackPlayer.id);
+      extractAndSaveOpponentName(payload, gameState.darkPlayer.id);
 
       expect(getOpponentName()).toBe('Alice');
     });
@@ -374,7 +374,7 @@ describe('Player Names Integration', () => {
         playerName: 'Bob',
       };
 
-      extractAndSaveOpponentName(payload, gameState.whitePlayer.id);
+      extractAndSaveOpponentName(payload, gameState.lightPlayer.id);
 
       expect(getOpponentName()).toBe('Bob');
     });
@@ -397,20 +397,20 @@ describe('Player Names Integration', () => {
         playerName: 'RecoveredName',
       };
 
-      extractAndSaveOpponentName(payload, gameState.whitePlayer.id);
+      extractAndSaveOpponentName(payload, gameState.lightPlayer.id);
 
       expect(getOpponentName()).toBe('RecoveredName');
     });
 
     it('should determine when to include playerName in delta for black player turn 1', () => {
-      const gameState = createMockGameState(1, 'black');
+      const gameState = createMockGameState(1, 'dark');
       const shouldInclude = shouldIncludePlayerName(gameState, 'delta');
 
       expect(shouldInclude).toBe(true);
     });
 
     it('should not include playerName in delta for subsequent moves', () => {
-      const gameState = createMockGameState(5, 'white');
+      const gameState = createMockGameState(5, 'light');
       const shouldInclude = shouldIncludePlayerName(gameState, 'delta');
 
       expect(shouldInclude).toBe(false);

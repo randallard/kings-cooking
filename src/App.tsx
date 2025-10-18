@@ -1,6 +1,6 @@
 import { ReactElement, useReducer, useEffect, useState } from 'react';
 import { gameFlowReducer } from './lib/gameFlow/reducer';
-import { storage } from './lib/storage/localStorage';
+import { storage, checkAndMigrateStorage } from './lib/storage/localStorage';
 import { useUrlState } from './hooks/useUrlState';
 import { ModeSelector } from './components/game/ModeSelector';
 import { NameForm } from './components/game/NameForm';
@@ -55,6 +55,14 @@ export default function App(): ReactElement {
 
   // Task 10: Restore game state from localStorage on page refresh
   useEffect(() => {
+    // Check and migrate storage if needed (Issue #4 - light/dark refactor)
+    const migrated = checkAndMigrateStorage();
+    if (migrated) {
+      console.log('📦 Storage migrated to v2.0.0 - cleared old game data (white/black → light/dark)');
+      // Early return - no saved data to restore after migration
+      return;
+    }
+
     const savedMode = storage.getGameMode();
     const savedGameState = storage.getGameState();
     const savedPlayer1 = storage.getPlayer1Name();
@@ -65,8 +73,8 @@ export default function App(): ReactElement {
       console.log('Restoring saved game from localStorage');
 
       // Check if game is over
-      const isGameOver = savedGameState.status === 'white_wins' ||
-                        savedGameState.status === 'black_wins' ||
+      const isGameOver = savedGameState.status === 'light_wins' ||
+                        savedGameState.status === 'dark_wins' ||
                         savedGameState.status === 'draw';
 
       if (isGameOver) {
@@ -141,9 +149,9 @@ export default function App(): ReactElement {
       }
       // Hot-seat mode: Show if current player hasn't seen it yet
       else if (mode === 'hotseat') {
-        if (currentPlayer === 'white' && !player1Seen) {
+        if (currentPlayer === 'light' && !player1Seen) {
           setShowStoryPanel(true);
-        } else if (currentPlayer === 'black' && !player2Seen) {
+        } else if (currentPlayer === 'dark' && !player2Seen) {
           setShowStoryPanel(true);
         }
       }
@@ -222,9 +230,9 @@ export default function App(): ReactElement {
         storage.setPlayer2SeenStory(true);
       } else if (mode === 'hotseat') {
         // Hot-seat mode: Set flag for current player only
-        if (currentPlayer === 'white') {
+        if (currentPlayer === 'light') {
           storage.setPlayer1SeenStory(true);
-        } else if (currentPlayer === 'black') {
+        } else if (currentPlayer === 'dark') {
           storage.setPlayer2SeenStory(true);
         }
       }
@@ -238,8 +246,8 @@ export default function App(): ReactElement {
 
       // Create engine and load current game state
       const engine = new KingsChessEngine(
-        state.gameState.whitePlayer,
-        state.gameState.blackPlayer,
+        state.gameState.lightPlayer,
+        state.gameState.darkPlayer,
         state.gameState
       );
 
@@ -295,8 +303,8 @@ export default function App(): ReactElement {
                 playerName: fullStatePayload.playerName,
                 currentTurn: newState.currentTurn,
                 checksum: newState.checksum,
-                whitePlayer: newState.whitePlayer.name,
-                blackPlayer: newState.blackPlayer.name,
+                lightPlayer: newState.lightPlayer.name,
+                darkPlayer: newState.darkPlayer.name,
                 board: newState.board,
               });
             }
@@ -381,10 +389,10 @@ export default function App(): ReactElement {
           }}>
             <div>
               <strong>Current Turn:</strong>{' '}
-              {state.gameState.currentPlayer === 'white' ? (
-                state.player1Name || 'White'
+              {state.gameState.currentPlayer === 'light' ? (
+                state.player1Name || 'Light'
               ) : (
-                state.player2Name || 'Black'
+                state.player2Name || 'Dark'
               )}
             </div>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
@@ -415,8 +423,8 @@ export default function App(): ReactElement {
             fontSize: 'var(--font-size-sm)',
             color: 'var(--text-secondary)',
           }}>
-            <strong>Game Stats:</strong> White in court: {state.gameState.whiteCourt.length} |
-            Black in court: {state.gameState.blackCourt.length}
+            <strong>Game Stats:</strong> Light in court: {state.gameState.lightCourt.length} |
+            Dark in court: {state.gameState.darkCourt.length}
           </div>
         </div>
 
@@ -474,13 +482,13 @@ export default function App(): ReactElement {
       }
 
       // Show HandoffScreen with countdown
-      const previousPlayer = state.gameState.currentPlayer === 'white' ? 'black' : 'white';
-      const previousPlayerName = previousPlayer === 'white'
-        ? (state.player1Name || 'White')
-        : (state.player2Name || 'Black');
-      const nextPlayerName = state.gameState.currentPlayer === 'white'
-        ? (state.player1Name || 'White')
-        : (state.player2Name || 'Black');
+      const previousPlayer = state.gameState.currentPlayer === 'light' ? 'dark' : 'light';
+      const previousPlayerName = previousPlayer === 'light'
+        ? (state.player1Name || 'Light')
+        : (state.player2Name || 'Dark');
+      const nextPlayerName = state.gameState.currentPlayer === 'light'
+        ? (state.player1Name || 'Light')
+        : (state.player2Name || 'Dark');
 
       return (
         <HandoffScreen
@@ -582,17 +590,17 @@ export default function App(): ReactElement {
       winner: state.winner,
       totalMoves: state.gameState.currentTurn,
       gameDuration: 0, // TODO: Track game duration in state
-      whiteCourt: state.gameState.whiteCourt,
-      blackCourt: state.gameState.blackCourt,
-      capturedWhite: state.gameState.capturedWhite,
-      capturedBlack: state.gameState.capturedBlack,
+      lightCourt: state.gameState.lightCourt,
+      darkCourt: state.gameState.darkCourt,
+      capturedLight: state.gameState.capturedLight,
+      capturedDark: state.gameState.capturedDark,
       board: state.gameState.board,
     };
 
     // Add optional props only if they have values
     if (state.winner !== 'draw') {
-      const winnerName = state.winner === 'white' ? state.player1Name : state.player2Name;
-      const loserName = state.winner === 'white' ? state.player2Name : state.player1Name;
+      const winnerName = state.winner === 'light' ? state.player1Name : state.player2Name;
+      const loserName = state.winner === 'light' ? state.player2Name : state.player1Name;
 
       if (winnerName) {
         victoryProps.winnerName = winnerName;

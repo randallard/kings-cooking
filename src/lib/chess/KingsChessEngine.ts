@@ -40,7 +40,7 @@ import {
  *
  * @example
  * ```typescript
- * const engine = new KingsChessEngine(whitePlayer, blackPlayer);
+ * const engine = new KingsChessEngine(lightPlayer, darkPlayer);
  * const result = engine.makeMove([2, 0], [1, 0]);
  * if (result.success) {
  *   const victory = engine.checkGameEnd();
@@ -56,13 +56,13 @@ export class KingsChessEngine {
   /**
    * Create new chess engine.
    *
-   * @param whitePlayer - White player info
-   * @param blackPlayer - Black player info
+   * @param lightPlayer - Light player info
+   * @param darkPlayer - Dark player info
    * @param initialState - Optional initial state to restore from
    */
   constructor(
-    whitePlayer: PlayerInfo,
-    blackPlayer: PlayerInfo,
+    lightPlayer: PlayerInfo,
+    darkPlayer: PlayerInfo,
     initialState?: GameState
   ) {
     if (initialState) {
@@ -70,7 +70,7 @@ export class KingsChessEngine {
       this.gameState = GameStateSchema.parse(initialState);
     } else {
       // Create new game
-      this.gameState = this.createInitialState(whitePlayer, blackPlayer);
+      this.gameState = this.createInitialState(lightPlayer, darkPlayer);
     }
   }
 
@@ -79,61 +79,61 @@ export class KingsChessEngine {
    *
    * Starting setup:
    * ```
-   * [♜][♞][♝]  ← Black (row 0)
+   * [♜][♞][♝]  ← Dark (row 0)
    * [ ][ ][ ]  ← Empty (row 1)
-   * [♖][♘][♗]  ← White (row 2)
+   * [♖][♘][♗]  ← Light (row 2)
    * ```
    */
   private createInitialState(
-    whitePlayer: PlayerInfo,
-    blackPlayer: PlayerInfo
+    lightPlayer: PlayerInfo,
+    darkPlayer: PlayerInfo
   ): GameState {
     const gameId: GameId = GameIdSchema.parse(uuid());
 
     // Create starting pieces
-    const whiteRook: Piece = {
+    const lightRook: Piece = {
       type: 'rook',
-      owner: 'white',
+      owner: 'light',
       position: [2, 0],
       moveCount: 0,
       id: uuid(),
     };
 
-    const whiteKnight: Piece = {
+    const lightKnight: Piece = {
       type: 'knight',
-      owner: 'white',
+      owner: 'light',
       position: [2, 1],
       moveCount: 0,
       id: uuid(),
     };
 
-    const whiteBishop: Piece = {
+    const lightBishop: Piece = {
       type: 'bishop',
-      owner: 'white',
+      owner: 'light',
       position: [2, 2],
       moveCount: 0,
       id: uuid(),
     };
 
-    const blackRook: Piece = {
+    const darkRook: Piece = {
       type: 'rook',
-      owner: 'black',
+      owner: 'dark',
       position: [0, 0],
       moveCount: 0,
       id: uuid(),
     };
 
-    const blackKnight: Piece = {
+    const darkKnight: Piece = {
       type: 'knight',
-      owner: 'black',
+      owner: 'dark',
       position: [0, 1],
       moveCount: 0,
       id: uuid(),
     };
 
-    const blackBishop: Piece = {
+    const darkBishop: Piece = {
       type: 'bishop',
-      owner: 'black',
+      owner: 'dark',
       position: [0, 2],
       moveCount: 0,
       id: uuid(),
@@ -141,23 +141,23 @@ export class KingsChessEngine {
 
     // Create 3x3 board
     const board: (Piece | null)[][] = [
-      [blackRook, blackKnight, blackBishop],
+      [darkRook, darkKnight, darkBishop],
       [null, null, null],
-      [whiteRook, whiteKnight, whiteBishop],
+      [lightRook, lightKnight, lightBishop],
     ];
 
     const initialState: GameState = {
       version: '1.0.0',
       gameId,
       board,
-      whiteCourt: [],
-      blackCourt: [],
-      capturedWhite: [],
-      capturedBlack: [],
+      lightCourt: [],
+      darkCourt: [],
+      capturedLight: [],
+      capturedDark: [],
       currentTurn: 0,
-      currentPlayer: 'white',
-      whitePlayer,
-      blackPlayer,
+      currentPlayer: 'light',
+      lightPlayer,
+      darkPlayer,
       status: 'playing',
       winner: null,
       moveHistory: [],
@@ -227,10 +227,10 @@ export class KingsChessEngine {
     piece.moveCount++;
 
     // Add to scoring court (piece goes to opponent's side to score)
-    if (piece.owner === 'white') {
-      this.gameState.whiteCourt.push(piece);
+    if (piece.owner === 'light') {
+      this.gameState.lightCourt.push(piece);
     } else {
-      this.gameState.blackCourt.push(piece);
+      this.gameState.darkCourt.push(piece);
     }
 
     // Record move
@@ -275,10 +275,10 @@ export class KingsChessEngine {
       // CRITICAL: Captured piece goes to THEIR OWN king's court (not captor's)
       targetPiece.position = null;
 
-      if (targetPiece.owner === 'white') {
-        this.gameState.capturedWhite.push(targetPiece);
+      if (targetPiece.owner === 'light') {
+        this.gameState.capturedLight.push(targetPiece);
       } else {
-        this.gameState.capturedBlack.push(targetPiece);
+        this.gameState.capturedDark.push(targetPiece);
       }
     }
 
@@ -320,7 +320,7 @@ export class KingsChessEngine {
   private advanceTurn(): void {
     this.gameState.currentTurn++;
     this.gameState.currentPlayer =
-      this.gameState.currentPlayer === 'white' ? 'black' : 'white';
+      this.gameState.currentPlayer === 'light' ? 'dark' : 'light';
     this.gameState.checksum = this.generateChecksum(
       this.gameState.gameId,
       this.gameState.currentTurn,
@@ -410,8 +410,8 @@ export class KingsChessEngine {
   public static fromJSON(json: GameState): KingsChessEngine {
     const validated = GameStateSchema.parse(json);
     return new KingsChessEngine(
-      validated.whitePlayer,
-      validated.blackPlayer,
+      validated.lightPlayer,
+      validated.darkPlayer,
       validated
     );
   }

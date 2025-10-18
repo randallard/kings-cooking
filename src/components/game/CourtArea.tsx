@@ -9,8 +9,8 @@ import { OffBoardButton } from './OffBoardButton';
 import styles from './CourtArea.module.css';
 
 interface CourtAreaProps {
-  /** Owner of this court (white/black) */
-  courtOwner: 'white' | 'black';
+  /** Owner of this court (light/dark) */
+  courtOwner: 'light' | 'dark';
   /** Pieces that have scored in this court (opponent's pieces) */
   scoredPieces: Piece[];
   /** Pieces that were captured and returned to their own court */
@@ -20,16 +20,16 @@ interface CourtAreaProps {
   /** Callback for off-board move */
   onOffBoardMove: () => void;
   /** Current player's turn */
-  currentPlayer: 'white' | 'black';
+  currentPlayer: 'light' | 'dark';
   /** Selected piece type (if any) */
   selectedPieceType: 'rook' | 'knight' | 'bishop' | null;
 }
 
 // Helper: Unicode piece lookup
-const PIECE_UNICODE: Record<string, { white: string; black: string }> = {
-  rook: { white: '♜', black: '♖' },
-  knight: { white: '♞', black: '♘' },
-  bishop: { white: '♝', black: '♗' },
+const PIECE_UNICODE: Record<string, { light: string; dark: string }> = {
+  rook: { light: '♜', dark: '♖' },
+  knight: { light: '♞', dark: '♘' },
+  bishop: { light: '♝', dark: '♗' },
 };
 
 /**
@@ -41,32 +41,32 @@ const PIECE_UNICODE: Record<string, { white: string; black: string }> = {
 function getPieceIcon(piece: Piece): string {
   const icons = PIECE_UNICODE[piece.type];
   if (!icons) return '?';
-  return piece.owner === 'white' ? icons.white : icons.black;
+  return piece.owner === 'light' ? icons.light : icons.dark;
 }
 
 /**
  * King's Court area component.
  *
  * Displays:
- * - Court label (e.g., "Black King's Court")
+ * - Court label (e.g., "Dark King's Court")
  * - Scored pieces (opponent's pieces that made it to this court)
  * - Captured pieces (this court owner's pieces that were captured)
  * - Off-board button (when it's opponent's turn and they can score)
  *
  * Layout:
- * - Black King's Court appears ABOVE the board (white pieces score here)
- * - White King's Court appears BELOW the board (black pieces score here)
+ * - Dark King's Court appears ABOVE the board (light pieces score here)
+ * - Light King's Court appears BELOW the board (dark pieces score here)
  *
  * @component
  * @example
  * ```tsx
  * <CourtArea
- *   courtOwner="black"
- *   scoredPieces={gameState.whiteCourt}
- *   capturedPieces={gameState.capturedBlack}
- *   canMoveOffBoard={canWhitePieceScore}
+ *   courtOwner="dark"
+ *   scoredPieces={gameState.lightCourt}
+ *   capturedPieces={gameState.capturedDark}
+ *   canMoveOffBoard={canLightPieceScore}
  *   onOffBoardMove={handleOffBoard}
- *   currentPlayer="white"
+ *   currentPlayer="light"
  *   selectedPieceType="rook"
  * />
  * ```
@@ -81,13 +81,13 @@ export const CourtArea = ({
   selectedPieceType,
 }: CourtAreaProps): ReactElement => {
   // Determine if this court should show button
-  // White scores in Black's court, Black scores in White's court
+  // Light scores in Dark's court, Dark scores in Light's court
   const isTargetCourt = currentPlayer !== courtOwner;
 
   return (
     <div className={styles.courtArea}>
       <div className={styles.courtLabel}>
-        {courtOwner === 'white' ? 'White' : 'Black'} King's Court
+        {courtOwner === 'light' ? 'Light' : 'Dark'} King's Court
       </div>
 
       <div className={styles.piecesContainer}>

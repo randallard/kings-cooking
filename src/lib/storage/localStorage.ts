@@ -15,6 +15,21 @@ import { z } from 'zod';
 import { GameStateSchema, type GameState } from '../validation/schemas';
 
 // ============================================================================
+// Storage Version Management
+// ============================================================================
+
+/**
+ * Current storage version.
+ * Increment when making breaking changes to stored data format.
+ *
+ * Version History:
+ * - 1.0.0: Initial release with 'white'/'black' terminology
+ * - 2.0.0: Refactored to 'light'/'dark' terminology (Issue #4)
+ */
+const STORAGE_VERSION = '2.0.0';
+const VERSION_KEY = 'kings-cooking:version';
+
+// ============================================================================
 // Storage Keys
 // ============================================================================
 
@@ -23,6 +38,9 @@ import { GameStateSchema, type GameState } from '../validation/schemas';
  * Namespaced with 'kings-cooking:' to avoid conflicts.
  */
 export const STORAGE_KEYS = {
+  /** Storage version for migration tracking */
+  VERSION: VERSION_KEY,
+
   /** Current player's name (used in both modes) */
   MY_NAME: 'kings-cooking:my-name',
 
@@ -148,6 +166,55 @@ export function clearGameStorage(): void {
   Object.values(STORAGE_KEYS).forEach((key) => {
     localStorage.removeItem(key);
   });
+}
+
+/**
+ * Checks storage version and performs migration if needed.
+ * Called on app startup to handle breaking changes.
+ *
+ * @returns true if migration was performed, false otherwise
+ *
+ * @example
+ * ```typescript
+ * useEffect(() => {
+ *   const migrated = checkAndMigrateStorage();
+ *   if (migrated) {
+ *     console.log('Storage migrated to', STORAGE_VERSION);
+ *   }
+ * }, []);
+ * ```
+ */
+export function checkAndMigrateStorage(): boolean {
+  try {
+    const currentVersion = localStorage.getItem(VERSION_KEY);
+
+    // No version or old version - perform migration
+    if (!currentVersion || currentVersion < STORAGE_VERSION) {
+      console.log(`Migrating storage from ${currentVersion || 'unknown'} to ${STORAGE_VERSION}`);
+
+      // Clear game data that may have old format (white/black)
+      localStorage.removeItem(STORAGE_KEYS.GAME_STATE);
+      localStorage.removeItem(STORAGE_KEYS.GAME_MODE);
+      localStorage.removeItem(STORAGE_KEYS.PLAYER1_NAME);
+      localStorage.removeItem(STORAGE_KEYS.PLAYER2_NAME);
+      localStorage.removeItem(STORAGE_KEYS.MY_NAME);
+      localStorage.removeItem(STORAGE_KEYS.MY_PLAYER_ID);
+
+      // Keep story flags and other non-game data
+      // STORAGE_KEYS.PLAYER1_SEEN_STORY - keep
+      // STORAGE_KEYS.PLAYER2_SEEN_STORY - keep
+
+      // Set new version
+      localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
+
+      return true; // Migration performed
+    }
+
+    return false; // No migration needed
+  } catch (error) {
+    console.error('Failed to migrate storage:', error);
+    return false;
+  }
 }
 
 // ============================================================================

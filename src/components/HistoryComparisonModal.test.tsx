@@ -15,7 +15,7 @@ import type { GameState, Move, Piece } from '@/lib/validation/schemas';
 /**
  * Helper function to create a mock piece
  */
-const createMockPiece = (owner: 'white' | 'black'): Piece => ({
+const createMockPiece = (owner: 'light' | 'dark'): Piece => ({
   type: 'rook',
   owner,
   position: [0, 0],
@@ -30,7 +30,7 @@ let mockTimestamp = Date.now();
 const createMockMove = (
   from: [number, number],
   to: [number, number] | 'off_board',
-  owner: 'white' | 'black'
+  owner: 'light' | 'dark'
 ): Move => ({
   from,
   to,
@@ -50,17 +50,17 @@ const createMockGameState = (moveHistory: Move[] = []): GameState => ({
     [null, null, null],
     [null, null, null],
   ],
-  whiteCourt: [],
-  blackCourt: [],
-  capturedWhite: [],
-  capturedBlack: [],
+  lightCourt: [],
+  darkCourt: [],
+  capturedLight: [],
+  capturedDark: [],
   currentTurn: moveHistory.length,
-  currentPlayer: moveHistory.length % 2 === 0 ? 'white' : 'black',
-  whitePlayer: {
+  currentPlayer: moveHistory.length % 2 === 0 ? 'light' : 'dark',
+  lightPlayer: {
     id: crypto.randomUUID() as never,
     name: 'Player 1',
   },
-  blackPlayer: {
+  darkPlayer: {
     id: crypto.randomUUID() as never,
     name: 'Player 2',
   },
@@ -160,15 +160,15 @@ describe('HistoryComparisonModal', () => {
   describe('Divergence Detection', () => {
     it('should detect divergence at first differing move', () => {
       const myHistory = [
-        createMockMove([0, 0], [1, 1], 'white'),
-        createMockMove([2, 2], [1, 1], 'black'),
-        createMockMove([1, 1], [2, 2], 'white'), // Diverges here
+        createMockMove([0, 0], [1, 1], 'light'),
+        createMockMove([2, 2], [1, 1], 'dark'),
+        createMockMove([1, 1], [2, 2], 'light'), // Diverges here
       ];
 
       const theirHistory = [
-        createMockMove([0, 0], [1, 1], 'white'),
-        createMockMove([2, 2], [1, 1], 'black'),
-        createMockMove([1, 1], [0, 0], 'white'), // Different move
+        createMockMove([0, 0], [1, 1], 'light'),
+        createMockMove([2, 2], [1, 1], 'dark'),
+        createMockMove([1, 1], [0, 0], 'light'), // Different move
       ];
 
       const myState = createMockGameState(myHistory);
@@ -187,14 +187,14 @@ describe('HistoryComparisonModal', () => {
 
     it('should detect divergence when histories have different lengths', () => {
       const myHistory = [
-        createMockMove([0, 0], [1, 1], 'white'),
-        createMockMove([2, 2], [1, 1], 'black'),
+        createMockMove([0, 0], [1, 1], 'light'),
+        createMockMove([2, 2], [1, 1], 'dark'),
       ];
 
       const theirHistory = [
-        createMockMove([0, 0], [1, 1], 'white'),
-        createMockMove([2, 2], [1, 1], 'black'),
-        createMockMove([1, 1], [2, 2], 'white'),
+        createMockMove([0, 0], [1, 1], 'light'),
+        createMockMove([2, 2], [1, 1], 'dark'),
+        createMockMove([1, 1], [2, 2], 'light'),
       ];
 
       const myState = createMockGameState(myHistory);
@@ -229,15 +229,15 @@ describe('HistoryComparisonModal', () => {
 
     it('should highlight divergent moves', () => {
       const myHistory = [
-        createMockMove([0, 0], [1, 1], 'white'),
-        createMockMove([2, 2], [1, 1], 'black'),
-        createMockMove([1, 1], [2, 2], 'white'),
+        createMockMove([0, 0], [1, 1], 'light'),
+        createMockMove([2, 2], [1, 1], 'dark'),
+        createMockMove([1, 1], [2, 2], 'light'),
       ];
 
       const theirHistory = [
-        createMockMove([0, 0], [1, 1], 'white'),
-        createMockMove([2, 2], [1, 1], 'black'),
-        createMockMove([1, 1], [0, 0], 'white'),
+        createMockMove([0, 0], [1, 1], 'light'),
+        createMockMove([2, 2], [1, 1], 'dark'),
+        createMockMove([1, 1], [0, 0], 'light'),
       ];
 
       const myState = createMockGameState(myHistory);
@@ -262,8 +262,8 @@ describe('HistoryComparisonModal', () => {
    */
   describe('Side-by-Side Comparison', () => {
     it('should display both histories', () => {
-      const myHistory = [createMockMove([0, 0], [1, 1], 'white')];
-      const theirHistory = [createMockMove([2, 2], [1, 1], 'black')];
+      const myHistory = [createMockMove([0, 0], [1, 1], 'light')];
+      const theirHistory = [createMockMove([2, 2], [1, 1], 'dark')];
 
       const myState = createMockGameState(myHistory);
 
@@ -282,10 +282,10 @@ describe('HistoryComparisonModal', () => {
 
     it('should show move counts in summary', () => {
       const myHistory = [
-        createMockMove([0, 0], [1, 1], 'white'),
-        createMockMove([2, 2], [1, 1], 'black'),
+        createMockMove([0, 0], [1, 1], 'light'),
+        createMockMove([2, 2], [1, 1], 'dark'),
       ];
-      const theirHistory = [createMockMove([0, 0], [1, 1], 'white')];
+      const theirHistory = [createMockMove([0, 0], [1, 1], 'light')];
 
       const myState = createMockGameState(myHistory);
 
@@ -305,7 +305,7 @@ describe('HistoryComparisonModal', () => {
     });
 
     it('should display move notation correctly', () => {
-      const myHistory = [createMockMove([0, 0], [2, 2], 'white')];
+      const myHistory = [createMockMove([0, 0], [2, 2], 'light')];
       const theirHistory: Move[] = [];
 
       const myState = createMockGameState(myHistory);

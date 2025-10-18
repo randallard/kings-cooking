@@ -20,7 +20,7 @@ import type { MoveHistoryEntry, GameHistory } from './types';
 // Mock piece for tests
 const mockPiece = {
   type: 'rook' as const,
-  owner: 'white' as const,
+  owner: 'light' as const,
   position: [2, 0] as [number, number],
   moveCount: 1,
   id: uuid(),
@@ -29,7 +29,7 @@ const mockPiece = {
 // Mock history entry
 const createMockEntry = (moveNumber: number, synced: boolean = false): MoveHistoryEntry => ({
   moveNumber,
-  player: moveNumber % 2 === 0 ? 'white' : 'black',
+  player: moveNumber % 2 === 0 ? 'light' : 'dark',
   from: [2, 0],
   to: [1, 0],
   piece: mockPiece,
@@ -340,7 +340,7 @@ describe('History Storage', () => {
     it('should handle round-trip with captured piece', () => {
       const capturedPiece = {
         type: 'knight' as const,
-        owner: 'black' as const,
+        owner: 'dark' as const,
         position: null,
         moveCount: 0,
         id: uuid(),

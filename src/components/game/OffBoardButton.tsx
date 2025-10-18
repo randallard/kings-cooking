@@ -13,8 +13,8 @@ interface OffBoardButtonProps {
   disabled: boolean;
   /** Type of piece that would move off-board */
   pieceType: 'rook' | 'knight' | 'bishop' | null;
-  /** Owner of the court (white/black) */
-  courtOwner: 'white' | 'black';
+  /** Owner of the court (light/dark) */
+  courtOwner: 'light' | 'dark';
 }
 
 /**
@@ -34,7 +34,7 @@ interface OffBoardButtonProps {
  *   onOffBoardMove={handleOffBoard}
  *   disabled={!canMoveOffBoard}
  *   pieceType="rook"
- *   courtOwner="black"
+ *   courtOwner="dark"
  * />
  * ```
  */
@@ -55,7 +55,7 @@ export const OffBoardButton = ({
   // ARIA label for screen readers
   const ariaLabel = disabled
     ? 'No piece can move to opponent\'s court'
-    : `Move ${pieceType} to ${courtOwner === 'white' ? 'White' : 'Black'} King's Court to score`;
+    : `Move ${pieceType} to ${courtOwner === 'light' ? 'Light' : 'Dark'} King's Court to score`;
 
   return (
     <button

@@ -581,13 +581,13 @@ test('WebRTC peer connection establishment', async ({ page, context }) => {
 // Game state type definitions
 export interface GameState {
   board: Piece[][];
-  currentPlayer: 'white' | 'black';
+  currentPlayer: 'light' | 'dark';
   capturedPieces: {
     white: Piece[];
     black: Piece[];
   };
   gamePhase: 'setup' | 'playing' | 'finished';
-  winner?: 'white' | 'black';
+  winner?: 'light' | 'dark';
 }
 
 // WebRTC message types

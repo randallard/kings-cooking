@@ -28,10 +28,10 @@ export type NonNullPosition = [number, number];
  * ```typescript
  * const entry: MoveHistoryEntry = {
  *   moveNumber: 1,
- *   player: 'white',
+ *   player: 'light',
  *   from: [2, 0],
  *   to: [1, 0],
- *   piece: { type: 'rook', owner: 'white', ... },
+ *   piece: { type: 'rook', owner: 'light', ... },
  *   captured: null,
  *   checksum: 'abc123',
  *   timestamp: 1634567890123,
@@ -44,7 +44,7 @@ export interface MoveHistoryEntry {
   moveNumber: number;
 
   /** Player who made the move */
-  player: 'white' | 'black';
+  player: 'light' | 'dark';
 
   /** Starting position (always non-null for valid moves) */
   from: NonNullPosition;

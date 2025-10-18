@@ -34,7 +34,7 @@ export function isInBounds(row: number, col: number): boolean {
 export function getRookMoves(
   from: Position,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'white' | 'black'
+  currentPlayer: 'light' | 'dark'
 ): Position[] {
   if (!from) return [];
 
@@ -79,7 +79,7 @@ export function getRookMoves(
 export function getKnightMoves(
   from: Position,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'white' | 'black'
+  currentPlayer: 'light' | 'dark'
 ): Position[] {
   if (!from) return [];
 
@@ -118,7 +118,7 @@ export function getKnightMoves(
 export function getBishopMoves(
   from: Position,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'white' | 'black'
+  currentPlayer: 'light' | 'dark'
 ): Position[] {
   if (!from) return [];
 
@@ -186,8 +186,8 @@ export function hasRookPathToEdge(
     if (pathClear) {
       // Check if we exited through opponent's edge
       const exitRow = row;
-      if (piece.owner === 'white' && exitRow < 0) return true;
-      if (piece.owner === 'black' && exitRow > 2) return true;
+      if (piece.owner === 'light' && exitRow < 0) return true;
+      if (piece.owner === 'dark' && exitRow > 2) return true;
     }
   }
 
@@ -219,8 +219,8 @@ export function canKnightJumpOffBoard(
     const row = from[0] + dr;
 
     // Check if L-move lands off-board through opponent's edge
-    if (piece.owner === 'white' && row < 0) return true;
-    if (piece.owner === 'black' && row > 2) return true;
+    if (piece.owner === 'light' && row < 0) return true;
+    if (piece.owner === 'dark' && row > 2) return true;
   }
 
   return false;
@@ -244,7 +244,7 @@ export function canKnightJumpOffBoard(
  *
  * @example
  * // Rule 2: Diagonal through middle column
- * // White bishop at (1,0) with clear path through (0,1)
+ * // Light bishop at (1,0) with clear path through (0,1)
  * canBishopMoveOffBoard([1, 0], whiteBishop, getPiece); // true if path clear
  */
 export function canBishopMoveOffBoard(
@@ -255,11 +255,11 @@ export function canBishopMoveOffBoard(
   if (!from || piece.type !== 'bishop') return false;
 
   // Rule 1: Bishop already on opponent's starting row
-  // White bishops score on row 0 (black's starting row)
-  // Black bishops score on row 2 (white's starting row)
+  // Light bishops score on row 0 (black's starting row)
+  // Dark bishops score on row 2 (white's starting row)
   const onOpponentStartingRow =
-    (piece.owner === 'white' && from[0] === 0) ||
-    (piece.owner === 'black' && from[0] === 2);
+    (piece.owner === 'light' && from[0] === 0) ||
+    (piece.owner === 'dark' && from[0] === 2);
 
   if (onOpponentStartingRow) return true;
 
@@ -280,7 +280,7 @@ export function canBishopMoveOffBoard(
 
     // Check if we exited through opponent's edge (not side edge)
     const exitedThroughOpponentEdge =
-      piece.owner === 'white' ? row < 0 : row > 2;
+      piece.owner === 'light' ? row < 0 : row > 2;
 
     if (!exitedThroughOpponentEdge) continue; // Wrong edge
 

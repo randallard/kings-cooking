@@ -102,7 +102,7 @@ export interface VictoryPhase {
   /** Selected game mode */
   mode: 'hotseat' | 'url';
   /** Winner of the game */
-  winner: 'white' | 'black' | 'draw';
+  winner: 'light' | 'dark' | 'draw';
   /** Final game state */
   gameState: GameState;
   /** Player 1 name */
@@ -248,7 +248,7 @@ export interface UrlGeneratedAction {
 export interface GameOverAction {
   type: 'GAME_OVER';
   /** Winner of the game */
-  winner: 'white' | 'black' | 'draw';
+  winner: 'light' | 'dark' | 'draw';
 }
 
 /**

@@ -108,10 +108,10 @@ export const GameCell = ({
 };
 
 // Helper: Unicode piece lookup
-const PIECE_UNICODE: Record<string, { white: string; black: string }> = {
-  rook: { white: '♜', black: '♖' },
-  knight: { white: '♞', black: '♘' },
-  bishop: { white: '♝', black: '♗' },
+const PIECE_UNICODE: Record<string, { light: string; dark: string }> = {
+  rook: { light: '♜', dark: '♖' },
+  knight: { light: '♞', dark: '♘' },
+  bishop: { light: '♝', dark: '♗' },
 };
 
 function getPieceUnicode(piece: Piece): string {

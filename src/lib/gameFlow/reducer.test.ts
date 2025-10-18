@@ -76,28 +76,28 @@ function createMockGameState(overrides?: Partial<GameState>): GameState {
     gameId: 'test-game-id' as never,
     board: [
       [
-        { type: 'rook', owner: 'black', position: [0, 0], moveCount: 0, id: 'black-rook' },
-        { type: 'knight', owner: 'black', position: [0, 1], moveCount: 0, id: 'black-knight' },
-        { type: 'bishop', owner: 'black', position: [0, 2], moveCount: 0, id: 'black-bishop' },
+        { type: 'rook', owner: 'dark', position: [0, 0], moveCount: 0, id: 'black-rook' },
+        { type: 'knight', owner: 'dark', position: [0, 1], moveCount: 0, id: 'black-knight' },
+        { type: 'bishop', owner: 'dark', position: [0, 2], moveCount: 0, id: 'black-bishop' },
       ],
       [null, null, null],
       [
-        { type: 'rook', owner: 'white', position: [2, 0], moveCount: 0, id: 'white-rook' },
-        { type: 'knight', owner: 'white', position: [2, 1], moveCount: 0, id: 'white-knight' },
-        { type: 'bishop', owner: 'white', position: [2, 2], moveCount: 0, id: 'white-bishop' },
+        { type: 'rook', owner: 'light', position: [2, 0], moveCount: 0, id: 'white-rook' },
+        { type: 'knight', owner: 'light', position: [2, 1], moveCount: 0, id: 'white-knight' },
+        { type: 'bishop', owner: 'light', position: [2, 2], moveCount: 0, id: 'white-bishop' },
       ],
     ],
-    whiteCourt: [],
-    blackCourt: [],
-    capturedWhite: [],
-    capturedBlack: [],
+    lightCourt: [],
+    darkCourt: [],
+    capturedLight: [],
+    capturedDark: [],
     currentTurn: 0,
-    currentPlayer: 'white',
-    whitePlayer: {
+    currentPlayer: 'light',
+    lightPlayer: {
       id: 'white-player-id' as never,
       name: 'Player 1',
     },
-    blackPlayer: {
+    darkPlayer: {
       id: 'black-player-id' as never,
       name: 'Player 2',
     },
@@ -194,7 +194,7 @@ describe('gameFlowReducer', () => {
         const victoryState: GameFlowState = {
           phase: 'victory',
           mode: 'hotseat',
-          winner: 'white',
+          winner: 'light',
           gameState: createMockGameState(),
           player1Name: 'Alice',
           player2Name: 'Bob',
@@ -513,7 +513,7 @@ describe('gameFlowReducer', () => {
         const victoryState: GameFlowState = {
           phase: 'victory',
           mode: 'hotseat',
-          winner: 'white',
+          winner: 'light',
           gameState: createMockGameState(),
           player1Name: 'Alice',
           player2Name: 'Bob',
@@ -538,7 +538,7 @@ describe('gameFlowReducer', () => {
           pendingMove: { from: [2, 0], to: [1, 0] },
         };
 
-        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'black' });
+        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'dark' });
         const mockEngine = {
           checkGameEnd: vi.fn(() => ({ gameOver: false })),
           getGameState: vi.fn(() => newGameState),
@@ -582,9 +582,9 @@ describe('gameFlowReducer', () => {
           pendingMove: { from: [2, 0], to: [1, 0] },
         };
 
-        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'black' });
+        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'dark' });
         const mockEngine = {
-          checkGameEnd: vi.fn(() => ({ gameOver: true, winner: 'white' })),
+          checkGameEnd: vi.fn(() => ({ gameOver: true, winner: 'light' })),
           getGameState: vi.fn(() => newGameState),
           makeMove: vi.fn(),
           getValidMoves: vi.fn(),
@@ -605,7 +605,7 @@ describe('gameFlowReducer', () => {
         expect(result).toMatchObject({
           phase: 'victory',
           mode: 'hotseat',
-          winner: 'white',
+          winner: 'light',
           gameState: newGameState,
           player1Name: 'Alice',
           player2Name: 'Bob',
@@ -624,7 +624,7 @@ describe('gameFlowReducer', () => {
           pendingMove: { from: [2, 0], to: [1, 0] },
         };
 
-        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'black' });
+        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'dark' });
         const mockEngine = {
           checkGameEnd: vi.fn(() => ({ gameOver: true, winner: null })),
           getGameState: vi.fn(() => newGameState),
@@ -665,9 +665,9 @@ describe('gameFlowReducer', () => {
           pendingMove: { from: [2, 0], to: [1, 0] },
         };
 
-        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'black' });
+        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'dark' });
         const mockEngine = {
-          checkGameEnd: vi.fn(() => ({ gameOver: true, winner: 'white' })),
+          checkGameEnd: vi.fn(() => ({ gameOver: true, winner: 'light' })),
           getGameState: vi.fn(() => newGameState),
           makeMove: vi.fn(),
           getValidMoves: vi.fn(),
@@ -761,13 +761,13 @@ describe('gameFlowReducer', () => {
 
     describe('GAME_OVER action', () => {
       it('should transition to victory phase with white winner', () => {
-        const action: GameFlowAction = { type: 'GAME_OVER', winner: 'white' };
+        const action: GameFlowAction = { type: 'GAME_OVER', winner: 'light' };
         const result = gameFlowReducer(playingState, action);
 
         expect(result).toMatchObject({
           phase: 'victory',
           mode: 'hotseat',
-          winner: 'white',
+          winner: 'light',
           player1Name: 'Alice',
           player2Name: 'Bob',
         });
@@ -777,13 +777,13 @@ describe('gameFlowReducer', () => {
       });
 
       it('should transition to victory phase with black winner', () => {
-        const action: GameFlowAction = { type: 'GAME_OVER', winner: 'black' };
+        const action: GameFlowAction = { type: 'GAME_OVER', winner: 'dark' };
         const result = gameFlowReducer(playingState, action);
 
         expect(result).toMatchObject({
           phase: 'victory',
           mode: 'hotseat',
-          winner: 'black',
+          winner: 'dark',
           player1Name: 'Alice',
           player2Name: 'Bob',
         });
@@ -819,7 +819,7 @@ describe('gameFlowReducer', () => {
           legalMoves: [],
           pendingMove: null,
         };
-        const action: GameFlowAction = { type: 'GAME_OVER', winner: 'white' };
+        const action: GameFlowAction = { type: 'GAME_OVER', winner: 'light' };
         const result = gameFlowReducer(stateWithoutPlayer2, action);
 
         expect(result).toMatchObject({
@@ -834,7 +834,7 @@ describe('gameFlowReducer', () => {
           mode: 'hotseat',
           player1Name: 'Alice',
         };
-        const action: GameFlowAction = { type: 'GAME_OVER', winner: 'white' };
+        const action: GameFlowAction = { type: 'GAME_OVER', winner: 'light' };
         const result = gameFlowReducer(setupState, action);
 
         expect(result).toBe(setupState);
@@ -1018,7 +1018,7 @@ describe('gameFlowReducer', () => {
     const victoryState: GameFlowState = {
       phase: 'victory',
       mode: 'hotseat',
-      winner: 'white',
+      winner: 'light',
       gameState: createMockGameState(),
       player1Name: 'Alice',
       player2Name: 'Bob',
@@ -1135,7 +1135,7 @@ describe('gameFlowReducer', () => {
       it('should use whitePlayer name as player1Name', () => {
         const initialState: GameFlowState = { phase: 'mode-selection' };
         const gameState = createMockGameState({
-          whitePlayer: {
+          lightPlayer: {
             id: 'white-player-id' as never,
             name: 'CustomPlayer1',
           },
@@ -1166,7 +1166,7 @@ describe('gameFlowReducer', () => {
       it('should apply delta move and transition to playing phase', () => {
         const initialState: GameFlowState = { phase: 'mode-selection' };
         const currentGameState = createMockGameState();
-        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'black' });
+        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'dark' });
 
         // Mock localStorage
         (storage.getGameState as Mock).mockReturnValue(currentGameState);
@@ -1198,8 +1198,8 @@ describe('gameFlowReducer', () => {
 
         expect(storage.getGameState).toHaveBeenCalled();
         expect(KingsChessEngine).toHaveBeenCalledWith(
-          currentGameState.whitePlayer,
-          currentGameState.blackPlayer,
+          currentGameState.lightPlayer,
+          currentGameState.darkPlayer,
           currentGameState
         );
         expect(mockEngine.getChecksum).toHaveBeenCalled();
@@ -1220,7 +1220,7 @@ describe('gameFlowReducer', () => {
       it('should transition to victory phase if game ends after delta', () => {
         const initialState: GameFlowState = { phase: 'mode-selection' };
         const currentGameState = createMockGameState();
-        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'black' });
+        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'dark' });
 
         // Mock localStorage
         (storage.getGameState as Mock).mockReturnValue(currentGameState);
@@ -1231,7 +1231,7 @@ describe('gameFlowReducer', () => {
           getChecksum: vi.fn(() => 'test-checksum'),
           makeMove: vi.fn(() => ({ success: true })),
           getGameState: vi.fn(() => newGameState),
-          checkGameEnd: vi.fn(() => ({ gameOver: true, winner: 'white' })),
+          checkGameEnd: vi.fn(() => ({ gameOver: true, winner: 'light' })),
           getValidMoves: vi.fn(),
           getPieceAt: vi.fn(),
         };
@@ -1253,7 +1253,7 @@ describe('gameFlowReducer', () => {
         expect(result).toMatchObject({
           phase: 'victory',
           mode: 'url',
-          winner: 'white',
+          winner: 'light',
           player1Name: 'Player 1',
           player2Name: 'Player 2',
         });
@@ -1262,7 +1262,7 @@ describe('gameFlowReducer', () => {
       it('should handle draw in delta payload', () => {
         const initialState: GameFlowState = { phase: 'mode-selection' };
         const currentGameState = createMockGameState();
-        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'black' });
+        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'dark' });
 
         // Mock localStorage
         (storage.getGameState as Mock).mockReturnValue(currentGameState);
@@ -1403,7 +1403,7 @@ describe('gameFlowReducer', () => {
       it('should handle off_board move in delta payload', () => {
         const initialState: GameFlowState = { phase: 'mode-selection' };
         const currentGameState = createMockGameState();
-        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'black' });
+        const newGameState = createMockGameState({ currentTurn: 1, currentPlayer: 'dark' });
 
         // Mock localStorage
         (storage.getGameState as Mock).mockReturnValue(currentGameState);
@@ -1625,7 +1625,7 @@ describe('gameFlowReducer', () => {
         { type: 'SET_PLAYER2_NAME', name: 'Bob' },
         { type: 'URL_GENERATED', url: 'https://example.com' },
         { type: 'COMPLETE_HANDOFF' },
-        { type: 'GAME_OVER', winner: 'white' },
+        { type: 'GAME_OVER', winner: 'light' },
         { type: 'NEW_GAME' },
         {
           type: 'LOAD_FROM_URL',
@@ -1737,7 +1737,7 @@ describe('gameFlowReducer', () => {
 
       // Mock engine that indicates game is over
       const mockEngine = {
-        checkGameEnd: () => ({ gameOver: true, winner: 'white' as const }),
+        checkGameEnd: () => ({ gameOver: true, winner: 'light' as const }),
       };
 
       // Action: Confirm move that ends game
@@ -1773,7 +1773,7 @@ describe('gameFlowReducer', () => {
 
       const action: GameFlowAction = {
         type: 'GAME_OVER',
-        winner: 'black',
+        winner: 'dark',
       };
 
       const newState = gameFlowReducer(playingState, action);

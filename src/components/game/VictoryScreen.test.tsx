@@ -9,15 +9,15 @@ import { VictoryScreen } from './VictoryScreen';
 
 describe('VictoryScreen', () => {
   const defaultProps = {
-    winner: 'white' as const,
+    winner: 'light' as const,
     winnerName: 'Alice',
     loserName: 'Bob',
     totalMoves: 42,
     gameDuration: 1234,
-    whiteCourt: [],
-    blackCourt: [],
-    capturedWhite: [],
-    capturedBlack: [],
+    lightCourt: [],
+    darkCourt: [],
+    capturedLight: [],
+    capturedDark: [],
     board: [
       [null, null, null],
       [null, null, null],
@@ -29,15 +29,15 @@ describe('VictoryScreen', () => {
     it('should render with white winner', () => {
       render(<VictoryScreen {...defaultProps} />);
 
-      expect(screen.getByRole('heading', { name: /white wins/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /light wins/i })).toBeInTheDocument();
     });
 
     it('should render with black winner', () => {
       render(
-        <VictoryScreen {...defaultProps} winner="black" winnerName="Charlie" loserName="David" />
+        <VictoryScreen {...defaultProps} winner="dark" winnerName="Charlie" loserName="David" />
       );
 
-      expect(screen.getByRole('heading', { name: /black wins/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /dark wins/i })).toBeInTheDocument();
     });
 
     it('should render for draw', () => {
@@ -80,16 +80,16 @@ describe('VictoryScreen', () => {
       expect(screen.getByText('1:05')).toBeInTheDocument();
     });
 
-    it('should display white player stats section', () => {
+    it('should display light player stats section', () => {
       render(<VictoryScreen {...defaultProps} />);
 
-      expect(screen.getByText('White Player (Player 1)')).toBeInTheDocument();
+      expect(screen.getByText('Light Player (Player 1)')).toBeInTheDocument();
     });
 
-    it('should display black player stats section', () => {
+    it('should display dark player stats section', () => {
       render(<VictoryScreen {...defaultProps} />);
 
-      expect(screen.getByText('Black Player (Player 2)')).toBeInTheDocument();
+      expect(screen.getByText('Dark Player (Player 2)')).toBeInTheDocument();
     });
 
     it('should handle zero duration', () => {
@@ -201,13 +201,13 @@ describe('VictoryScreen', () => {
 
   describe('Celebration Messages', () => {
     it('should show celebration for white winner', () => {
-      render(<VictoryScreen {...defaultProps} winner="white" />);
+      render(<VictoryScreen {...defaultProps} winner="light" />);
 
       expect(screen.getByText('White Wins!')).toBeInTheDocument();
     });
 
     it('should show celebration for black winner', () => {
-      render(<VictoryScreen {...defaultProps} winner="black" />);
+      render(<VictoryScreen {...defaultProps} winner="dark" />);
 
       expect(screen.getByText('Black Wins!')).toBeInTheDocument();
     });
@@ -220,7 +220,7 @@ describe('VictoryScreen', () => {
 
     it('should show subtitle with player names for winner', () => {
       render(
-        <VictoryScreen {...defaultProps} winner="white" winnerName="Alice" loserName="Bob" />
+        <VictoryScreen {...defaultProps} winner="light" winnerName="Alice" loserName="Bob" />
       );
 
       expect(screen.getByText('Alice defeated Bob')).toBeInTheDocument();
@@ -243,7 +243,7 @@ describe('VictoryScreen', () => {
 
   describe('Confetti Animation', () => {
     it('should render confetti for white winner', () => {
-      render(<VictoryScreen {...defaultProps} winner="white" />);
+      render(<VictoryScreen {...defaultProps} winner="light" />);
 
       // Check for confetti pieces (rendered as divs with keys)
       const dialog = screen.getByRole('dialog');
@@ -252,7 +252,7 @@ describe('VictoryScreen', () => {
     });
 
     it('should render confetti for black winner', () => {
-      render(<VictoryScreen {...defaultProps} winner="black" />);
+      render(<VictoryScreen {...defaultProps} winner="dark" />);
 
       const dialog = screen.getByRole('dialog');
       const confettiContainer = dialog.querySelector('[aria-hidden="true"]');
@@ -269,7 +269,7 @@ describe('VictoryScreen', () => {
     });
 
     it('should render 50 confetti pieces for winner', () => {
-      render(<VictoryScreen {...defaultProps} winner="white" />);
+      render(<VictoryScreen {...defaultProps} winner="light" />);
 
       const dialog = screen.getByRole('dialog');
       const confettiContainer = dialog.querySelector('[aria-hidden="true"]');
@@ -303,7 +303,7 @@ describe('VictoryScreen', () => {
       const dialog = screen.getByRole('dialog');
       const titleId = dialog.getAttribute('aria-labelledby');
       expect(titleId).toBe('victory-title');
-      expect(screen.getByRole('heading', { name: /white wins/i })).toHaveAttribute('id', titleId);
+      expect(screen.getByRole('heading', { name: /light wins/i })).toHaveAttribute('id', titleId);
     });
 
     it('should have aria-describedby pointing to subtitle', () => {
@@ -329,7 +329,7 @@ describe('VictoryScreen', () => {
     });
 
     it('should hide confetti from screen readers', () => {
-      render(<VictoryScreen {...defaultProps} winner="white" />);
+      render(<VictoryScreen {...defaultProps} winner="light" />);
 
       const dialog = screen.getByRole('dialog');
       const confettiContainer = dialog.querySelector('[aria-hidden="true"]');
@@ -358,7 +358,7 @@ describe('VictoryScreen', () => {
     });
 
     it('should handle empty piece arrays', () => {
-      render(<VictoryScreen {...defaultProps} whiteCourt={[]} blackCourt={[]} capturedWhite={[]} capturedBlack={[]} />);
+      render(<VictoryScreen {...defaultProps} lightCourt={[]} darkCourt={[]} capturedLight={[]} capturedDark={[]} />);
 
       // Should display "0 pieces" for each stat
       const zeros = screen.getAllByText(/0 piece/);
@@ -381,13 +381,13 @@ describe('VictoryScreen', () => {
     it('should not crash with missing optional props', () => {
       render(
         <VictoryScreen
-          winner="white"
+          winner="light"
           totalMoves={10}
           gameDuration={60}
-          whiteCourt={[]}
-          blackCourt={[]}
-          capturedWhite={[]}
-          capturedBlack={[]}
+          lightCourt={[]}
+          darkCourt={[]}
+          capturedLight={[]}
+          capturedDark={[]}
           board={[
             [null, null, null],
             [null, null, null],

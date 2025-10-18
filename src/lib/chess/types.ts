@@ -26,11 +26,11 @@ export interface VictoryResult {
   /** Whether game is over */
   gameOver: boolean;
   /** Winner if game over */
-  winner?: 'white' | 'black' | null;
+  winner?: 'light' | 'dark' | null;
   /** Score breakdown */
   score?: {
-    white: number;
-    black: number;
+    light: number;
+    dark: number;
   };
   /** Reason for game end */
   reason?: string;

@@ -20,22 +20,22 @@ import { v4 as uuid } from 'uuid';
 import { PlayerIdSchema } from '@/lib/validation/schemas';
 
 describe('URL Parser Utilities', () => {
-  let whitePlayer: PlayerInfo;
-  let blackPlayer: PlayerInfo;
+  let lightPlayer: PlayerInfo;
+  let darkPlayer: PlayerInfo;
   let engine: KingsChessEngine;
 
   beforeEach(() => {
-    whitePlayer = {
+    lightPlayer = {
       id: PlayerIdSchema.parse(uuid()),
       name: 'Player 1',
     };
 
-    blackPlayer = {
+    darkPlayer = {
       id: PlayerIdSchema.parse(uuid()),
       name: 'Player 2',
     };
 
-    engine = new KingsChessEngine(whitePlayer, blackPlayer);
+    engine = new KingsChessEngine(lightPlayer, darkPlayer);
   });
 
   describe('parseUrlHash', () => {
@@ -362,7 +362,7 @@ describe('URL Parser Utilities', () => {
   describe('Integration: Parse and Apply', () => {
     it('should successfully parse and apply complete game flow', () => {
       // Create initial game
-      const player1Engine = new KingsChessEngine(whitePlayer, blackPlayer);
+      const player1Engine = new KingsChessEngine(lightPlayer, darkPlayer);
 
       // Player 1 sends initial state to Player 2
       const initialStateUrl = buildFullStateUrl(player1Engine.getGameState());

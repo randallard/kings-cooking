@@ -10,7 +10,7 @@ import type { Piece } from '@/lib/validation/schemas';
 // Helper: Create mock piece
 const createMockPiece = (
   type: 'rook' | 'knight' | 'bishop',
-  owner: 'white' | 'black'
+  owner: 'light' | 'dark'
 ): Piece => ({
   type,
   owner,
@@ -20,94 +20,94 @@ const createMockPiece = (
 });
 
 describe('CourtArea', () => {
-  it('renders court label correctly for black court', () => {
+  it('renders court label correctly for dark court', () => {
     const onOffBoardMove = vi.fn();
     render(
       <CourtArea
-        courtOwner="black"
+        courtOwner="dark"
         scoredPieces={[]}
         capturedPieces={[]}
         canMoveOffBoard={false}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="white"
+        currentPlayer="light"
         selectedPieceType={null}
       />
     );
 
-    expect(screen.getByText('Black King\'s Court')).toBeInTheDocument();
+    expect(screen.getByText('Dark King\'s Court')).toBeInTheDocument();
   });
 
-  it('renders court label correctly for white court', () => {
+  it('renders court label correctly for light court', () => {
     const onOffBoardMove = vi.fn();
     render(
       <CourtArea
-        courtOwner="white"
+        courtOwner="light"
         scoredPieces={[]}
         capturedPieces={[]}
         canMoveOffBoard={false}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="black"
+        currentPlayer="dark"
         selectedPieceType={null}
       />
     );
 
-    expect(screen.getByText('White King\'s Court')).toBeInTheDocument();
+    expect(screen.getByText('Light King\'s Court')).toBeInTheDocument();
   });
 
   it('shows scored pieces with correct icons', () => {
     const onOffBoardMove = vi.fn();
     const scoredPieces: Piece[] = [
-      createMockPiece('rook', 'white'),
-      createMockPiece('knight', 'white'),
+      createMockPiece('rook', 'light'),
+      createMockPiece('knight', 'light'),
     ];
 
     render(
       <CourtArea
-        courtOwner="black"
+        courtOwner="dark"
         scoredPieces={scoredPieces}
         capturedPieces={[]}
         canMoveOffBoard={false}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="white"
+        currentPlayer="light"
         selectedPieceType={null}
       />
     );
 
-    expect(screen.getByText('♜')).toBeInTheDocument(); // White rook
-    expect(screen.getByText('♞')).toBeInTheDocument(); // White knight
+    expect(screen.getByText('♜')).toBeInTheDocument(); // Light rook
+    expect(screen.getByText('♞')).toBeInTheDocument(); // Light knight
   });
 
   it('shows captured pieces with correct icons', () => {
     const onOffBoardMove = vi.fn();
     const capturedPieces: Piece[] = [
-      createMockPiece('bishop', 'black'),
+      createMockPiece('bishop', 'dark'),
     ];
 
     render(
       <CourtArea
-        courtOwner="black"
+        courtOwner="dark"
         scoredPieces={[]}
         capturedPieces={capturedPieces}
         canMoveOffBoard={false}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="white"
+        currentPlayer="light"
         selectedPieceType={null}
       />
     );
 
-    expect(screen.getByText('♗')).toBeInTheDocument(); // Black bishop
+    expect(screen.getByText('♗')).toBeInTheDocument(); // Dark bishop
   });
 
   it('shows "None" when no scored pieces', () => {
     const onOffBoardMove = vi.fn();
     render(
       <CourtArea
-        courtOwner="black"
+        courtOwner="dark"
         scoredPieces={[]}
         capturedPieces={[]}
         canMoveOffBoard={false}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="white"
+        currentPlayer="light"
         selectedPieceType={null}
       />
     );
@@ -116,16 +116,16 @@ describe('CourtArea', () => {
     expect(noneTexts.length).toBeGreaterThanOrEqual(2); // Scored and Caught sections
   });
 
-  it('shows button only for target court (white turn -> black court)', () => {
+  it('shows button only for target court (light turn -> dark court)', () => {
     const onOffBoardMove = vi.fn();
     render(
       <CourtArea
-        courtOwner="black"
+        courtOwner="dark"
         scoredPieces={[]}
         capturedPieces={[]}
         canMoveOffBoard={true}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="white"
+        currentPlayer="light"
         selectedPieceType="rook"
       />
     );
@@ -134,16 +134,16 @@ describe('CourtArea', () => {
     expect(screen.getByText('Party!')).toBeInTheDocument();
   });
 
-  it('hides button for non-target court (white turn -> white court)', () => {
+  it('hides button for non-target court (light turn -> light court)', () => {
     const onOffBoardMove = vi.fn();
     render(
       <CourtArea
-        courtOwner="white"
+        courtOwner="light"
         scoredPieces={[]}
         capturedPieces={[]}
         canMoveOffBoard={false}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="white"
+        currentPlayer="light"
         selectedPieceType={null}
       />
     );
@@ -151,16 +151,16 @@ describe('CourtArea', () => {
     expect(screen.queryByText('Party!')).not.toBeInTheDocument();
   });
 
-  it('shows button only for target court (black turn -> white court)', () => {
+  it('shows button only for target court (dark turn -> light court)', () => {
     const onOffBoardMove = vi.fn();
     render(
       <CourtArea
-        courtOwner="white"
+        courtOwner="light"
         scoredPieces={[]}
         capturedPieces={[]}
         canMoveOffBoard={true}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="black"
+        currentPlayer="dark"
         selectedPieceType="knight"
       />
     );
@@ -175,12 +175,12 @@ describe('CourtArea', () => {
     // Disabled
     const { rerender } = render(
       <CourtArea
-        courtOwner="black"
+        courtOwner="dark"
         scoredPieces={[]}
         capturedPieces={[]}
         canMoveOffBoard={false}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="white"
+        currentPlayer="light"
         selectedPieceType={null}
       />
     );
@@ -190,12 +190,12 @@ describe('CourtArea', () => {
     // Enabled
     rerender(
       <CourtArea
-        courtOwner="black"
+        courtOwner="dark"
         scoredPieces={[]}
         capturedPieces={[]}
         canMoveOffBoard={true}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="white"
+        currentPlayer="light"
         selectedPieceType="rook"
       />
     );
@@ -206,22 +206,22 @@ describe('CourtArea', () => {
   it('displays piece tooltips with correct information', () => {
     const onOffBoardMove = vi.fn();
     const scoredPieces: Piece[] = [
-      createMockPiece('rook', 'white'),
+      createMockPiece('rook', 'light'),
     ];
 
     render(
       <CourtArea
-        courtOwner="black"
+        courtOwner="dark"
         scoredPieces={scoredPieces}
         capturedPieces={[]}
         canMoveOffBoard={false}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="white"
+        currentPlayer="light"
         selectedPieceType={null}
       />
     );
 
-    const pieceIcon = screen.getByTitle('white rook');
+    const pieceIcon = screen.getByTitle('light rook');
     expect(pieceIcon).toBeInTheDocument();
   });
 
@@ -229,12 +229,12 @@ describe('CourtArea', () => {
     const onOffBoardMove = vi.fn();
     render(
       <CourtArea
-        courtOwner="black"
+        courtOwner="dark"
         scoredPieces={[]}
         capturedPieces={[]}
         canMoveOffBoard={false}
         onOffBoardMove={onOffBoardMove}
-        currentPlayer="white"
+        currentPlayer="light"
         selectedPieceType={null}
       />
     );

@@ -36,9 +36,9 @@ describe('Zod Schemas', () => {
   });
 
   describe('PieceOwnerSchema', () => {
-    it('should accept white and black', () => {
-      expect(PieceOwnerSchema.parse('white')).toBe('white');
-      expect(PieceOwnerSchema.parse('black')).toBe('black');
+    it('should accept light and dark', () => {
+      expect(PieceOwnerSchema.parse('light')).toBe('light');
+      expect(PieceOwnerSchema.parse('dark')).toBe('dark');
     });
 
     it('should reject other values', () => {
@@ -51,7 +51,7 @@ describe('Zod Schemas', () => {
     it('should validate correct piece structure', () => {
       const piece = {
         type: 'rook',
-        owner: 'white',
+        owner: 'light',
         position: [0, 0] as [number, number],
         moveCount: 0,
         id: '123e4567-e89b-12d3-a456-426614174000',
@@ -64,7 +64,7 @@ describe('Zod Schemas', () => {
     it('should accept null position (off-board)', () => {
       const piece = {
         type: 'knight',
-        owner: 'black',
+        owner: 'dark',
         position: null,
         moveCount: 5,
         id: '123e4567-e89b-12d3-a456-426614174001',
@@ -77,7 +77,7 @@ describe('Zod Schemas', () => {
     it('should reject invalid piece structure', () => {
       const badPiece = {
         type: 'rook',
-        owner: 'white',
+        owner: 'light',
         // Missing required fields
       };
 
@@ -88,7 +88,7 @@ describe('Zod Schemas', () => {
     it('should reject negative moveCount', () => {
       const piece = {
         type: 'bishop',
-        owner: 'white',
+        owner: 'light',
         position: [1, 1] as [number, number],
         moveCount: -1, // Invalid
         id: '123e4567-e89b-12d3-a456-426614174002',
@@ -151,17 +151,17 @@ describe('Zod Schemas', () => {
           [null, null, null],
           [null, null, null],
         ],
-        whiteCourt: [],
-        blackCourt: [],
-        capturedWhite: [],
-        capturedBlack: [],
+        lightCourt: [],
+        darkCourt: [],
+        capturedLight: [],
+        capturedDark: [],
         currentTurn: 0,
-        currentPlayer: 'white',
-        whitePlayer: {
+        currentPlayer: 'light',
+        lightPlayer: {
           id: '123e4567-e89b-12d3-a456-426614174007' as PlayerId,
           name: 'Player 1',
         },
-        blackPlayer: {
+        darkPlayer: {
           id: '123e4567-e89b-12d3-a456-426614174008' as PlayerId,
           name: 'Player 2',
         },
@@ -184,17 +184,17 @@ describe('Zod Schemas', () => {
           [null, null],
           [null, null],
         ],
-        whiteCourt: [],
-        blackCourt: [],
-        capturedWhite: [],
-        capturedBlack: [],
+        lightCourt: [],
+        darkCourt: [],
+        capturedLight: [],
+        capturedDark: [],
         currentTurn: 0,
-        currentPlayer: 'white',
-        whitePlayer: {
+        currentPlayer: 'light',
+        lightPlayer: {
           id: '123e4567-e89b-12d3-a456-426614174010',
           name: 'Player 1',
         },
-        blackPlayer: {
+        darkPlayer: {
           id: '123e4567-e89b-12d3-a456-426614174011',
           name: 'Player 2',
         },
@@ -217,17 +217,17 @@ describe('Zod Schemas', () => {
           [null, null, null],
           [null, null, null],
         ],
-        whiteCourt: [],
-        blackCourt: [],
-        capturedWhite: [],
-        capturedBlack: [],
+        lightCourt: [],
+        darkCourt: [],
+        capturedLight: [],
+        capturedDark: [],
         currentTurn: 0,
-        currentPlayer: 'white',
-        whitePlayer: {
+        currentPlayer: 'light',
+        lightPlayer: {
           id: '123e4567-e89b-12d3-a456-426614174013',
           name: 'Player 1',
         },
-        blackPlayer: {
+        darkPlayer: {
           id: '123e4567-e89b-12d3-a456-426614174014',
           name: 'Player 2',
         },
@@ -268,17 +268,17 @@ describe('Zod Schemas', () => {
           [null, null, null],
           [null, null, null],
         ],
-        whiteCourt: [],
-        blackCourt: [],
-        capturedWhite: [],
-        capturedBlack: [],
+        lightCourt: [],
+        darkCourt: [],
+        capturedLight: [],
+        capturedDark: [],
         currentTurn: 0,
-        currentPlayer: 'white',
-        whitePlayer: {
+        currentPlayer: 'light',
+        lightPlayer: {
           id: '123e4567-e89b-12d3-a456-426614174012' as PlayerId,
           name: 'Alice',
         },
-        blackPlayer: {
+        darkPlayer: {
           id: '123e4567-e89b-12d3-a456-426614174013' as PlayerId,
           name: 'Bob',
         },
@@ -293,7 +293,7 @@ describe('Zod Schemas', () => {
 
       if (result.success) {
         expect(result.data.gameId).toBe(validState.gameId);
-        expect(result.data.whitePlayer.name).toBe('Alice');
+        expect(result.data.lightPlayer.name).toBe('Alice');
       }
     });
   });

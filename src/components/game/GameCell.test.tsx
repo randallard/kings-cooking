@@ -6,7 +6,7 @@ import type { Piece } from '@/lib/validation/schemas';
 
 const mockPiece: Piece = {
   type: 'rook',
-  owner: 'white',
+  owner: 'light',
   position: [0, 0],
   moveCount: 0,
   id: crypto.randomUUID(),
@@ -41,7 +41,7 @@ describe('GameCell', () => {
       />
     );
 
-    expect(screen.getByLabelText(/white rook at A1/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/light rook at A1/i)).toBeInTheDocument();
     expect(screen.getByText('♜')).toBeInTheDocument();
   });
 
@@ -133,10 +133,10 @@ describe('GameCell', () => {
     expect(screen.getByLabelText(/Empty square C3/i)).toBeInTheDocument();
   });
 
-  it('should render black piece with correct unicode', () => {
+  it('should render dark piece with correct unicode', () => {
     const blackKnight: Piece = {
       type: 'knight',
-      owner: 'black',
+      owner: 'dark',
       position: [1, 1],
       moveCount: 0,
       id: crypto.randomUUID(),
@@ -159,7 +159,7 @@ describe('GameCell', () => {
   it('should render bishop piece correctly', () => {
     const whiteBishop: Piece = {
       type: 'bishop',
-      owner: 'white',
+      owner: 'light',
       position: [0, 2],
       moveCount: 0,
       id: crypto.randomUUID(),

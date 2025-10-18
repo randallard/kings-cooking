@@ -101,7 +101,7 @@ export const HistoryComparisonModal = ({
 
     try {
       // Generate full_state URL
-      const urlHash = buildFullStateUrl(myState, myState.whitePlayer.name);
+      const urlHash = buildFullStateUrl(myState, myState.lightPlayer.name);
       const fullUrl = `${window.location.origin}${window.location.pathname}#${urlHash}`;
 
       // Copy to clipboard
