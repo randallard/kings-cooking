@@ -10,6 +10,7 @@ import { HandoffScreen } from './components/game/HandoffScreen';
 import { VictoryScreen } from './components/game/VictoryScreen';
 import { URLSharer } from './components/game/URLSharer';
 import { KingsChessEngine } from './lib/chess/KingsChessEngine';
+import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
 
 /**
  * Main App component for King's Cooking Chess Game.
@@ -512,10 +513,6 @@ export default function App(): ReactElement {
       capturedWhite: state.gameState.capturedWhite,
       capturedBlack: state.gameState.capturedBlack,
       board: state.gameState.board,
-      onNewGame: () => {
-        dispatch({ type: 'NEW_GAME' });
-        storage.clearAll();
-      },
     };
 
     // Add optional props only if they have values
@@ -532,9 +529,14 @@ export default function App(): ReactElement {
     }
 
     if (state.mode === 'url') {
+      // Generate full state URL for victory sharing
+      const victoryUrlHash = buildFullStateUrl(state.gameState, state.player1Name);
+      const fullShareUrl = `${window.location.origin}${window.location.pathname}${victoryUrlHash}`;
+
+      victoryProps.shareUrl = fullShareUrl;
       victoryProps.onShare = () => {
-        // TODO: Generate victory URL for sharing
-        console.log('Share victory result');
+        // Callback is optional - VictoryScreen manages URLSharer visibility
+        console.log('Share Result button clicked');
       };
     }
 

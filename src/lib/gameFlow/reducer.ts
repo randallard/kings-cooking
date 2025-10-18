@@ -96,6 +96,26 @@ function handleUrlLoad(
       }
     }
 
+    // Check if game is over
+    const engine = new KingsChessEngine(
+      payload.gameState.whitePlayer,
+      payload.gameState.blackPlayer,
+      payload.gameState
+    );
+    const victoryResult = engine.checkGameEnd();
+
+    if (victoryResult && victoryResult.gameOver) {
+      // Game is over - go to victory phase
+      return {
+        phase: 'victory',
+        mode: 'url',
+        winner: victoryResult.winner || 'draw',
+        gameState: payload.gameState,
+        player1Name,
+        player2Name: player2Name || myName || 'Player 2',
+      };
+    }
+
     if (myName) {
       // Check if saved name matches Player 1 (white)
       if (myName === player1Name) {
