@@ -42,6 +42,7 @@ vi.mock('../storage/localStorage', () => ({
     setPlayer2Name: vi.fn(),
     getGameMode: vi.fn(),
     setGameMode: vi.fn(),
+    clearGameMode: vi.fn(),
     clearAll: vi.fn(),
   },
 }));
@@ -1713,6 +1714,72 @@ describe('gameFlowReducer', () => {
       const result = gameFlowReducer(state, action);
 
       expect(result).toBe(state);
+    });
+  });
+
+  describe('Issue #7: Clear Mode on Victory', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('should clear game mode when CONFIRM_MOVE triggers victory', () => {
+      // Setup: Create playing state with hotseat mode
+      const playingState: GameFlowState = {
+        phase: 'playing',
+        mode: 'hotseat',
+        player1Name: 'Alice',
+        player2Name: 'Bob',
+        gameState: createMockGameState(),
+        selectedPosition: null,
+        legalMoves: [],
+        pendingMove: { from: [0, 0], to: [0, 1] },
+      };
+
+      // Mock engine that indicates game is over
+      const mockEngine = {
+        checkGameEnd: () => ({ gameOver: true, winner: 'white' as const }),
+      };
+
+      // Action: Confirm move that ends game
+      const action: GameFlowAction = {
+        type: 'CONFIRM_MOVE',
+        result: {
+          newState: createMockGameState(),
+          engine: mockEngine as unknown as KingsChessEngine,
+        },
+      };
+
+      // Execute reducer
+      const newState = gameFlowReducer(playingState, action);
+
+      // Assert: Phase is victory
+      expect(newState.phase).toBe('victory');
+
+      // Assert: clearGameMode was called
+      expect(storage.clearGameMode).toHaveBeenCalledTimes(1);
+    });
+
+    it('should clear game mode when GAME_OVER action is dispatched', () => {
+      const playingState: GameFlowState = {
+        phase: 'playing',
+        mode: 'url',
+        player1Name: 'Alice',
+        player2Name: 'Bob',
+        gameState: createMockGameState(),
+        selectedPosition: null,
+        legalMoves: [],
+        pendingMove: null,
+      };
+
+      const action: GameFlowAction = {
+        type: 'GAME_OVER',
+        winner: 'black',
+      };
+
+      const newState = gameFlowReducer(playingState, action);
+
+      expect(newState.phase).toBe('victory');
+      expect(storage.clearGameMode).toHaveBeenCalledTimes(1);
     });
   });
 });

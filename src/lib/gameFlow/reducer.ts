@@ -105,6 +105,9 @@ function handleUrlLoad(
     const victoryResult = engine.checkGameEnd();
 
     if (victoryResult && victoryResult.gameOver) {
+      // Clear game mode when loading completed game (Issue #7 fix)
+      storage.clearGameMode();
+
       // Game is over - go to victory phase
       return {
         phase: 'victory',
@@ -353,6 +356,9 @@ export function gameFlowReducer(
       // Check for game over
       const victoryResult = action.result.engine.checkGameEnd();
       if (victoryResult.gameOver) {
+        // Clear game mode when transitioning to victory (Issue #7 fix)
+        storage.clearGameMode();
+
         return {
           phase: 'victory',
           mode: state.mode,
@@ -407,6 +413,10 @@ export function gameFlowReducer(
 
     case 'GAME_OVER':
       if (state.phase !== 'playing') return state;
+
+      // Clear game mode when transitioning to victory (Issue #7 fix)
+      storage.clearGameMode();
+
       return {
         phase: 'victory',
         mode: state.mode,
