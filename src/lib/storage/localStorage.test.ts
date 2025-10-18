@@ -98,6 +98,14 @@ describe('localStorage utilities', () => {
       expect(result).toBe(false);
     });
 
+    it('should clear game mode', () => {
+      storage.setGameMode('hotseat');
+      expect(storage.getGameMode()).toBe('hotseat');
+
+      storage.clearGameMode();
+      expect(storage.getGameMode()).toBe(null);
+    });
+
     it('should clear all game storage', () => {
       storage.setMyName('Alice');
       storage.setGameMode('hotseat');

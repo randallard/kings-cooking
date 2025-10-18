@@ -198,6 +198,9 @@ export const storage = {
   setGameMode: (mode: 'hotseat' | 'url'): boolean =>
     setValidatedItem(STORAGE_KEYS.GAME_MODE, mode, GameModeSchema),
 
+  clearGameMode: (): void =>
+    removeItem(STORAGE_KEYS.GAME_MODE),
+
   // Game state (with full validation)
   getGameState: (): GameState | null =>
     getValidatedItem(STORAGE_KEYS.GAME_STATE, GameStateSchema) as GameState | null,
