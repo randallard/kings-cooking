@@ -91,7 +91,8 @@ export default function App(): ReactElement {
         // TODO: Add a RESTORE_GAME action for cleaner restoration
       }
     }
-  }, [state.phase]); // Re-run when phase changes to mode-selection (e.g., after NEW_GAME)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only run on mount
 
   // Task 9: Browser back button handling
   useEffect(() => {
