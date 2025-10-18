@@ -137,4 +137,34 @@ describe('App Component - Phase 5 Game Flow', () => {
       expect(hotseatButton).toHaveFocus();
     });
   });
+
+  describe('Bug #7: Mode Selection After New Game', () => {
+    it('should show mode selection screen after completing a game and starting a new game', () => {
+      // This test reproduces Issue #7: Can't Switch Mode
+      // Bug: After completing a game, the NEW_GAME action doesn't properly reset to mode selection
+
+      // Step 1: Save a game mode to localStorage (simulate user having played a game)
+      localStorage.setItem('kings-cooking:game-mode', JSON.stringify('hotseat'));
+
+      // Step 2: Render App (should restore the saved mode)
+      const { unmount } = render(<App />);
+
+      // Step 3: Unmount and remount to simulate "New Game" behavior
+      unmount();
+
+      // Step 4: Clear all storage (simulating NEW_GAME action)
+      localStorage.clear();
+
+      // Step 5: Render App again (should show mode selection, not skip to setup)
+      render(<App />);
+
+      // EXPECTED: Mode selection screen should appear
+      expect(screen.getByText(/Choose Your Game Mode/i)).toBeInTheDocument();
+      expect(screen.getByTestId('mode-hotseat')).toBeInTheDocument();
+      expect(screen.getByTestId('mode-url')).toBeInTheDocument();
+
+      // ACTUAL (before fix): The app skips mode selection and goes directly to the last mode used
+      // This happens because the useEffect that restores state doesn't re-run when returning to mode-selection
+    });
+  });
 });
