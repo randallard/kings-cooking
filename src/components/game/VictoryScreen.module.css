@@ -10,9 +10,18 @@
   align-items: center;
   justify-content: center;
 
+  /* Mobile-safe padding for notched devices */
+  padding: env(safe-area-inset-top, 0)
+           env(safe-area-inset-right, 0)
+           env(safe-area-inset-bottom, 0)
+           env(safe-area-inset-left, 0);
+
   background-color: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(8px);
   animation: fadeIn 0.5s ease-out;
+
+  /* Prevent iOS scroll chaining (pull-to-refresh) */
+  overscroll-behavior: contain;
 }
 
 .confetti {
@@ -97,6 +106,16 @@
 
   max-width: 600px;
   width: 90%;
+
+  /* Enable scrolling when content exceeds viewport */
+  max-height: 90vh;
+  overflow-y: auto;
+
+  /* iOS Safari smooth scrolling */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+
   padding: var(--spacing-xl, 2rem);
 
   background-color: var(--bg-modal, #ffffff);
@@ -330,6 +349,8 @@
 @media (max-width: 480px) {
   .container {
     padding: var(--spacing-lg, 1.5rem);
+    /* Use more viewport height on mobile when browser chrome is hidden */
+    max-height: 95vh;
   }
 
   .title {
