@@ -66,6 +66,15 @@
   outline-offset: 3px;
 }
 
+/* Main title */
+.mainTitle {
+  font-size: var(--font-size-xl, 1.5rem);
+  font-weight: 700;
+  margin: 0 0 var(--spacing-lg, 1.5rem) 0;
+  color: var(--text-primary, #212529);
+  text-align: center;
+}
+
 /* Story and instructions sections - REUSE from ModeSelector */
 .storySection {
   max-width: 700px;
@@ -189,6 +198,11 @@
     width: 40px;
     height: 40px;
     font-size: 1.5rem;
+  }
+
+  .mainTitle {
+    font-size: var(--font-size-lg, 1.25rem);
+    margin-bottom: var(--spacing-md, 1rem);
   }
 
   .storySection {

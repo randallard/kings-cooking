@@ -135,10 +135,10 @@ describe('StoryPanel', () => {
       expect(dialog).toHaveAttribute('aria-modal', 'true');
     });
 
-    it('should have aria-labelledby pointing to title', () => {
+    it('should have aria-labelledby pointing to main title', () => {
       render(<StoryPanel isOpen={true} onClose={vi.fn()} />);
       const dialog = screen.getByRole('dialog');
-      expect(dialog).toHaveAttribute('aria-labelledby', 'story-panel-title');
+      expect(dialog).toHaveAttribute('aria-labelledby', 'story-panel-main-title');
     });
 
     it('should have aria-describedby pointing to description', () => {
@@ -151,6 +151,32 @@ describe('StoryPanel', () => {
       const { container } = render(<StoryPanel isOpen={true} onClose={vi.fn()} />);
       const backdrop = container.querySelector('[aria-hidden="true"]');
       expect(backdrop).toBeInTheDocument();
+    });
+  });
+
+  describe('Main Title', () => {
+    it('should render "The Story" main title', () => {
+      render(<StoryPanel isOpen={true} onClose={vi.fn()} />);
+
+      const mainTitle = screen.getByRole('heading', { name: /the story/i, level: 1 });
+      expect(mainTitle).toBeInTheDocument();
+    });
+
+    it('should have correct heading hierarchy (h1 for main title, h2 for subsections)', () => {
+      render(<StoryPanel isOpen={true} onClose={vi.fn()} />);
+
+      const h1 = screen.getByRole('heading', { level: 1 });
+      const h2 = screen.getByRole('heading', { level: 2 });
+
+      expect(h1).toHaveTextContent(/the story/i);
+      expect(h2).toHaveTextContent(/how to play/i);
+    });
+
+    it('should use main title for aria-labelledby', () => {
+      render(<StoryPanel isOpen={true} onClose={vi.fn()} />);
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveAttribute('aria-labelledby', 'story-panel-main-title');
     });
   });
 

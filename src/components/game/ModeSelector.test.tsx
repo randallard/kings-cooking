@@ -154,15 +154,10 @@ describe('ModeSelector', () => {
       render(<ModeSelector onModeSelected={vi.fn()} />);
 
       const h1 = screen.getByRole('heading', { level: 1 });
-      const h2s = screen.getAllByRole('heading', { level: 2 });
       const h3s = screen.getAllByRole('heading', { level: 3 });
 
       // h1: Page title
       expect(h1).toHaveTextContent(/king's cooking chess/i);
-
-      // h2: Instructions title
-      expect(h2s).toHaveLength(1);
-      expect(h2s[0]).toHaveTextContent(/how to play/i);
 
       // h3: Mode selection subtitle + mode titles
       expect(h3s).toHaveLength(3);
@@ -183,130 +178,6 @@ describe('ModeSelector', () => {
       render(<ModeSelector onModeSelected={vi.fn()} />);
 
       expect(screen.getByTestId('mode-url')).toBeInTheDocument();
-    });
-  });
-
-  describe('Story and Instructions', () => {
-    describe('Story Section', () => {
-      it('should render game story section with ARIA label', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        const storySection = screen.getByRole('region', { name: /game story/i });
-        expect(storySection).toBeInTheDocument();
-      });
-
-      it('should display Dark King pigeon dialogue', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        expect(screen.getByText(/A pigeon\.\.\. what's up Glinda/i)).toBeInTheDocument();
-      });
-
-      it('should display Light King scroll message', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        expect(screen.getByText(/we're coming over! you're cooking!/i)).toBeInTheDocument();
-        expect(screen.getByText(/- Light King/i)).toBeInTheDocument();
-      });
-
-      it('should display Dark King response', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        expect(screen.getByText(/HA! Not if we get there first!/i)).toBeInTheDocument();
-      });
-
-      it('should display Dark King final shout', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        expect(screen.getByText(/We're off! Dinner at the Light King's Castle!/i)).toBeInTheDocument();
-      });
-
-      it('should use semantic paragraph elements for dialogue', () => {
-        const { container } = render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        const storySection = container.querySelector('[aria-label="Game story"]');
-        const paragraphs = storySection?.querySelectorAll('p');
-
-        expect(paragraphs?.length).toBeGreaterThan(0);
-      });
-
-      it('should use strong elements for speaker names', () => {
-        const { container } = render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        const storySection = container.querySelector('[aria-label="Game story"]');
-        const strongElements = storySection?.querySelectorAll('strong');
-
-        expect(strongElements?.length).toBeGreaterThan(0);
-        expect(strongElements?.[0]).toHaveTextContent(/Dark King/i);
-      });
-    });
-
-    describe('Instructions Section', () => {
-      it('should render instructions section with ARIA label', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        const instructionsSection = screen.getByRole('region', { name: /how to play/i });
-        expect(instructionsSection).toBeInTheDocument();
-      });
-
-      it('should display "How to Play" heading', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        expect(screen.getByRole('heading', { name: /how to play/i })).toBeInTheDocument();
-      });
-
-      it('should display win condition instruction', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        expect(screen.getByText(/most pieces to make it to the opponent's castle wins/i)).toBeInTheDocument();
-      });
-
-      it('should display capture mechanic instruction', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        expect(screen.getByText(/captured pieces are sent home to prepare the feast/i)).toBeInTheDocument();
-      });
-
-      it('should display move selection instruction', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        expect(screen.getByText(/click a piece to select.*click the desired square/i)).toBeInTheDocument();
-      });
-
-      it('should display move confirmation instruction', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        expect(screen.getByText(/click confirm to lock in your move/i)).toBeInTheDocument();
-      });
-
-      it('should display URL mode instruction', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        expect(screen.getByText(/URL to share with your opponent/i)).toBeInTheDocument();
-      });
-
-      it('should display hot-seat mode instruction', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        expect(screen.getByText(/play with someone on the same device/i)).toBeInTheDocument();
-      });
-
-      it('should use unordered list for instructions', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        const instructionsSection = screen.getByRole('region', { name: /how to play/i });
-        const list = instructionsSection.querySelector('ul');
-
-        expect(list).toBeInTheDocument();
-      });
-
-      it('should have at least 6 instruction items', () => {
-        render(<ModeSelector onModeSelected={vi.fn()} />);
-
-        const instructionsSection = screen.getByRole('region', { name: /how to play/i });
-        const listItems = instructionsSection.querySelectorAll('li');
-
-        expect(listItems.length).toBeGreaterThanOrEqual(6);
-      });
     });
   });
 

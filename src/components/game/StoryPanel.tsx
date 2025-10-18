@@ -97,7 +97,7 @@ export function StoryPanel({ isOpen, onClose }: StoryPanelProps): ReactElement |
       className={styles.overlay}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="story-panel-title"
+      aria-labelledby="story-panel-main-title"
       aria-describedby="story-panel-description"
     >
       <div ref={containerRef} className={styles.container}>
@@ -111,6 +111,11 @@ export function StoryPanel({ isOpen, onClose }: StoryPanelProps): ReactElement |
         >
           ×
         </button>
+
+        {/* Main title */}
+        <h1 id="story-panel-main-title" className={styles.mainTitle}>
+          The Story
+        </h1>
 
         {/* Story section */}
         <section className={styles.storySection} aria-label="Game story">
