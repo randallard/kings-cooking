@@ -15,7 +15,7 @@ import type { Move, Piece } from '@/lib/validation/schemas';
 /**
  * Helper function to create a mock piece
  */
-const createMockPiece = (owner: 'white' | 'black'): Piece => ({
+const createMockPiece = (owner: 'light' | 'dark'): Piece => ({
   type: 'rook',
   owner,
   position: [0, 0],
@@ -30,7 +30,7 @@ let mockTimestamp = Date.now();
 const createMockMove = (
   from: [number, number],
   to: [number, number] | 'off_board',
-  owner: 'white' | 'black',
+  owner: 'light' | 'dark',
   captured: Piece | null = null
 ): Move => ({
   from,
@@ -72,8 +72,8 @@ describe('HistoryViewer', () => {
 
     it('should render with initial moves', () => {
       const history = [
-        createMockMove([0, 0], [1, 1], 'white'),
-        createMockMove([2, 2], [1, 1], 'black'),
+        createMockMove([0, 0], [1, 1], 'light'),
+        createMockMove([2, 2], [1, 1], 'dark'),
       ];
 
       render(<HistoryViewer history={history} />);
@@ -83,7 +83,7 @@ describe('HistoryViewer', () => {
 
     it('should display correct move count in header', () => {
       const history = Array.from({ length: 15 }, (_, i) =>
-        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'white' : 'black')
+        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'light' : 'dark')
       );
 
       render(<HistoryViewer history={history} />);
@@ -97,7 +97,7 @@ describe('HistoryViewer', () => {
    */
   describe('Collapsible Panel', () => {
     it('should start expanded by default', () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       render(<HistoryViewer history={history} />);
 
       const content = screen.getByRole('log');
@@ -105,7 +105,7 @@ describe('HistoryViewer', () => {
     });
 
     it('should start collapsed when defaultExpanded is false', () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       render(<HistoryViewer history={history} defaultExpanded={false} />);
 
       const content = document.querySelector('#history-content');
@@ -113,7 +113,7 @@ describe('HistoryViewer', () => {
     });
 
     it('should toggle panel on header click', async () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       render(<HistoryViewer history={history} />);
 
       const header = screen.getByRole('button', { name: /Move History/i });
@@ -137,7 +137,7 @@ describe('HistoryViewer', () => {
     });
 
     it('should toggle panel on Enter key', async () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       render(<HistoryViewer history={history} />);
 
       const header = screen.getByRole('button', { name: /Move History/i });
@@ -152,7 +152,7 @@ describe('HistoryViewer', () => {
     });
 
     it('should toggle panel on Space key', async () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       render(<HistoryViewer history={history} />);
 
       const header = screen.getByRole('button', { name: /Move History/i });
@@ -167,7 +167,7 @@ describe('HistoryViewer', () => {
     });
 
     it('should have correct ARIA attributes when expanded', () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       render(<HistoryViewer history={history} />);
 
       const header = screen.getByRole('button');
@@ -176,7 +176,7 @@ describe('HistoryViewer', () => {
     });
 
     it('should have correct ARIA attributes when collapsed', async () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       render(<HistoryViewer history={history} />);
 
       const header = screen.getByRole('button');
@@ -194,7 +194,7 @@ describe('HistoryViewer', () => {
   describe('Move Display', () => {
     it('should show last 10 moves when history is longer', () => {
       const history = Array.from({ length: 15 }, (_, i) =>
-        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'white' : 'black')
+        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'light' : 'dark')
       );
 
       render(<HistoryViewer history={history} />);
@@ -205,7 +205,7 @@ describe('HistoryViewer', () => {
     });
 
     it('should display move notation correctly', () => {
-      const history = [createMockMove([0, 0], [2, 2], 'white')];
+      const history = [createMockMove([0, 0], [2, 2], 'light')];
 
       render(<HistoryViewer history={history} />);
 
@@ -213,7 +213,7 @@ describe('HistoryViewer', () => {
     });
 
     it('should display "Off Board" for off-board moves', () => {
-      const history = [createMockMove([1, 1], 'off_board', 'white')];
+      const history = [createMockMove([1, 1], 'off_board', 'light')];
 
       render(<HistoryViewer history={history} />);
 
@@ -222,8 +222,8 @@ describe('HistoryViewer', () => {
 
     it('should display player ownership', () => {
       const history = [
-        createMockMove([0, 0], [1, 1], 'white'),
-        createMockMove([2, 2], [1, 1], 'black'),
+        createMockMove([0, 0], [1, 1], 'light'),
+        createMockMove([2, 2], [1, 1], 'dark'),
       ];
 
       render(<HistoryViewer history={history} />);
@@ -233,8 +233,8 @@ describe('HistoryViewer', () => {
     });
 
     it('should show capture indicator when piece captured', () => {
-      const capturedPiece = createMockPiece('black');
-      const history = [createMockMove([0, 0], [1, 1], 'white', capturedPiece)];
+      const capturedPiece = createMockPiece('dark');
+      const history = [createMockMove([0, 0], [1, 1], 'light', capturedPiece)];
 
       render(<HistoryViewer history={history} />);
 
@@ -244,9 +244,9 @@ describe('HistoryViewer', () => {
 
     it('should highlight current move with aria-current', () => {
       const history = [
-        createMockMove([0, 0], [1, 1], 'white'),
-        createMockMove([2, 2], [1, 1], 'black'),
-        createMockMove([1, 1], [2, 2], 'white'),
+        createMockMove([0, 0], [1, 1], 'light'),
+        createMockMove([2, 2], [1, 1], 'dark'),
+        createMockMove([1, 1], [2, 2], 'light'),
       ];
 
       render(<HistoryViewer history={history} currentMoveIndex={1} />);
@@ -262,7 +262,7 @@ describe('HistoryViewer', () => {
   describe('Full History Modal', () => {
     it('should show "Show Full History" button when history > 10 moves', () => {
       const history = Array.from({ length: 15 }, (_, i) =>
-        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'white' : 'black')
+        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'light' : 'dark')
       );
 
       render(<HistoryViewer history={history} />);
@@ -272,7 +272,7 @@ describe('HistoryViewer', () => {
 
     it('should not show "Show Full History" button when history <= 10 moves', () => {
       const history = Array.from({ length: 5 }, (_, i) =>
-        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'white' : 'black')
+        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'light' : 'dark')
       );
 
       render(<HistoryViewer history={history} />);
@@ -284,7 +284,7 @@ describe('HistoryViewer', () => {
 
     it('should open modal when "Show Full History" button clicked', async () => {
       const history = Array.from({ length: 15 }, (_, i) =>
-        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'white' : 'black')
+        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'light' : 'dark')
       );
 
       render(<HistoryViewer history={history} />);
@@ -300,7 +300,7 @@ describe('HistoryViewer', () => {
 
     it('should close modal when close button clicked', async () => {
       const history = Array.from({ length: 15 }, (_, i) =>
-        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'white' : 'black')
+        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'light' : 'dark')
       );
 
       render(<HistoryViewer history={history} />);
@@ -322,7 +322,7 @@ describe('HistoryViewer', () => {
 
     it('should close modal on ESC key', async () => {
       const history = Array.from({ length: 15 }, (_, i) =>
-        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'white' : 'black')
+        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'light' : 'dark')
       );
 
       render(<HistoryViewer history={history} />);
@@ -343,7 +343,7 @@ describe('HistoryViewer', () => {
 
     it('should display all moves in modal', async () => {
       const history = Array.from({ length: 15 }, (_, i) =>
-        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'white' : 'black')
+        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'light' : 'dark')
       );
 
       render(<HistoryViewer history={history} />);
@@ -362,7 +362,7 @@ describe('HistoryViewer', () => {
    */
   describe('Export JSON', () => {
     it('should show export button when handler provided', () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       const onExport = vi.fn();
 
       render(<HistoryViewer history={history} onExportJSON={onExport} />);
@@ -371,7 +371,7 @@ describe('HistoryViewer', () => {
     });
 
     it('should not show export button when no handler', () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
 
       render(<HistoryViewer history={history} />);
 
@@ -379,7 +379,7 @@ describe('HistoryViewer', () => {
     });
 
     it('should call export handler when button clicked', async () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       const onExport = vi.fn();
 
       render(<HistoryViewer history={history} onExportJSON={onExport} />);
@@ -396,7 +396,7 @@ describe('HistoryViewer', () => {
    */
   describe('Accessibility', () => {
     it('should have proper heading structure', () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       render(<HistoryViewer history={history} />);
 
       const heading = screen.getByRole('heading', { level: 2 });
@@ -404,14 +404,14 @@ describe('HistoryViewer', () => {
     });
 
     it('should use role="log" for move list', () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       render(<HistoryViewer history={history} />);
 
       expect(screen.getByRole('log')).toBeInTheDocument();
     });
 
     it('should have aria-live="polite" for move list', () => {
-      const history = [createMockMove([0, 0], [1, 1], 'white')];
+      const history = [createMockMove([0, 0], [1, 1], 'light')];
       render(<HistoryViewer history={history} />);
 
       const moveList = screen.getByRole('log');
@@ -420,7 +420,7 @@ describe('HistoryViewer', () => {
 
     it('should have descriptive button labels', () => {
       const history = Array.from({ length: 15 }, (_, i) =>
-        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'white' : 'black')
+        createMockMove([0, 0], [1, 1], i % 2 === 0 ? 'light' : 'dark')
       );
 
       render(<HistoryViewer history={history} onExportJSON={vi.fn()} />);

@@ -142,10 +142,10 @@ export function checkStateConsistency(gameState: GameState): VerificationResult 
 
   const totalPieces =
     piecesOnBoard +
-    gameState.whiteCourt.length +
-    gameState.blackCourt.length +
-    gameState.capturedWhite.length +
-    gameState.capturedBlack.length;
+    gameState.lightCourt.length +
+    gameState.darkCourt.length +
+    gameState.capturedLight.length +
+    gameState.capturedDark.length;
 
   // Initial game starts with 6 pieces (3 white, 3 black)
   if (totalPieces > 6) {

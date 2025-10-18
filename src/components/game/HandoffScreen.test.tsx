@@ -18,55 +18,55 @@ describe('HandoffScreen', () => {
   });
 
   describe('Rendering', () => {
-    it('should render with correct title for white player', () => {
+    it('should render with correct title for light player', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
       );
 
-      expect(screen.getByRole('heading', { name: /white's turn/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /light's turn/i })).toBeInTheDocument();
     });
 
-    it('should render with correct title for black player', () => {
+    it('should render with correct title for dark player', () => {
       render(
         <HandoffScreen
-          nextPlayer="black"
+          nextPlayer="dark"
           nextPlayerName="Charlie"
-          previousPlayer="white"
+          previousPlayer="light"
           previousPlayerName="David"
           onContinue={vi.fn()}
         />
       );
 
-      expect(screen.getByRole('heading', { name: /black's turn/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /dark's turn/i })).toBeInTheDocument();
     });
 
     it('should display handoff message with player names', () => {
       render(
         <HandoffScreen
-          nextPlayer="black"
+          nextPlayer="dark"
           nextPlayerName="Alice"
-          previousPlayer="white"
+          previousPlayer="light"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
       );
 
-      expect(screen.getByText(/white \(bob\) made their move/i)).toBeInTheDocument();
+      expect(screen.getByText(/light \(bob\) made their move/i)).toBeInTheDocument();
       expect(screen.getByText(/pass the device to alice/i)).toBeInTheDocument();
     });
 
     it('should render skip button', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
@@ -78,9 +78,9 @@ describe('HandoffScreen', () => {
     it('should display initial countdown', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
           countdownSeconds={3}
@@ -94,9 +94,9 @@ describe('HandoffScreen', () => {
     it('should display keyboard hint', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
@@ -111,9 +111,9 @@ describe('HandoffScreen', () => {
     it('should countdown from 3 to 0', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
           countdownSeconds={3}
@@ -138,9 +138,9 @@ describe('HandoffScreen', () => {
 
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={onContinue}
           countdownSeconds={1}
@@ -158,9 +158,9 @@ describe('HandoffScreen', () => {
     it('should support custom countdown duration', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
           countdownSeconds={5}
@@ -173,9 +173,9 @@ describe('HandoffScreen', () => {
     it('should display singular "second" when countdown is 1', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
           countdownSeconds={2}
@@ -197,9 +197,9 @@ describe('HandoffScreen', () => {
 
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={onContinue}
         />
@@ -215,9 +215,9 @@ describe('HandoffScreen', () => {
 
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={onContinue}
         />
@@ -233,9 +233,9 @@ describe('HandoffScreen', () => {
     it('should have role="dialog"', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
@@ -247,9 +247,9 @@ describe('HandoffScreen', () => {
     it('should have aria-modal="true"', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
@@ -262,9 +262,9 @@ describe('HandoffScreen', () => {
     it('should have aria-labelledby pointing to title', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
@@ -273,15 +273,15 @@ describe('HandoffScreen', () => {
       const dialog = screen.getByRole('dialog');
       const titleId = dialog.getAttribute('aria-labelledby');
       expect(titleId).toBe('handoff-title');
-      expect(screen.getByRole('heading', { name: /white's turn/i })).toHaveAttribute('id', titleId);
+      expect(screen.getByRole('heading', { name: /light's turn/i })).toHaveAttribute('id', titleId);
     });
 
     it('should have aria-describedby pointing to description', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
@@ -294,9 +294,9 @@ describe('HandoffScreen', () => {
     it('should announce countdown with aria-live', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
@@ -310,9 +310,9 @@ describe('HandoffScreen', () => {
     it('should have accessible skip button label', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
@@ -325,9 +325,9 @@ describe('HandoffScreen', () => {
     it('should hide blur overlay from screen readers', () => {
       const { container } = render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
@@ -342,9 +342,9 @@ describe('HandoffScreen', () => {
     it('should trap focus within modal', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />
@@ -366,9 +366,9 @@ describe('HandoffScreen', () => {
 
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={onContinue}
           countdownSeconds={0}
@@ -382,9 +382,9 @@ describe('HandoffScreen', () => {
     it('should not crash with very long player names', () => {
       render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName={'A'.repeat(50)}
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName={'B'.repeat(50)}
           onContinue={vi.fn()}
         />
@@ -396,9 +396,9 @@ describe('HandoffScreen', () => {
     it('should cleanup timer on unmount', () => {
       const { unmount } = render(
         <HandoffScreen
-          nextPlayer="white"
+          nextPlayer="light"
           nextPlayerName="Alice"
-          previousPlayer="black"
+          previousPlayer="dark"
           previousPlayerName="Bob"
           onContinue={vi.fn()}
         />

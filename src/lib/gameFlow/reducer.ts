@@ -15,15 +15,15 @@ import { storage } from '../storage/localStorage';
  * @returns Initial GameState with Player 1 and Player 2
  */
 function createInitialGameState(): GameState {
-  const whitePlayer = {
+  const lightPlayer = {
     id: crypto.randomUUID() as never,
     name: 'Player 1'
   };
-  const blackPlayer = {
+  const darkPlayer = {
     id: crypto.randomUUID() as never,
     name: 'Player 2'
   };
-  const engine = new KingsChessEngine(whitePlayer, blackPlayer);
+  const engine = new KingsChessEngine(lightPlayer, darkPlayer);
   return engine.getGameState();
 }
 
@@ -51,8 +51,8 @@ function handleUrlLoad(
 
   if (payload.type === 'full_state') {
     // Full state: Restore complete game (Player 2 receiving first URL, or Player 1 returning)
-    let player1Name = payload.gameState.whitePlayer.name;
-    let player2Name = payload.gameState.blackPlayer.name;
+    let player1Name = payload.gameState.lightPlayer.name;
+    let player2Name = payload.gameState.darkPlayer.name;
 
     // Check localStorage for saved name
     const myName = storage.getMyName();
@@ -80,7 +80,7 @@ function handleUrlLoad(
         // We are Player 1, so the playerName is Player 2's name
         player2Name = payload.playerName;
         // Update the gameState to have Player 2's correct name
-        payload.gameState.blackPlayer.name = payload.playerName;
+        payload.gameState.darkPlayer.name = payload.playerName;
 
         if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
           console.log('  ✅ Identified as Player 1 receiving Player 2 name:', payload.playerName);
@@ -88,7 +88,7 @@ function handleUrlLoad(
       } else {
         // We are Player 2, so the playerName is Player 1's name
         player1Name = payload.playerName;
-        payload.gameState.whitePlayer.name = payload.playerName;
+        payload.gameState.lightPlayer.name = payload.playerName;
 
         if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
           console.log('  ✅ Identified as Player 2 receiving Player 1 name:', payload.playerName);
@@ -98,8 +98,8 @@ function handleUrlLoad(
 
     // Check if game is over
     const engine = new KingsChessEngine(
-      payload.gameState.whitePlayer,
-      payload.gameState.blackPlayer,
+      payload.gameState.lightPlayer,
+      payload.gameState.darkPlayer,
       payload.gameState
     );
     const victoryResult = engine.checkGameEnd();
@@ -168,8 +168,8 @@ function handleUrlLoad(
     }
 
     const engine = new KingsChessEngine(
-      currentState.whitePlayer,
-      currentState.blackPlayer,
+      currentState.lightPlayer,
+      currentState.darkPlayer,
       currentState
     );
 
@@ -186,8 +186,8 @@ function handleUrlLoad(
         myCurrentChecksum: currentChecksum,
         myCurrentTurn: currentState.currentTurn,
         myCurrentPlayer: currentState.currentPlayer,
-        myWhitePlayer: currentState.whitePlayer.name,
-        myBlackPlayer: currentState.blackPlayer.name,
+        myLightPlayer: currentState.lightPlayer.name,
+        myDarkPlayer: currentState.darkPlayer.name,
         myBoard: currentState.board,
       });
     }
@@ -202,8 +202,8 @@ function handleUrlLoad(
       return {
         phase: 'playing',
         mode: 'url',
-        player1Name: currentState.whitePlayer.name,
-        player2Name: currentState.blackPlayer.name,
+        player1Name: currentState.lightPlayer.name,
+        player2Name: currentState.darkPlayer.name,
         gameState: currentState,
         selectedPosition: null,
         legalMoves: [],
@@ -257,8 +257,8 @@ function handleUrlLoad(
     // Check for game over
     const victoryResult = engine.checkGameEnd();
     if (victoryResult.gameOver) {
-      const player1Name = newGameState.whitePlayer.name;
-      const player2Name = newGameState.blackPlayer.name;
+      const player1Name = newGameState.lightPlayer.name;
+      const player2Name = newGameState.darkPlayer.name;
 
       return {
         phase: 'victory',
@@ -274,8 +274,8 @@ function handleUrlLoad(
     return {
       phase: 'playing',
       mode: 'url',
-      player1Name: newGameState.whitePlayer.name,
-      player2Name: newGameState.blackPlayer.name,
+      player1Name: newGameState.lightPlayer.name,
+      player2Name: newGameState.darkPlayer.name,
       gameState: newGameState,
       selectedPosition: null,
       legalMoves: [],

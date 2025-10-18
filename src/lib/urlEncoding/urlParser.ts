@@ -316,7 +316,7 @@ function handleResyncRequest(payload: ResyncRequestPayload): ApplyResult {
 export function extractOpponentName(payload: UrlPayload): string | null {
   if (payload.type === 'full_state') {
     // For full_state, opponent is the white player (game creator)
-    return payload.gameState.whitePlayer.name;
+    return payload.gameState.lightPlayer.name;
   }
 
   if (payload.type === 'delta' || payload.type === 'resync_request') {

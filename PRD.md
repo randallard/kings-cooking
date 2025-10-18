@@ -43,7 +43,7 @@
 **Example:**
 - White gets 2 pieces to Black's court
 - Black gets 1 piece to White's court
-- White wins!
+- Light wins!
 
 ### 1.2 Board Setup
 
@@ -160,15 +160,15 @@ If equal pieces in each court, it's a DRAW - "Both kings serve together in the c
 When all pieces from one team are off the board (either captured or scored), the game ends immediately and remaining opponent pieces on the board are automatically counted as having reached the opponent's court.
 
 **Examples:**
-- **Scenario 1:** All White pieces captured (in White's court) = 0 White points
+- **Scenario 1:** All Light pieces captured (in White's court) = 0 White points
   - Black has 2 pieces on board + 1 in White's court = 3 Black points (1 scored + 2 auto-scored)
-  - Result: Black wins 3-0
+  - Result: Dark wins 3-0
 
-- **Scenario 2:** All Black pieces off-board (2 in White's court, 1 captured)
+- **Scenario 2:** All Dark pieces off-board (2 in White's court, 1 captured)
   - Black score: 2 points (in White's court)
   - White has 1 piece on board + 2 captured
   - White score: 1 point (auto-scored)
-  - Result: Black wins 2-1
+  - Result: Dark wins 2-1
 
 **Stalemate Resolution:**
 - If both teams have pieces but no legal moves:
@@ -295,7 +295,7 @@ export type PieceType = z.infer<typeof PieceTypeSchema>;
 // Piece with owner and position
 export const PieceSchema = z.object({
   type: PieceTypeSchema,
-  owner: z.enum(['white', 'black']),
+  owner: z.enum(['light', 'dark']),
   position: z.tuple([z.number(), z.number()]).nullable(), // null = in court
   moveCount: z.number().int().min(0),
   id: z.string().uuid(), // Unique piece identifier
@@ -312,16 +312,16 @@ export const GameStateSchema = z.object({
   board: z.array(z.array(PieceSchema.nullable())).length(3),
 
   // Pieces in courts
-  whiteCourt: z.array(PieceSchema), // White pieces in Black's court (white scores)
-  blackCourt: z.array(PieceSchema), // Black pieces in White's court (black scores)
+  whiteCourt: z.array(PieceSchema), // Light pieces in Black's court (white scores)
+  blackCourt: z.array(PieceSchema), // Dark pieces in White's court (black scores)
 
   // Captured pieces (removed from play, no score)
-  capturedWhite: z.array(PieceSchema), // White pieces captured
-  capturedBlack: z.array(PieceSchema), // Black pieces captured
+  capturedWhite: z.array(PieceSchema), // Light pieces captured
+  capturedBlack: z.array(PieceSchema), // Dark pieces captured
 
   // Turn management
   currentTurn: z.number().int().min(0),
-  currentPlayer: z.enum(['white', 'black']),
+  currentPlayer: z.enum(['light', 'dark']),
 
   // Player info
   whitePlayer: z.object({
@@ -335,7 +335,7 @@ export const GameStateSchema = z.object({
 
   // Game status
   status: z.enum(['playing', 'white_wins', 'black_wins', 'draw']),
-  winner: z.enum(['white', 'black']).nullable(),
+  winner: z.enum(['light', 'dark']).nullable(),
 
   // Move history
   moveHistory: z.array(z.object({
@@ -488,9 +488,9 @@ class KingsChessEngine {
   // Initialize starting position
   private initializeBoard(): void {
     this.board = [
-      [createRook('black'), createKnight('black'), createBishop('black')],
+      [createRook('dark'), createKnight('dark'), createBishop('dark')],
       [null, null, null],
-      [createRook('white'), createKnight('white'), createBishop('white')],
+      [createRook('light'), createKnight('light'), createBishop('light')],
     ];
     this.whiteCourt = [];
     this.blackCourt = [];
@@ -547,22 +547,22 @@ class KingsChessEngine {
     }
 
     // Count pieces in opponent's courts
-    const whiteScore = this.whiteCourt.length; // White pieces in Black's court
-    const blackScore = this.blackCourt.length; // Black pieces in White's court
+    const whiteScore = this.whiteCourt.length; // Light pieces in Black's court
+    const blackScore = this.blackCourt.length; // Dark pieces in White's court
 
     if (whiteScore > blackScore) {
       return {
         gameOver: true,
-        winner: 'white',
+        winner: 'light',
         score: { white: whiteScore, black: blackScore },
-        reason: `White wins with ${whiteScore} pieces at Black's court!`,
+        reason: `Light wins with ${whiteScore} pieces at Black's court!`,
       };
     } else if (blackScore > whiteScore) {
       return {
         gameOver: true,
-        winner: 'black',
+        winner: 'dark',
         score: { white: whiteScore, black: blackScore },
-        reason: `Black wins with ${blackScore} pieces at White's court!`,
+        reason: `Dark wins with ${blackScore} pieces at White's court!`,
       };
     } else {
       return {

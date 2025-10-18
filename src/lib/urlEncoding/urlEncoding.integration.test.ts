@@ -24,9 +24,9 @@ function createMockGameState(): GameState {
     gameId: GameIdSchema.parse('00000000-0000-0000-0000-000000000000'),
     board: [
       [
-        { type: 'rook', owner: 'white', position: [0, 0], moveCount: 0, id: '00000000-0000-0000-0000-000000000001' },
-        { type: 'knight', owner: 'white', position: [0, 1], moveCount: 0, id: '00000000-0000-0000-0000-000000000002' },
-        { type: 'bishop', owner: 'white', position: [0, 2], moveCount: 0, id: '00000000-0000-0000-0000-000000000003' },
+        { type: 'rook', owner: 'light', position: [0, 0], moveCount: 0, id: '00000000-0000-0000-0000-000000000001' },
+        { type: 'knight', owner: 'light', position: [0, 1], moveCount: 0, id: '00000000-0000-0000-0000-000000000002' },
+        { type: 'bishop', owner: 'light', position: [0, 2], moveCount: 0, id: '00000000-0000-0000-0000-000000000003' },
       ],
       [
         null,
@@ -34,22 +34,22 @@ function createMockGameState(): GameState {
         null,
       ],
       [
-        { type: 'rook', owner: 'black', position: [2, 0], moveCount: 0, id: '00000000-0000-0000-0000-000000000007' },
-        { type: 'knight', owner: 'black', position: [2, 1], moveCount: 0, id: '00000000-0000-0000-0000-000000000008' },
-        { type: 'bishop', owner: 'black', position: [2, 2], moveCount: 0, id: '00000000-0000-0000-0000-000000000009' },
+        { type: 'rook', owner: 'dark', position: [2, 0], moveCount: 0, id: '00000000-0000-0000-0000-000000000007' },
+        { type: 'knight', owner: 'dark', position: [2, 1], moveCount: 0, id: '00000000-0000-0000-0000-000000000008' },
+        { type: 'bishop', owner: 'dark', position: [2, 2], moveCount: 0, id: '00000000-0000-0000-0000-000000000009' },
       ],
     ],
-    whiteCourt: [],
-    blackCourt: [],
-    capturedWhite: [],
-    capturedBlack: [],
+    lightCourt: [],
+    darkCourt: [],
+    capturedLight: [],
+    capturedDark: [],
     currentTurn: 0,
-    currentPlayer: 'white',
-    whitePlayer: {
+    currentPlayer: 'light',
+    lightPlayer: {
       id: PlayerIdSchema.parse('00000000-0000-0000-0000-000000000010'),
       name: 'Player1',
     },
-    blackPlayer: {
+    darkPlayer: {
       id: PlayerIdSchema.parse('00000000-0000-0000-0000-000000000011'),
       name: 'Player2',
     },
@@ -343,18 +343,18 @@ describe('URL Encoding Integration Tests', () => {
       // Create a reasonably sized game state
       const mockGameState = createMockGameState();
       mockGameState.currentTurn = 15;
-      mockGameState.capturedWhite = [
-        { type: 'rook', owner: 'black', position: null, moveCount: 0, id: '00000000-0000-0000-0000-000000000099' },
+      mockGameState.capturedLight = [
+        { type: 'rook', owner: 'dark', position: null, moveCount: 0, id: '00000000-0000-0000-0000-000000000099' },
       ];
-      mockGameState.capturedBlack = [
-        { type: 'knight', owner: 'white', position: null, moveCount: 0, id: '00000000-0000-0000-0000-000000000098' },
+      mockGameState.capturedDark = [
+        { type: 'knight', owner: 'light', position: null, moveCount: 0, id: '00000000-0000-0000-0000-000000000098' },
       ];
       mockGameState.moveHistory = Array(10).fill(null).map((_, i) => ({
         from: [0, 0] as [number, number],
         to: [1, 1] as [number, number],
         piece: {
           type: 'rook' as const,
-          owner: i % 2 === 0 ? ('white' as const) : ('black' as const),
+          owner: i % 2 === 0 ? ('light' as const) : ('dark' as const),
           position: null,
           moveCount: i,
           id: `00000000-0000-0000-0000-${String(i).padStart(12, '0')}`,

@@ -17,7 +17,7 @@ import type { Piece, Position } from '../validation/schemas';
 import { v4 as uuid } from 'uuid';
 
 describe('pieceMovement', () => {
-  const createMockPiece = (type: 'rook' | 'knight' | 'bishop', owner: 'white' | 'black', position: Position): Piece => ({
+  const createMockPiece = (type: 'rook' | 'knight' | 'bishop', owner: 'light' | 'dark', position: Position): Piece => ({
     type,
     owner,
     position,
@@ -58,7 +58,7 @@ describe('pieceMovement', () => {
 
   describe('getRookMoves', () => {
     test('should return vertical and horizontal moves on empty board', () => {
-      const moves = getRookMoves([1, 1], emptyBoard(), 'white');
+      const moves = getRookMoves([1, 1], emptyBoard(), 'light');
 
       expect(moves).toContainEqual([0, 1]); // Up
       expect(moves).toContainEqual([2, 1]); // Down
@@ -68,7 +68,7 @@ describe('pieceMovement', () => {
     });
 
     test('should stop at board edges', () => {
-      const moves = getRookMoves([0, 0], emptyBoard(), 'white');
+      const moves = getRookMoves([0, 0], emptyBoard(), 'light');
 
       expect(moves).toContainEqual([0, 1]);
       expect(moves).toContainEqual([0, 2]);
@@ -78,41 +78,41 @@ describe('pieceMovement', () => {
     });
 
     test('should stop at own pieces', () => {
-      const ownPiece = createMockPiece('knight', 'white', [1, 0]);
+      const ownPiece = createMockPiece('knight', 'light', [1, 0]);
       const getPiece = boardWithPieces([{ pos: [1, 0], piece: ownPiece }]);
 
-      const moves = getRookMoves([2, 0], getPiece, 'white');
+      const moves = getRookMoves([2, 0], getPiece, 'light');
 
       expect(moves).not.toContainEqual([1, 0]);
       expect(moves).not.toContainEqual([0, 0]);
     });
 
     test('should include opponent pieces (capture)', () => {
-      const opponentPiece = createMockPiece('knight', 'black', [1, 0]);
+      const opponentPiece = createMockPiece('knight', 'dark', [1, 0]);
       const getPiece = boardWithPieces([{ pos: [1, 0], piece: opponentPiece }]);
 
-      const moves = getRookMoves([2, 0], getPiece, 'white');
+      const moves = getRookMoves([2, 0], getPiece, 'light');
 
       expect(moves).toContainEqual([1, 0]);
       expect(moves).not.toContainEqual([0, 0]); // Can't jump over
     });
 
     test('should return empty array for null position', () => {
-      const moves = getRookMoves(null, emptyBoard(), 'white');
+      const moves = getRookMoves(null, emptyBoard(), 'light');
       expect(moves).toEqual([]);
     });
   });
 
   describe('getKnightMoves', () => {
     test('should return L-shaped moves on empty board', () => {
-      const moves = getKnightMoves([1, 0], emptyBoard(), 'white');
+      const moves = getKnightMoves([1, 0], emptyBoard(), 'light');
 
       // L-moves from (1,0) - some will be valid on 3x3 board
       expect(moves.length).toBeGreaterThan(0);
     });
 
     test('should only return in-bounds moves', () => {
-      const moves = getKnightMoves([0, 0], emptyBoard(), 'white');
+      const moves = getKnightMoves([0, 0], emptyBoard(), 'light');
 
       // From corner, only certain L-moves are valid
       moves.forEach(move => {
@@ -125,32 +125,32 @@ describe('pieceMovement', () => {
     });
 
     test('should not include own pieces', () => {
-      const ownPiece = createMockPiece('rook', 'white', [2, 2]);
+      const ownPiece = createMockPiece('rook', 'light', [2, 2]);
       const getPiece = boardWithPieces([{ pos: [2, 2], piece: ownPiece }]);
 
-      const moves = getKnightMoves([1, 0], getPiece, 'white');
+      const moves = getKnightMoves([1, 0], getPiece, 'light');
 
       expect(moves).not.toContainEqual([2, 2]);
     });
 
     test('should include opponent pieces (capture)', () => {
-      const opponentPiece = createMockPiece('rook', 'black', [2, 2]);
+      const opponentPiece = createMockPiece('rook', 'dark', [2, 2]);
       const getPiece = boardWithPieces([{ pos: [2, 2], piece: opponentPiece }]);
 
-      const moves = getKnightMoves([1, 0], getPiece, 'white');
+      const moves = getKnightMoves([1, 0], getPiece, 'light');
 
       expect(moves).toContainEqual([2, 2]);
     });
 
     test('should return empty array for null position', () => {
-      const moves = getKnightMoves(null, emptyBoard(), 'white');
+      const moves = getKnightMoves(null, emptyBoard(), 'light');
       expect(moves).toEqual([]);
     });
   });
 
   describe('getBishopMoves', () => {
     test('should return diagonal moves on empty board', () => {
-      const moves = getBishopMoves([1, 1], emptyBoard(), 'white');
+      const moves = getBishopMoves([1, 1], emptyBoard(), 'light');
 
       expect(moves).toContainEqual([0, 0]); // Up-left
       expect(moves).toContainEqual([0, 2]); // Up-right
@@ -160,7 +160,7 @@ describe('pieceMovement', () => {
     });
 
     test('should stop at board edges', () => {
-      const moves = getBishopMoves([0, 0], emptyBoard(), 'white');
+      const moves = getBishopMoves([0, 0], emptyBoard(), 'light');
 
       expect(moves).toContainEqual([1, 1]);
       expect(moves).toContainEqual([2, 2]);
@@ -168,49 +168,49 @@ describe('pieceMovement', () => {
     });
 
     test('should stop at own pieces', () => {
-      const ownPiece = createMockPiece('rook', 'white', [1, 1]);
+      const ownPiece = createMockPiece('rook', 'light', [1, 1]);
       const getPiece = boardWithPieces([{ pos: [1, 1], piece: ownPiece }]);
 
-      const moves = getBishopMoves([0, 0], getPiece, 'white');
+      const moves = getBishopMoves([0, 0], getPiece, 'light');
 
       expect(moves).not.toContainEqual([1, 1]);
       expect(moves).not.toContainEqual([2, 2]);
     });
 
     test('should include opponent pieces (capture)', () => {
-      const opponentPiece = createMockPiece('rook', 'black', [1, 1]);
+      const opponentPiece = createMockPiece('rook', 'dark', [1, 1]);
       const getPiece = boardWithPieces([{ pos: [1, 1], piece: opponentPiece }]);
 
-      const moves = getBishopMoves([0, 0], getPiece, 'white');
+      const moves = getBishopMoves([0, 0], getPiece, 'light');
 
       expect(moves).toContainEqual([1, 1]);
       expect(moves).not.toContainEqual([2, 2]); // Can't jump over
     });
 
     test('should return empty array for null position', () => {
-      const moves = getBishopMoves(null, emptyBoard(), 'white');
+      const moves = getBishopMoves(null, emptyBoard(), 'light');
       expect(moves).toEqual([]);
     });
   });
 
   describe('hasRookPathToEdge', () => {
-    test('should return true for clear path to opponent edge (white)', () => {
-      const rook = createMockPiece('rook', 'white', [1, 0]);
+    test('should return true for clear path to opponent edge (light)', () => {
+      const rook = createMockPiece('rook', 'light', [1, 0]);
       const result = hasRookPathToEdge([1, 0], rook, emptyBoard());
 
       expect(result).toBe(true);
     });
 
-    test('should return true for clear path to opponent edge (black)', () => {
-      const rook = createMockPiece('rook', 'black', [1, 0]);
+    test('should return true for clear path to opponent edge (dark)', () => {
+      const rook = createMockPiece('rook', 'dark', [1, 0]);
       const result = hasRookPathToEdge([1, 0], rook, emptyBoard());
 
       expect(result).toBe(true);
     });
 
     test('should return false for blocked path', () => {
-      const rook = createMockPiece('rook', 'white', [2, 0]);
-      const blockingPiece = createMockPiece('knight', 'black', [1, 0]);
+      const rook = createMockPiece('rook', 'light', [2, 0]);
+      const blockingPiece = createMockPiece('knight', 'dark', [1, 0]);
       const getPiece = boardWithPieces([{ pos: [1, 0], piece: blockingPiece }]);
 
       const result = hasRookPathToEdge([2, 0], rook, getPiece);
@@ -219,14 +219,14 @@ describe('pieceMovement', () => {
     });
 
     test('should return false for non-rook piece', () => {
-      const knight = createMockPiece('knight', 'white', [1, 0]);
+      const knight = createMockPiece('knight', 'light', [1, 0]);
       const result = hasRookPathToEdge([1, 0], knight, emptyBoard());
 
       expect(result).toBe(false);
     });
 
     test('should return false for null position', () => {
-      const rook = createMockPiece('rook', 'white', [1, 0]);
+      const rook = createMockPiece('rook', 'light', [1, 0]);
       const result = hasRookPathToEdge(null, rook, emptyBoard());
 
       expect(result).toBe(false);
@@ -234,36 +234,36 @@ describe('pieceMovement', () => {
   });
 
   describe('canKnightJumpOffBoard', () => {
-    test('should return true for white knight that can jump off to black court', () => {
-      const knight = createMockPiece('knight', 'white', [1, 1]);
+    test('should return true for light knight that can jump off to dark court', () => {
+      const knight = createMockPiece('knight', 'light', [1, 1]);
       const result = canKnightJumpOffBoard([1, 1], knight);
 
       expect(result).toBe(true); // Can jump to row -1
     });
 
-    test('should return true for black knight that can jump off to white court', () => {
-      const knight = createMockPiece('knight', 'black', [1, 1]);
+    test('should return true for dark knight that can jump off to light court', () => {
+      const knight = createMockPiece('knight', 'dark', [1, 1]);
       const result = canKnightJumpOffBoard([1, 1], knight);
 
       expect(result).toBe(true); // Can jump to row 3
     });
 
     test('should return true for knight that can jump off from edge', () => {
-      const knight = createMockPiece('knight', 'white', [1, 1]);
+      const knight = createMockPiece('knight', 'light', [1, 1]);
       const result = canKnightJumpOffBoard([1, 1], knight);
 
       expect(result).toBe(true); // 1 + (-2) = -1 (off board)
     });
 
     test('should return false for non-knight piece', () => {
-      const rook = createMockPiece('rook', 'white', [1, 1]);
+      const rook = createMockPiece('rook', 'light', [1, 1]);
       const result = canKnightJumpOffBoard([1, 1], rook);
 
       expect(result).toBe(false);
     });
 
     test('should return false for null position', () => {
-      const knight = createMockPiece('knight', 'white', [1, 1]);
+      const knight = createMockPiece('knight', 'light', [1, 1]);
       const result = canKnightJumpOffBoard(null, knight);
 
       expect(result).toBe(false);
@@ -272,7 +272,7 @@ describe('pieceMovement', () => {
 
   describe('canBishopMoveOffBoard', () => {
     test('should return true if diagonal crosses through middle column', () => {
-      const bishop = createMockPiece('bishop', 'white', [1, 0]);
+      const bishop = createMockPiece('bishop', 'light', [1, 0]);
       const result = canBishopMoveOffBoard([1, 0], bishop, emptyBoard());
 
       // Diagonal from (1,0) goes through (0,1) which is middle column
@@ -280,7 +280,7 @@ describe('pieceMovement', () => {
     });
 
     test('should return false if diagonal crosses through corner column', () => {
-      const bishop = createMockPiece('bishop', 'white', [1, 1]);
+      const bishop = createMockPiece('bishop', 'light', [1, 1]);
       const result = canBishopMoveOffBoard([1, 1], bishop, emptyBoard());
 
       // Diagonals from (1,1) go through corners (0,0) or (0,2)
@@ -288,8 +288,8 @@ describe('pieceMovement', () => {
     });
 
     test('should return false if path is blocked', () => {
-      const bishop = createMockPiece('bishop', 'white', [1, 0]);
-      const blockingPiece = createMockPiece('knight', 'black', [0, 1]);
+      const bishop = createMockPiece('bishop', 'light', [1, 0]);
+      const blockingPiece = createMockPiece('knight', 'dark', [0, 1]);
       const getPiece = boardWithPieces([{ pos: [0, 1], piece: blockingPiece }]);
 
       const result = canBishopMoveOffBoard([1, 0], bishop, getPiece);
@@ -298,14 +298,14 @@ describe('pieceMovement', () => {
     });
 
     test('should return false for non-bishop piece', () => {
-      const rook = createMockPiece('rook', 'white', [1, 0]);
+      const rook = createMockPiece('rook', 'light', [1, 0]);
       const result = canBishopMoveOffBoard([1, 0], rook, emptyBoard());
 
       expect(result).toBe(false);
     });
 
     test('should return false for null position', () => {
-      const bishop = createMockPiece('bishop', 'white', [1, 0]);
+      const bishop = createMockPiece('bishop', 'light', [1, 0]);
       const result = canBishopMoveOffBoard(null, bishop, emptyBoard());
 
       expect(result).toBe(false);
@@ -313,58 +313,58 @@ describe('pieceMovement', () => {
 
     // Rule 1: Bishop on opponent's starting row tests
     describe('edge position rule', () => {
-      test('white bishop at [0, 0] (black starting row, left corner) can move off-board', () => {
-        const whiteBishop = createMockPiece('bishop', 'white', [0, 0]);
-        const result = canBishopMoveOffBoard([0, 0], whiteBishop, emptyBoard());
+      test('light bishop at [0, 0] (dark starting row, left corner) can move off-board', () => {
+        const lightBishop = createMockPiece('bishop', 'light', [0, 0]);
+        const result = canBishopMoveOffBoard([0, 0], lightBishop, emptyBoard());
 
         expect(result).toBe(true);
       });
 
-      test('white bishop at [0, 1] (black starting row, middle) can move off-board', () => {
-        const whiteBishop = createMockPiece('bishop', 'white', [0, 1]);
-        const result = canBishopMoveOffBoard([0, 1], whiteBishop, emptyBoard());
+      test('light bishop at [0, 1] (dark starting row, middle) can move off-board', () => {
+        const lightBishop = createMockPiece('bishop', 'light', [0, 1]);
+        const result = canBishopMoveOffBoard([0, 1], lightBishop, emptyBoard());
 
         expect(result).toBe(true);
       });
 
-      test('white bishop at [0, 2] (black starting row, right corner) can move off-board', () => {
-        const whiteBishop = createMockPiece('bishop', 'white', [0, 2]);
-        const result = canBishopMoveOffBoard([0, 2], whiteBishop, emptyBoard());
+      test('light bishop at [0, 2] (dark starting row, right corner) can move off-board', () => {
+        const lightBishop = createMockPiece('bishop', 'light', [0, 2]);
+        const result = canBishopMoveOffBoard([0, 2], lightBishop, emptyBoard());
 
         expect(result).toBe(true);
       });
 
-      test('black bishop at [2, 0] (white starting row, left corner) can move off-board', () => {
-        const blackBishop = createMockPiece('bishop', 'black', [2, 0]);
-        const result = canBishopMoveOffBoard([2, 0], blackBishop, emptyBoard());
+      test('dark bishop at [2, 0] (light starting row, left corner) can move off-board', () => {
+        const darkBishop = createMockPiece('bishop', 'dark', [2, 0]);
+        const result = canBishopMoveOffBoard([2, 0], darkBishop, emptyBoard());
 
         expect(result).toBe(true);
       });
 
-      test('black bishop at [2, 1] (white starting row, middle) can move off-board', () => {
-        const blackBishop = createMockPiece('bishop', 'black', [2, 1]);
-        const result = canBishopMoveOffBoard([2, 1], blackBishop, emptyBoard());
+      test('dark bishop at [2, 1] (light starting row, middle) can move off-board', () => {
+        const darkBishop = createMockPiece('bishop', 'dark', [2, 1]);
+        const result = canBishopMoveOffBoard([2, 1], darkBishop, emptyBoard());
 
         expect(result).toBe(true);
       });
 
-      test('black bishop at [2, 2] (white starting row, right corner) can move off-board', () => {
-        const blackBishop = createMockPiece('bishop', 'black', [2, 2]);
-        const result = canBishopMoveOffBoard([2, 2], blackBishop, emptyBoard());
+      test('dark bishop at [2, 2] (light starting row, right corner) can move off-board', () => {
+        const darkBishop = createMockPiece('bishop', 'dark', [2, 2]);
+        const result = canBishopMoveOffBoard([2, 2], darkBishop, emptyBoard());
 
         expect(result).toBe(true);
       });
 
-      test('white bishop at [2, 0] (own starting row) cannot move off-board', () => {
-        const whiteBishop = createMockPiece('bishop', 'white', [2, 0]);
-        const result = canBishopMoveOffBoard([2, 0], whiteBishop, emptyBoard());
+      test('light bishop at [2, 0] (own starting row) cannot move off-board', () => {
+        const lightBishop = createMockPiece('bishop', 'light', [2, 0]);
+        const result = canBishopMoveOffBoard([2, 0], lightBishop, emptyBoard());
 
         expect(result).toBe(false);
       });
 
-      test('black bishop at [0, 0] (own starting row) cannot move off-board', () => {
-        const blackBishop = createMockPiece('bishop', 'black', [0, 0]);
-        const result = canBishopMoveOffBoard([0, 0], blackBishop, emptyBoard());
+      test('dark bishop at [0, 0] (own starting row) cannot move off-board', () => {
+        const darkBishop = createMockPiece('bishop', 'dark', [0, 0]);
+        const result = canBishopMoveOffBoard([0, 0], darkBishop, emptyBoard());
 
         expect(result).toBe(false);
       });

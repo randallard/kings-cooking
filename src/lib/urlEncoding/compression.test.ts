@@ -107,17 +107,17 @@ describe('Compression Utilities', () => {
           version: '1.0.0',
           gameId: GameIdSchema.parse(uuid()),
           board: [[null, null, null], [null, null, null], [null, null, null]],
-          whiteCourt: [],
-          blackCourt: [],
-          capturedWhite: [],
-          capturedBlack: [],
+          lightCourt: [],
+          darkCourt: [],
+          capturedLight: [],
+          capturedDark: [],
           currentTurn: 0,
-          currentPlayer: 'white',
-          whitePlayer: {
+          currentPlayer: 'light',
+          lightPlayer: {
             id: PlayerIdSchema.parse(uuid()),
             name: 'Player 1',
           },
-          blackPlayer: {
+          darkPlayer: {
             id: PlayerIdSchema.parse(uuid()),
             name: 'Player 2',
           },
@@ -202,17 +202,17 @@ describe('Compression Utilities', () => {
           version: '1.0.0',
           gameId: GameIdSchema.parse(uuid()),
           board: [[null, null, null], [null, null, null], [null, null, null]],
-          whiteCourt: [],
-          blackCourt: [],
-          capturedWhite: [],
-          capturedBlack: [],
+          lightCourt: [],
+          darkCourt: [],
+          capturedLight: [],
+          capturedDark: [],
           currentTurn: 0,
-          currentPlayer: 'white',
-          whitePlayer: {
+          currentPlayer: 'light',
+          lightPlayer: {
             id: PlayerIdSchema.parse(uuid()),
             name: 'Player 1',
           },
-          blackPlayer: {
+          darkPlayer: {
             id: PlayerIdSchema.parse(uuid()),
             name: 'Player 2',
           },
@@ -240,17 +240,17 @@ describe('Compression Utilities', () => {
           version: '1.0.0',
           gameId: GameIdSchema.parse(uuid()),
           board: [[null, null, null], [null, null, null], [null, null, null]],
-          whiteCourt: [],
-          blackCourt: [],
-          capturedWhite: [],
-          capturedBlack: [],
+          lightCourt: [],
+          darkCourt: [],
+          capturedLight: [],
+          capturedDark: [],
           currentTurn: 0,
-          currentPlayer: 'white',
-          whitePlayer: {
+          currentPlayer: 'light',
+          lightPlayer: {
             id: PlayerIdSchema.parse(uuid()),
             name: 'Player 1',
           },
-          blackPlayer: {
+          darkPlayer: {
             id: PlayerIdSchema.parse(uuid()),
             name: 'Player 2',
           },

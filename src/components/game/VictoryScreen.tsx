@@ -10,7 +10,7 @@ import styles from './VictoryScreen.module.css';
 
 interface VictoryScreenProps {
   /** Winner of the game */
-  winner: 'white' | 'black' | 'draw';
+  winner: 'light' | 'dark' | 'draw';
   /** Winner's player name */
   winnerName?: string;
   /** Loser's player name */
@@ -19,14 +19,14 @@ interface VictoryScreenProps {
   totalMoves: number;
   /** Game duration in seconds */
   gameDuration: number;
-  /** White pieces in Black's court (scored by white) */
-  whiteCourt: Piece[];
-  /** Black pieces in White's court (scored by black) */
-  blackCourt: Piece[];
-  /** White player's captured pieces */
-  capturedWhite: Piece[];
-  /** Black player's captured pieces */
-  capturedBlack: Piece[];
+  /** Light pieces in Dark's court (scored by light) */
+  lightCourt: Piece[];
+  /** Dark pieces in Light's court (scored by dark) */
+  darkCourt: Piece[];
+  /** Light player's captured pieces */
+  capturedLight: Piece[];
+  /** Dark player's captured pieces */
+  capturedDark: Piece[];
   /** Game board to check for auto-scored pieces */
   board: (Piece | null)[][];
   /** Shareable URL for game result */
@@ -58,7 +58,7 @@ interface VictoryScreenProps {
  * @example
  * ```tsx
  * <VictoryScreen
- *   winner="white"
+ *   winner="light"
  *   winnerName="Alice"
  *   loserName="Bob"
  *   totalMoves={42}
@@ -77,10 +77,10 @@ export const VictoryScreen = ({
   loserName,
   totalMoves,
   gameDuration,
-  whiteCourt,
-  blackCourt,
-  capturedWhite,
-  capturedBlack,
+  lightCourt,
+  darkCourt,
+  capturedLight,
+  capturedDark,
   board,
   shareUrl,
   onShare,
@@ -90,7 +90,7 @@ export const VictoryScreen = ({
   const [showUrlSharer, setShowUrlSharer] = useState(false);
 
   // Extract auto-scored pieces (pieces still on board when game ended)
-  const getAutoScoredPieces = (owner: 'white' | 'black'): Piece[] => {
+  const getAutoScoredPieces = (owner: 'light' | 'dark'): Piece[] => {
     const pieces: Piece[] = [];
     for (let row = 0; row < board.length; row++) {
       const boardRow = board[row];
@@ -105,8 +105,8 @@ export const VictoryScreen = ({
     return pieces;
   };
 
-  const whiteAutoScored = getAutoScoredPieces('white');
-  const blackAutoScored = getAutoScoredPieces('black');
+  const whiteAutoScored = getAutoScoredPieces('light');
+  const blackAutoScored = getAutoScoredPieces('dark');
 
   // Format duration from seconds to MM:SS
   const formatDuration = (seconds: number): string => {
@@ -120,7 +120,7 @@ export const VictoryScreen = ({
     if (winner === 'draw') {
       return "It's a Draw!";
     }
-    const winnerColor = winner === 'white' ? 'White' : 'Black';
+    const winnerColor = winner === 'light' ? 'Light' : 'Dark';
     return `${winnerColor} Wins!`;
   };
 
@@ -132,7 +132,7 @@ export const VictoryScreen = ({
     if (winnerName && loserName) {
       return `${winnerName} defeated ${loserName}`;
     }
-    const winnerColor = winner === 'white' ? 'White' : 'Black';
+    const winnerColor = winner === 'light' ? 'Light' : 'Dark';
     return `${winnerColor} is victorious!`;
   };
 
@@ -191,17 +191,17 @@ export const VictoryScreen = ({
             </div>
           </div>
 
-          {/* White Player Stats */}
+          {/* Light Player Stats */}
           <div className={styles.playerStats}>
-            <h3 className={styles.playerStatsTitle}>White Player (Player 1)</h3>
+            <h3 className={styles.playerStatsTitle}>Light Player (Player 1)</h3>
             <div className={styles.courtSection}>
               <div className={styles.courtLabel}>
-                <strong>Scored in Black's Court:</strong> {whiteCourt.length} piece{whiteCourt.length !== 1 ? 's' : ''}
+                <strong>Scored in Dark's Court:</strong> {lightCourt.length} piece{lightCourt.length !== 1 ? 's' : ''}
               </div>
-              {whiteCourt.length > 0 && (
+              {lightCourt.length > 0 && (
                 <div className={styles.piecesList}>
-                  {whiteCourt.map((piece, idx) => (
-                    <span key={`white-court-${idx}`} className={styles.piece} title={piece.type}>
+                  {lightCourt.map((piece, idx) => (
+                    <span key={`light-court-${idx}`} className={styles.piece} title={piece.type}>
                       {getPieceSymbol(piece)}
                     </span>
                   ))}
@@ -215,7 +215,7 @@ export const VictoryScreen = ({
                 </div>
                 <div className={styles.piecesList}>
                   {whiteAutoScored.map((piece, idx) => (
-                    <span key={`white-auto-${idx}`} className={styles.piece} title={piece.type}>
+                    <span key={`light-auto-${idx}`} className={styles.piece} title={piece.type}>
                       {getPieceSymbol(piece)}
                     </span>
                   ))}
@@ -224,12 +224,12 @@ export const VictoryScreen = ({
             )}
             <div className={styles.capturedSection}>
               <div className={styles.capturedLabel}>
-                <strong>Captured:</strong> {capturedWhite.length} piece{capturedWhite.length !== 1 ? 's' : ''}
+                <strong>Captured:</strong> {capturedLight.length} piece{capturedLight.length !== 1 ? 's' : ''}
               </div>
-              {capturedWhite.length > 0 && (
+              {capturedLight.length > 0 && (
                 <div className={styles.piecesList}>
-                  {capturedWhite.map((piece, idx) => (
-                    <span key={`white-captured-${idx}`} className={styles.piece} title={piece.type}>
+                  {capturedLight.map((piece, idx) => (
+                    <span key={`light-captured-${idx}`} className={styles.piece} title={piece.type}>
                       {getPieceSymbol(piece)}
                     </span>
                   ))}
@@ -238,17 +238,17 @@ export const VictoryScreen = ({
             </div>
           </div>
 
-          {/* Black Player Stats */}
+          {/* Dark Player Stats */}
           <div className={styles.playerStats}>
-            <h3 className={styles.playerStatsTitle}>Black Player (Player 2)</h3>
+            <h3 className={styles.playerStatsTitle}>Dark Player (Player 2)</h3>
             <div className={styles.courtSection}>
               <div className={styles.courtLabel}>
-                <strong>Scored in White's Court:</strong> {blackCourt.length} piece{blackCourt.length !== 1 ? 's' : ''}
+                <strong>Scored in Light's Court:</strong> {darkCourt.length} piece{darkCourt.length !== 1 ? 's' : ''}
               </div>
-              {blackCourt.length > 0 && (
+              {darkCourt.length > 0 && (
                 <div className={styles.piecesList}>
-                  {blackCourt.map((piece, idx) => (
-                    <span key={`black-court-${idx}`} className={styles.piece} title={piece.type}>
+                  {darkCourt.map((piece, idx) => (
+                    <span key={`dark-court-${idx}`} className={styles.piece} title={piece.type}>
                       {getPieceSymbol(piece)}
                     </span>
                   ))}
@@ -262,7 +262,7 @@ export const VictoryScreen = ({
                 </div>
                 <div className={styles.piecesList}>
                   {blackAutoScored.map((piece, idx) => (
-                    <span key={`black-auto-${idx}`} className={styles.piece} title={piece.type}>
+                    <span key={`dark-auto-${idx}`} className={styles.piece} title={piece.type}>
                       {getPieceSymbol(piece)}
                     </span>
                   ))}
@@ -271,12 +271,12 @@ export const VictoryScreen = ({
             )}
             <div className={styles.capturedSection}>
               <div className={styles.capturedLabel}>
-                <strong>Captured:</strong> {capturedBlack.length} piece{capturedBlack.length !== 1 ? 's' : ''}
+                <strong>Captured:</strong> {capturedDark.length} piece{capturedDark.length !== 1 ? 's' : ''}
               </div>
-              {capturedBlack.length > 0 && (
+              {capturedDark.length > 0 && (
                 <div className={styles.piecesList}>
-                  {capturedBlack.map((piece, idx) => (
-                    <span key={`black-captured-${idx}`} className={styles.piece} title={piece.type}>
+                  {capturedDark.map((piece, idx) => (
+                    <span key={`dark-captured-${idx}`} className={styles.piece} title={piece.type}>
                       {getPieceSymbol(piece)}
                     </span>
                   ))}

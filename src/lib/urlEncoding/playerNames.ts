@@ -18,7 +18,7 @@ export const OPPONENT_NAME_KEY = 'kings-cooking:opponent-name';
  * Extract and save opponent name from URL payload
  *
  * For URL Mode player name discovery flow:
- * 1. Player 1 creates game with their name in gameState.whitePlayer.name
+ * 1. Player 1 creates game with their name in gameState.lightPlayer.name
  * 2. Player 2 receives full_state URL → saves Player 1's name as opponent
  * 3. Player 2 makes first move → includes their name in delta.playerName
  * 4. Player 1 receives delta → saves Player 2's name as opponent
@@ -32,7 +32,7 @@ export const OPPONENT_NAME_KEY = 'kings-cooking:opponent-name';
  * // Player 2 receives initial game from Player 1
  * const payload: FullStatePayload = {
  *   type: 'full_state',
- *   gameState: { whitePlayer: { id: '...', name: 'Alice' }, ... }
+ *   gameState: { lightPlayer: { id: '...', name: 'Alice' }, ... }
  * };
  * extractAndSaveOpponentName(payload, myPlayerId);
  * // Saves 'Alice' to localStorage
@@ -48,10 +48,10 @@ export function extractAndSaveOpponentName(
     if (payload.type === 'full_state') {
       // Receiving initial game state from Player 1
       // Opponent is always the white player (game creator)
-      const whitePlayerId = payload.gameState.whitePlayer.id;
+      const lightPlayerId = payload.gameState.lightPlayer.id;
 
-      if (whitePlayerId !== myPlayerId) {
-        opponentName = payload.gameState.whitePlayer.name;
+      if (lightPlayerId !== myPlayerId) {
+        opponentName = payload.gameState.lightPlayer.name;
       }
     } else if (payload.type === 'delta' && payload.playerName) {
       // Receiving first move from opponent with their name
@@ -102,8 +102,8 @@ export function shouldIncludePlayerName(
   // For delta payloads: Include if we're black player on first move (turn 1)
   if (payloadType === 'delta') {
     // Turn 1 is when black player makes their first move (turn 0 is white's first move)
-    // Black player needs to send their name so white player knows who they are
-    if (gameState.currentPlayer === 'black' && gameState.currentTurn === 1) {
+    // Dark player needs to send their name so white player knows who they are
+    if (gameState.currentPlayer === 'dark' && gameState.currentTurn === 1) {
       return true;
     }
   }

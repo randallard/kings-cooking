@@ -58,9 +58,9 @@ export type PieceType = z.infer<typeof PieceTypeSchema>;
 
 /**
  * Piece owner (color).
- * White always starts first.
+ * Light always starts first.
  */
-export const PieceOwnerSchema = z.enum(['white', 'black']);
+export const PieceOwnerSchema = z.enum(['light', 'dark']);
 export type PieceOwner = z.infer<typeof PieceOwnerSchema>;
 
 /**
@@ -159,14 +159,14 @@ export type Move = z.infer<typeof MoveSchema>;
  * @property version - Schema version for backward compatibility
  * @property gameId - Unique game identifier
  * @property board - 3x3 grid of pieces (null = empty square)
- * @property whiteCourt - White pieces that reached Black's court (white scores)
- * @property blackCourt - Black pieces that reached White's court (black scores)
- * @property capturedWhite - White pieces captured (not scored)
- * @property capturedBlack - Black pieces captured (not scored)
+ * @property lightCourt - Light pieces that reached Dark's court (light scores)
+ * @property darkCourt - Dark pieces that reached Light's court (dark scores)
+ * @property capturedLight - Light pieces captured (not scored)
+ * @property capturedDark - Dark pieces captured (not scored)
  * @property currentTurn - Turn number (starts at 0)
  * @property currentPlayer - Whose turn it is
- * @property whitePlayer - White player info
- * @property blackPlayer - Black player info
+ * @property lightPlayer - Light player info
+ * @property darkPlayer - Dark player info
  * @property status - Current game status
  * @property winner - Winner if game is finished
  * @property moveHistory - Complete move history
@@ -180,23 +180,23 @@ export const GameStateSchema = z.object({
   board: z.array(z.array(PieceSchema.nullable()).length(3)).length(3),
 
   // Pieces in courts (scoring)
-  whiteCourt: z.array(PieceSchema), // White pieces in Black's court
-  blackCourt: z.array(PieceSchema), // Black pieces in White's court
+  lightCourt: z.array(PieceSchema), // Light pieces in Dark's court
+  darkCourt: z.array(PieceSchema), // Dark pieces in Light's court
 
   // Captured pieces (removed from play)
-  capturedWhite: z.array(PieceSchema),
-  capturedBlack: z.array(PieceSchema),
+  capturedLight: z.array(PieceSchema),
+  capturedDark: z.array(PieceSchema),
 
   // Turn management
   currentTurn: z.number().int().min(0),
   currentPlayer: PieceOwnerSchema,
 
   // Player info
-  whitePlayer: PlayerInfoSchema,
-  blackPlayer: PlayerInfoSchema,
+  lightPlayer: PlayerInfoSchema,
+  darkPlayer: PlayerInfoSchema,
 
   // Game status
-  status: z.enum(['playing', 'white_wins', 'black_wins', 'draw']),
+  status: z.enum(['playing', 'light_wins', 'dark_wins', 'draw']),
   winner: PieceOwnerSchema.nullable(),
 
   // Move history

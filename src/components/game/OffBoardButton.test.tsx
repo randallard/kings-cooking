@@ -15,7 +15,7 @@ describe('OffBoardButton', () => {
         onOffBoardMove={onOffBoardMove}
         disabled={false}
         pieceType="rook"
-        courtOwner="black"
+        courtOwner="dark"
       />
     );
 
@@ -30,7 +30,7 @@ describe('OffBoardButton', () => {
         onOffBoardMove={onOffBoardMove}
         disabled={true}
         pieceType={null}
-        courtOwner="black"
+        courtOwner="dark"
       />
     );
 
@@ -47,13 +47,13 @@ describe('OffBoardButton', () => {
         onOffBoardMove={onOffBoardMove}
         disabled={false}
         pieceType="knight"
-        courtOwner="white"
+        courtOwner="light"
       />
     );
 
     const button = screen.getByRole('button');
     expect(button).not.toBeDisabled();
-    expect(button).toHaveAttribute('aria-label', 'Move knight to White King\'s Court to score');
+    expect(button).toHaveAttribute('aria-label', 'Move knight to Light King\'s Court to score');
   });
 
   it('calls onOffBoardMove when clicked (enabled)', async () => {
@@ -65,7 +65,7 @@ describe('OffBoardButton', () => {
         onOffBoardMove={onOffBoardMove}
         disabled={false}
         pieceType="rook"
-        courtOwner="black"
+        courtOwner="dark"
       />
     );
 
@@ -84,7 +84,7 @@ describe('OffBoardButton', () => {
         onOffBoardMove={onOffBoardMove}
         disabled={true}
         pieceType={null}
-        courtOwner="black"
+        courtOwner="dark"
       />
     );
 
@@ -101,7 +101,7 @@ describe('OffBoardButton', () => {
         onOffBoardMove={onOffBoardMove}
         disabled={false}
         pieceType="bishop"
-        courtOwner="black"
+        courtOwner="dark"
       />
     );
 
@@ -119,10 +119,10 @@ describe('OffBoardButton', () => {
         onOffBoardMove={onOffBoardMove}
         disabled={false}
         pieceType="rook"
-        courtOwner="black"
+        courtOwner="dark"
       />
     );
-    expect(screen.getByLabelText(/Move rook to Black King's Court/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Move rook to Dark King's Court/i)).toBeInTheDocument();
 
     // Knight
     rerender(
@@ -130,10 +130,10 @@ describe('OffBoardButton', () => {
         onOffBoardMove={onOffBoardMove}
         disabled={false}
         pieceType="knight"
-        courtOwner="white"
+        courtOwner="light"
       />
     );
-    expect(screen.getByLabelText(/Move knight to White King's Court/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Move knight to Light King's Court/i)).toBeInTheDocument();
 
     // Bishop
     rerender(
@@ -141,9 +141,9 @@ describe('OffBoardButton', () => {
         onOffBoardMove={onOffBoardMove}
         disabled={false}
         pieceType="bishop"
-        courtOwner="black"
+        courtOwner="dark"
       />
     );
-    expect(screen.getByLabelText(/Move bishop to Black King's Court/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Move bishop to Dark King's Court/i)).toBeInTheDocument();
   });
 });

@@ -10,22 +10,22 @@ import type { PlayerInfo, Position } from '../validation/schemas';
 import { v4 as uuid } from 'uuid';
 
 describe('KingsChessEngine', () => {
-  let whitePlayer: PlayerInfo;
-  let blackPlayer: PlayerInfo;
+  let lightPlayer: PlayerInfo;
+  let darkPlayer: PlayerInfo;
   let engine: KingsChessEngine;
 
   beforeEach(() => {
-    whitePlayer = {
+    lightPlayer = {
       id: PlayerIdSchema.parse(uuid()),
       name: 'White Player',
     };
 
-    blackPlayer = {
+    darkPlayer = {
       id: PlayerIdSchema.parse(uuid()),
       name: 'Black Player',
     };
 
-    engine = new KingsChessEngine(whitePlayer, blackPlayer);
+    engine = new KingsChessEngine(lightPlayer, darkPlayer);
   });
 
   describe('initialization', () => {
@@ -33,13 +33,13 @@ describe('KingsChessEngine', () => {
       const state = engine.getGameState();
 
       expect(state.version).toBe('1.0.0');
-      expect(state.currentPlayer).toBe('white');
+      expect(state.currentPlayer).toBe('light');
       expect(state.currentTurn).toBe(0);
       expect(state.status).toBe('playing');
-      expect(state.whiteCourt).toHaveLength(0);
-      expect(state.blackCourt).toHaveLength(0);
-      expect(state.capturedWhite).toHaveLength(0);
-      expect(state.capturedBlack).toHaveLength(0);
+      expect(state.lightCourt).toHaveLength(0);
+      expect(state.darkCourt).toHaveLength(0);
+      expect(state.capturedLight).toHaveLength(0);
+      expect(state.capturedDark).toHaveLength(0);
     });
 
     test('should set up starting position correctly', () => {
@@ -48,11 +48,11 @@ describe('KingsChessEngine', () => {
 
       // Black pieces on row 0
       expect(board[0]?.[0]?.type).toBe('rook');
-      expect(board[0]?.[0]?.owner).toBe('black');
+      expect(board[0]?.[0]?.owner).toBe('dark');
       expect(board[0]?.[1]?.type).toBe('knight');
-      expect(board[0]?.[1]?.owner).toBe('black');
+      expect(board[0]?.[1]?.owner).toBe('dark');
       expect(board[0]?.[2]?.type).toBe('bishop');
-      expect(board[0]?.[2]?.owner).toBe('black');
+      expect(board[0]?.[2]?.owner).toBe('dark');
 
       // Empty row 1
       expect(board[1]?.[0]).toBeNull();
@@ -61,16 +61,16 @@ describe('KingsChessEngine', () => {
 
       // White pieces on row 2
       expect(board[2]?.[0]?.type).toBe('rook');
-      expect(board[2]?.[0]?.owner).toBe('white');
+      expect(board[2]?.[0]?.owner).toBe('light');
       expect(board[2]?.[1]?.type).toBe('knight');
-      expect(board[2]?.[1]?.owner).toBe('white');
+      expect(board[2]?.[1]?.owner).toBe('light');
       expect(board[2]?.[2]?.type).toBe('bishop');
-      expect(board[2]?.[2]?.owner).toBe('white');
+      expect(board[2]?.[2]?.owner).toBe('light');
     });
 
     test('should restore from initial state', () => {
       const state1 = engine.getGameState();
-      const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state1);
+      const engine2 = new KingsChessEngine(lightPlayer, darkPlayer, state1);
       const state2 = engine2.getGameState();
 
       expect(state2.gameId).toBe(state1.gameId);
@@ -89,7 +89,7 @@ describe('KingsChessEngine', () => {
       const state = engine.getGameState();
       expect(state.board[1]?.[0]?.type).toBe('rook');
       expect(state.board[2]?.[0]).toBeNull();
-      expect(state.currentPlayer).toBe('black');
+      expect(state.currentPlayer).toBe('dark');
       expect(state.currentTurn).toBe(1);
     });
 
@@ -104,7 +104,7 @@ describe('KingsChessEngine', () => {
       const result = engine.makeMove([0, 0], [1, 0]);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain("It's white's turn");
+      expect(result.error).toContain("It's light's turn");
     });
 
     test('should reject moving to square with own piece', () => {
@@ -128,23 +128,23 @@ describe('KingsChessEngine', () => {
 
       const state = engine.getGameState();
       expect(state.board[0]?.[2]?.type).toBe('knight');
-      expect(state.board[0]?.[2]?.owner).toBe('white');
+      expect(state.board[0]?.[2]?.owner).toBe('light');
       expect(state.board[2]?.[1]).toBeNull();
     });
 
     test('should handle captures correctly', () => {
-      // White knight captures black bishop
+      // White knight captures dark bishop
       engine.makeMove([2, 1], [0, 2]);
       const state = engine.getGameState();
 
       // Black bishop should be in capturedBlack (their own court)
-      expect(state.capturedBlack).toHaveLength(1);
-      expect(state.capturedBlack[0]?.type).toBe('bishop');
-      expect(state.capturedBlack[0]?.owner).toBe('black');
+      expect(state.capturedDark).toHaveLength(1);
+      expect(state.capturedDark[0]?.type).toBe('bishop');
+      expect(state.capturedDark[0]?.owner).toBe('dark');
 
       // White knight is now at (0,2)
       expect(state.board[0]?.[2]?.type).toBe('knight');
-      expect(state.board[0]?.[2]?.owner).toBe('white');
+      expect(state.board[0]?.[2]?.owner).toBe('light');
     });
 
     test('should track move history', () => {
@@ -159,21 +159,21 @@ describe('KingsChessEngine', () => {
 
   describe('off-board moves', () => {
     test('should allow rook to move off-board with clear path', () => {
-      // Move white rook forward twice to get clear path
+      // Move light rook forward twice to get clear path
       engine.makeMove([2, 0], [1, 0]);
       engine.makeMove([0, 1], [2, 0]); // Black knight moves
       engine.makeMove([1, 0], [0, 0]); // White rook to edge
       engine.makeMove([2, 0], [0, 1]); // Black knight moves
 
-      // Now white rook can move off-board
+      // Now light rook can move off-board
       const result = engine.makeMove([0, 0], 'off_board');
 
       expect(result.success).toBe(true);
 
       const state = engine.getGameState();
-      expect(state.whiteCourt).toHaveLength(1);
-      expect(state.whiteCourt[0]?.type).toBe('rook');
-      expect(state.whiteCourt[0]?.owner).toBe('white');
+      expect(state.lightCourt).toHaveLength(1);
+      expect(state.lightCourt[0]?.type).toBe('rook');
+      expect(state.lightCourt[0]?.owner).toBe('light');
       expect(state.board[0]?.[0]).toBeNull();
     });
 
@@ -201,56 +201,56 @@ describe('KingsChessEngine', () => {
   });
 
   describe('victory conditions', () => {
-    test('should detect white victory', () => {
-      // Simulate game where white gets 2 pieces to black court
+    test('should detect light victory', () => {
+      // Simulate game where light gets 2 pieces to dark court
       const state = engine.getGameState();
-      state.whiteCourt = [
-        { type: 'rook', owner: 'white', position: null, moveCount: 3, id: uuid() },
-        { type: 'knight', owner: 'white', position: null, moveCount: 2, id: uuid() },
+      state.lightCourt = [
+        { type: 'rook', owner: 'light', position: null, moveCount: 3, id: uuid() },
+        { type: 'knight', owner: 'light', position: null, moveCount: 2, id: uuid() },
       ];
-      state.blackCourt = [
-        { type: 'bishop', owner: 'black', position: null, moveCount: 4, id: uuid() },
+      state.darkCourt = [
+        { type: 'bishop', owner: 'dark', position: null, moveCount: 4, id: uuid() },
       ];
       state.board = [[null, null, null], [null, null, null], [null, null, null]];
 
-      const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state);
+      const engine2 = new KingsChessEngine(lightPlayer, darkPlayer, state);
       const victory = engine2.checkGameEnd();
 
       expect(victory.gameOver).toBe(true);
-      expect(victory.winner).toBe('white');
-      expect(victory.score).toEqual({ white: 2, black: 1 });
+      expect(victory.winner).toBe('light');
+      expect(victory.score).toEqual({ light: 2, dark: 1 });
     });
 
-    test('should detect black victory', () => {
+    test('should detect dark victory', () => {
       const state = engine.getGameState();
-      state.whiteCourt = [
-        { type: 'rook', owner: 'white', position: null, moveCount: 3, id: uuid() },
+      state.lightCourt = [
+        { type: 'rook', owner: 'light', position: null, moveCount: 3, id: uuid() },
       ];
-      state.blackCourt = [
-        { type: 'bishop', owner: 'black', position: null, moveCount: 4, id: uuid() },
-        { type: 'knight', owner: 'black', position: null, moveCount: 2, id: uuid() },
+      state.darkCourt = [
+        { type: 'bishop', owner: 'dark', position: null, moveCount: 4, id: uuid() },
+        { type: 'knight', owner: 'dark', position: null, moveCount: 2, id: uuid() },
       ];
       state.board = [[null, null, null], [null, null, null], [null, null, null]];
 
-      const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state);
+      const engine2 = new KingsChessEngine(lightPlayer, darkPlayer, state);
       const victory = engine2.checkGameEnd();
 
       expect(victory.gameOver).toBe(true);
-      expect(victory.winner).toBe('black');
-      expect(victory.score).toEqual({ white: 1, black: 2 });
+      expect(victory.winner).toBe('dark');
+      expect(victory.score).toEqual({ light: 1, dark: 2 });
     });
 
     test('should detect draw', () => {
       const state = engine.getGameState();
-      state.whiteCourt = [
-        { type: 'rook', owner: 'white', position: null, moveCount: 3, id: uuid() },
+      state.lightCourt = [
+        { type: 'rook', owner: 'light', position: null, moveCount: 3, id: uuid() },
       ];
-      state.blackCourt = [
-        { type: 'rook', owner: 'black', position: null, moveCount: 3, id: uuid() },
+      state.darkCourt = [
+        { type: 'rook', owner: 'dark', position: null, moveCount: 3, id: uuid() },
       ];
       state.board = [[null, null, null], [null, null, null], [null, null, null]];
 
-      const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state);
+      const engine2 = new KingsChessEngine(lightPlayer, darkPlayer, state);
       const victory = engine2.checkGameEnd();
 
       expect(victory.gameOver).toBe(true);
@@ -258,30 +258,30 @@ describe('KingsChessEngine', () => {
       expect(victory.reason).toContain('Draw');
     });
 
-    test('should end game when all white pieces eliminated and auto-score black pieces', () => {
+    test('should end game when all light pieces eliminated and auto-score dark pieces', () => {
       const state = engine.getGameState();
-      const blackRook = { type: 'rook' as const, owner: 'black' as const, position: [0, 0] as Position, moveCount: 0, id: uuid() };
-      const blackKnight = { type: 'knight' as const, owner: 'black' as const, position: [0, 1] as Position, moveCount: 0, id: uuid() };
+      const darkRook = { type: 'rook' as const, owner: 'dark' as const, position: [0, 0] as Position, moveCount: 0, id: uuid() };
+      const darkKnight = { type: 'knight' as const, owner: 'dark' as const, position: [0, 1] as Position, moveCount: 0, id: uuid() };
 
-      // All white pieces captured
-      state.capturedWhite = [
-        { type: 'rook' as const, owner: 'white' as const, position: null, moveCount: 2, id: uuid() },
-        { type: 'knight' as const, owner: 'white' as const, position: null, moveCount: 1, id: uuid() },
-        { type: 'bishop' as const, owner: 'white' as const, position: null, moveCount: 1, id: uuid() },
+      // All light pieces captured
+      state.capturedLight = [
+        { type: 'rook' as const, owner: 'light' as const, position: null, moveCount: 2, id: uuid() },
+        { type: 'knight' as const, owner: 'light' as const, position: null, moveCount: 1, id: uuid() },
+        { type: 'bishop' as const, owner: 'light' as const, position: null, moveCount: 1, id: uuid() },
       ];
 
       // Black has 2 pieces on board + 1 scored
-      state.board = [[blackRook, blackKnight, null], [null, null, null], [null, null, null]];
-      state.blackCourt = [
-        { type: 'bishop' as const, owner: 'black' as const, position: null, moveCount: 3, id: uuid() },
+      state.board = [[darkRook, darkKnight, null], [null, null, null], [null, null, null]];
+      state.darkCourt = [
+        { type: 'bishop' as const, owner: 'dark' as const, position: null, moveCount: 3, id: uuid() },
       ];
 
-      const engine2 = new KingsChessEngine(whitePlayer, blackPlayer, state);
+      const engine2 = new KingsChessEngine(lightPlayer, darkPlayer, state);
       const victory = engine2.checkGameEnd();
 
       expect(victory.gameOver).toBe(true);
-      expect(victory.winner).toBe('black');
-      expect(victory.score).toEqual({ white: 0, black: 3 }); // 1 scored + 2 auto-scored
+      expect(victory.winner).toBe('dark');
+      expect(victory.score).toEqual({ light: 0, dark: 3 }); // 1 scored + 2 auto-scored
     });
 
     test('should not end game if pieces remain on board', () => {
@@ -308,7 +308,7 @@ describe('KingsChessEngine', () => {
 
       expect(state2.gameId).toBe(json.gameId);
       expect(state2.currentTurn).toBe(json.currentTurn);
-      expect(state2.currentPlayer).toBe('black');
+      expect(state2.currentPlayer).toBe('dark');
     });
 
     test('should maintain state through serialization cycle', () => {
@@ -329,7 +329,7 @@ describe('KingsChessEngine', () => {
     });
 
     test('should return empty array for opponent piece on their turn', () => {
-      const moves = engine.getValidMoves([0, 0]); // Black rook on white's turn
+      const moves = engine.getValidMoves([0, 0]); // Black rook on light's turn
       expect(moves).toEqual([]);
     });
 

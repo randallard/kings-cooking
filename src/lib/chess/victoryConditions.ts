@@ -16,10 +16,10 @@ import type { VictoryResult } from './types';
  * Check if game has ended and determine winner.
  *
  * CRITICAL RULES:
- * - whiteCourt = white pieces in BLACK's court (white scores)
- * - blackCourt = black pieces in WHITE's court (black scores)
- * - capturedWhite = white pieces captured (no score)
- * - capturedBlack = black pieces captured (no score)
+ * - lightCourt = white pieces in BLACK's court (white scores)
+ * - darkCourt = black pieces in WHITE's court (black scores)
+ * - capturedLight = white pieces captured (no score)
+ * - capturedDark = black pieces captured (no score)
  * - AUTO-SCORING: When one team eliminated, remaining opponent pieces auto-score
  *
  * @param gameState - Current game state
@@ -27,37 +27,37 @@ import type { VictoryResult } from './types';
  */
 export function checkGameEnd(gameState: GameState): VictoryResult {
   // Count pieces still on board for each team
-  const whitePiecesOnBoard = countPiecesOnBoard(gameState, 'white');
-  const blackPiecesOnBoard = countPiecesOnBoard(gameState, 'black');
+  const whitePiecesOnBoard = countPiecesOnBoard(gameState, 'light');
+  const blackPiecesOnBoard = countPiecesOnBoard(gameState, 'dark');
 
   // Check if one team has been eliminated (all pieces off-board)
   if (whitePiecesOnBoard === 0 || blackPiecesOnBoard === 0) {
     // Auto-score remaining pieces
-    const whiteScore = gameState.whiteCourt.length + whitePiecesOnBoard;
-    const blackScore = gameState.blackCourt.length + blackPiecesOnBoard;
+    const whiteScore = gameState.lightCourt.length + whitePiecesOnBoard;
+    const blackScore = gameState.darkCourt.length + blackPiecesOnBoard;
 
     if (whiteScore > blackScore) {
       return {
         gameOver: true,
-        winner: 'white',
-        score: { white: whiteScore, black: blackScore },
-        reason: `White wins ${whiteScore}-${blackScore} (${whitePiecesOnBoard === 0 ? 'eliminated' : 'dominating'})`,
+        winner: 'light',
+        score: { light: whiteScore, dark: blackScore },
+        reason: `Light wins ${whiteScore}-${blackScore} (${whitePiecesOnBoard === 0 ? 'eliminated' : 'dominating'})`,
       };
     }
 
     if (blackScore > whiteScore) {
       return {
         gameOver: true,
-        winner: 'black',
-        score: { white: whiteScore, black: blackScore },
-        reason: `Black wins ${blackScore}-${whiteScore} (${blackPiecesOnBoard === 0 ? 'eliminated' : 'dominating'})`,
+        winner: 'dark',
+        score: { light: whiteScore, dark: blackScore },
+        reason: `Dark wins ${blackScore}-${whiteScore} (${blackPiecesOnBoard === 0 ? 'eliminated' : 'dominating'})`,
       };
     }
 
     return {
       gameOver: true,
       winner: null,
-      score: { white: whiteScore, black: blackScore },
+      score: { light: whiteScore, dark: blackScore },
       reason: 'Draw! Both kings serve together.',
     };
   }
@@ -70,31 +70,31 @@ export function checkGameEnd(gameState: GameState): VictoryResult {
   }
 
   // Count scored pieces (in opponent's courts)
-  const whiteScore = gameState.whiteCourt.length; // White in Black's court
-  const blackScore = gameState.blackCourt.length; // Black in White's court
+  const whiteScore = gameState.lightCourt.length; // Light in Dark's court
+  const blackScore = gameState.darkCourt.length; // Dark in Light's court
 
   if (whiteScore > blackScore) {
     return {
       gameOver: true,
-      winner: 'white',
-      score: { white: whiteScore, black: blackScore },
-      reason: `White wins with ${whiteScore} pieces in Black's court!`,
+      winner: 'light',
+      score: { light: whiteScore, dark: blackScore },
+      reason: `Light wins with ${whiteScore} pieces in Dark's court!`,
     };
   }
 
   if (blackScore > whiteScore) {
     return {
       gameOver: true,
-      winner: 'black',
-      score: { white: whiteScore, black: blackScore },
-      reason: `Black wins with ${blackScore} pieces in White's court!`,
+      winner: 'dark',
+      score: { light: whiteScore, dark: blackScore },
+      reason: `Dark wins with ${blackScore} pieces in Light's court!`,
     };
   }
 
   return {
     gameOver: true,
     winner: null,
-    score: { white: whiteScore, black: blackScore },
+    score: { light: whiteScore, dark: blackScore },
     reason: 'Draw! Both kings serve together.',
   };
 }
@@ -103,12 +103,12 @@ export function checkGameEnd(gameState: GameState): VictoryResult {
  * Count pieces still on board for a specific team.
  *
  * @param gameState - Current game state
- * @param owner - Team to count ('white' or 'black')
+ * @param owner - Team to count ('light' or 'dark')
  * @returns Number of pieces on board
  */
 function countPiecesOnBoard(
   gameState: GameState,
-  owner: 'white' | 'black'
+  owner: 'light' | 'dark'
 ): number {
   let count = 0;
 
@@ -148,11 +148,11 @@ function areAllPiecesOffBoard(gameState: GameState): boolean {
  * @returns Score for each player
  */
 export function getCurrentScore(gameState: GameState): {
-  white: number;
-  black: number;
+  light: number;
+  dark: number;
 } {
   return {
-    white: gameState.whiteCourt.length,
-    black: gameState.blackCourt.length,
+    light: gameState.lightCourt.length,
+    dark: gameState.darkCourt.length,
   };
 }

@@ -8,11 +8,11 @@ import styles from './HandoffScreen.module.css';
 
 interface HandoffScreenProps {
   /** Which player's turn is next */
-  nextPlayer: 'white' | 'black';
+  nextPlayer: 'light' | 'dark';
   /** Player name for next player */
   nextPlayerName: string;
   /** Previous player who just moved */
-  previousPlayer: 'white' | 'black';
+  previousPlayer: 'light' | 'dark';
   /** Previous player's name */
   previousPlayerName: string;
   /** Callback when countdown finishes or user skips */
@@ -42,9 +42,9 @@ interface HandoffScreenProps {
  * @example
  * ```tsx
  * <HandoffScreen
- *   nextPlayer="black"
+ *   nextPlayer="dark"
  *   nextPlayerName="Alice"
- *   previousPlayer="white"
+ *   previousPlayer="light"
  *   previousPlayerName="Bob"
  *   onContinue={() => setShowHandoff(false)}
  * />
@@ -106,8 +106,8 @@ export const HandoffScreen = ({
     return () => document.removeEventListener('keydown', handleTabKey);
   }, []);
 
-  const nextPlayerColor = nextPlayer === 'white' ? 'White' : 'Black';
-  const previousPlayerColor = previousPlayer === 'white' ? 'White' : 'Black';
+  const nextPlayerColor = nextPlayer === 'light' ? 'Light' : 'Dark';
+  const previousPlayerColor = previousPlayer === 'light' ? 'Light' : 'Dark';
 
   return (
     <div

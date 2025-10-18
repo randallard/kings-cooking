@@ -67,7 +67,7 @@ export function setGameHistory(history: GameHistory): boolean {
  * ```typescript
  * const entry: MoveHistoryEntry = {
  *   moveNumber: 1,
- *   player: 'white',
+ *   player: 'light',
  *   from: [2, 0],
  *   to: [1, 0],
  *   piece: movedPiece,

@@ -1,0 +1,50 @@
+{
+  "repository": {
+    "owner": "randallard",
+    "name": "kings-cooking",
+    "full_name": "randallard/kings-cooking",
+    "url": "https://github.com/randallard/kings-cooking",
+    "git_url": "git@github.com:randallard/kings-cooking.git"
+  },
+  "github_cli": {
+    "binary_path": "~/bin/gh",
+    "authenticated": true,
+    "account": "ryankhetlyr"
+  },
+  "issue_workflow": {
+    "branch_prefix": "issue-",
+    "commands": {
+      "list_open_issues": "~/bin/gh issue list --repo randallard/kings-cooking --state open",
+      "view_issue": "~/bin/gh issue view {issue_number} --repo randallard/kings-cooking",
+      "comment_on_issue": "~/bin/gh issue comment {issue_number} --body \"{comment}\" --repo randallard/kings-cooking",
+      "create_pr": "~/bin/gh pr create --repo randallard/kings-cooking"
+    }
+  },
+  "current_open_issues": [
+    {
+      "number": 11,
+      "title": "[BUG] Name set requires change",
+      "labels": ["bug"],
+      "created_at": "2025-10-18T12:27:32Z"
+    },
+    {
+      "number": 9,
+      "title": "[TDD] allow more than one game at a time",
+      "labels": [],
+      "created_at": "2025-10-18T12:55:22Z"
+    },
+    {
+      "number": 6,
+      "title": "[TDD] Allow players to select which pieces they play with",
+      "labels": [],
+      "created_at": "2025-10-18T01:16:55Z"
+    },
+    {
+      "number": 4,
+      "title": "[REFACTOR] Refactor Black and White verbiage",
+      "labels": [],
+      "created_at": "2025-10-18T00:43:25Z"
+    }
+  ],
+  "last_updated": "2025-10-18T15:30:00Z"
+}

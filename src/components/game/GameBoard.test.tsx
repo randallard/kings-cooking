@@ -37,15 +37,15 @@ vi.mock('./GameCell', () => ({
 }));
 
 // Helper: Create test players
-function createTestPlayers(): { white: PlayerInfo; black: PlayerInfo } {
+function createTestPlayers(): { light: PlayerInfo; dark: PlayerInfo } {
   return {
-    white: {
+    light: {
       id: PlayerIdSchema.parse('550e8400-e29b-41d4-a716-446655440000'),
-      name: 'White Player',
+      name: 'Light Player',
     },
-    black: {
+    dark: {
       id: PlayerIdSchema.parse('550e8400-e29b-41d4-a716-446655440001'),
-      name: 'Black Player',
+      name: 'Dark Player',
     },
   };
 }
@@ -53,7 +53,7 @@ function createTestPlayers(): { white: PlayerInfo; black: PlayerInfo } {
 // Helper: Create test game state using KingsChessEngine
 function createTestGameState(overrides?: Partial<GameState>): GameState {
   const players = createTestPlayers();
-  const engine = new KingsChessEngine(players.white, players.black);
+  const engine = new KingsChessEngine(players.light, players.dark);
   const state = engine.getGameState();
 
   if (!overrides) return state;
@@ -114,7 +114,7 @@ describe('GameBoard', () => {
       const user = userEvent.setup();
       render(<GameBoard gameState={gameState} onMove={mockOnMove} />);
 
-      // Select white piece (row 2, white starts first)
+      // Select light piece (row 2, white starts first)
       const cell = screen.getByTestId('cell-2-0');
       await user.click(cell);
 
@@ -126,7 +126,7 @@ describe('GameBoard', () => {
       const user = userEvent.setup();
       render(<GameBoard gameState={gameState} onMove={mockOnMove} />);
 
-      // Try to select black piece (current player is white, black is row 0)
+      // Try to select dark piece (current player is white, black is row 0)
       const blackCell = screen.getByTestId('cell-0-0');
       await user.click(blackCell);
 
@@ -138,7 +138,7 @@ describe('GameBoard', () => {
       const user = userEvent.setup();
       render(<GameBoard gameState={gameState} onMove={mockOnMove} />);
 
-      // Select white piece (row 2)
+      // Select light piece (row 2)
       const cell = screen.getByTestId('cell-2-0');
 
       // Select
@@ -154,7 +154,7 @@ describe('GameBoard', () => {
       const user = userEvent.setup();
       render(<GameBoard gameState={gameState} onMove={mockOnMove} />);
 
-      // Select white pieces (row 2)
+      // Select light pieces (row 2)
       const cell1 = screen.getByTestId('cell-2-0');
       const cell2 = screen.getByTestId('cell-2-1');
 
@@ -174,7 +174,7 @@ describe('GameBoard', () => {
       const user = userEvent.setup();
       render(<GameBoard gameState={gameState} onMove={mockOnMove} />);
 
-      // Select white rook at [2, 0]
+      // Select light rook at [2, 0]
       await user.click(screen.getByTestId('cell-2-0'));
 
       // Click legal move destination (rook can move vertically up)
@@ -204,7 +204,7 @@ describe('GameBoard', () => {
       const user = userEvent.setup();
       render(<GameBoard gameState={gameState} onMove={mockOnMove} />);
 
-      // Select white rook at [2, 0]
+      // Select light rook at [2, 0]
       await user.click(screen.getByTestId('cell-2-0'));
 
       // Try to click illegal destination (rook can't move diagonally)
@@ -219,7 +219,7 @@ describe('GameBoard', () => {
       const user = userEvent.setup();
       render(<GameBoard gameState={gameState} onMove={mockOnMove} />);
 
-      // Select white rook at [2, 0]
+      // Select light rook at [2, 0]
       await user.click(screen.getByTestId('cell-2-0'));
 
       // Rook can move to [1, 0] (up one square)
@@ -256,7 +256,7 @@ describe('GameBoard', () => {
         />
       );
 
-      // Try to select a white piece
+      // Try to select a light piece
       const cell = screen.getByTestId('cell-2-0');
       await user.click(cell);
 
@@ -268,7 +268,7 @@ describe('GameBoard', () => {
       const user = userEvent.setup();
       render(<GameBoard gameState={gameState} onMove={mockOnMove} />);
 
-      // Select white piece
+      // Select light piece
       const cell = screen.getByTestId('cell-2-0');
       await user.click(cell);
 
@@ -300,7 +300,7 @@ describe('GameBoard', () => {
       const baseState = createTestGameState();
 
       // Get a valid piece from the board
-      const piece = baseState.board[2]?.[0]; // White rook at [2, 0]
+      const piece = baseState.board[2]?.[0]; // Light rook at [2, 0]
 
       if (!piece) {
         throw new Error('Test setup failed: No piece found');
@@ -337,7 +337,7 @@ describe('GameBoard', () => {
       const user = userEvent.setup();
       render(<GameBoard gameState={gameState} onMove={mockOnMove} />);
 
-      // Select white rook at [2, 0] (A3 in chess notation)
+      // Select light rook at [2, 0] (A3 in chess notation)
       await user.click(screen.getByTestId('cell-2-0'));
 
       const status = screen.getByRole('status');
@@ -404,7 +404,7 @@ describe('GameBoard', () => {
 
       // Create a completely new game state
       const players = createTestPlayers();
-      const newEngine = new KingsChessEngine(players.white, players.black);
+      const newEngine = new KingsChessEngine(players.light, players.dark);
       const newState = newEngine.getGameState();
 
       rerender(<GameBoard gameState={newState} onMove={mockOnMove} />);

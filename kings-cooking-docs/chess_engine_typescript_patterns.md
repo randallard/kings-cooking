@@ -20,7 +20,7 @@ import { Chess } from 'chess.js';
 
 interface ChessPiece {
   type: 'pawn' | 'rook' | 'knight' | 'bishop' | 'queen' | 'king';
-  color: 'white' | 'black';
+  color: 'light' | 'dark';
   position?: [number, number];
   moveCount: number;
 }
@@ -47,7 +47,7 @@ interface PartyState {
 
 class KingsChessEngine {
   private board: KingsChessBoard;
-  private currentPlayer: 'white' | 'black' = 'white';
+  private currentPlayer: 'light' | 'dark' = 'light';
   private moveHistory: KingsChessMove[] = [];
   private partyState: PartyState = { whiteKingGuests: [], blackKingGuests: [] };
 
@@ -139,7 +139,7 @@ class KingsChessEngine {
     }
 
     this.moveHistory.push(move);
-    this.currentPlayer = this.currentPlayer === 'white' ? 'black' : 'white';
+    this.currentPlayer = this.currentPlayer === 'light' ? 'dark' : 'light';
 
     return true;
   }
@@ -149,7 +149,7 @@ class KingsChessEngine {
     this.board.squares[from[0]][from[1]] = null;
 
     // Send piece to the party (their own king's side)
-    if (piece.color === 'white') {
+    if (piece.color === 'light') {
       this.partyState.whiteKingGuests.push(piece);
     } else {
       this.partyState.blackKingGuests.push(piece);
@@ -170,7 +170,7 @@ class KingsChessEngine {
       move.captured = { ...capturedPiece };
 
       // King's Cooking: captured pieces go to opponent's king for the party
-      if (capturedPiece.color === 'white') {
+      if (capturedPiece.color === 'light') {
         this.partyState.blackKingGuests.push(capturedPiece);
       } else {
         this.partyState.whiteKingGuests.push(capturedPiece);
@@ -185,21 +185,21 @@ class KingsChessEngine {
   }
 
   // King's Cooking victory condition
-  checkGameEnd(): { winner: 'white' | 'black' | null, reason?: string } {
+  checkGameEnd(): { winner: 'light' | 'dark' | null, reason?: string } {
     const whiteGuests = this.partyState.whiteKingGuests.length;
     const blackGuests = this.partyState.blackKingGuests.length;
 
     // Victory: king with most guests hosts the party
     if (whiteGuests > blackGuests && whiteGuests >= 3) {
       return {
-        winner: 'white',
+        winner: 'light',
         reason: `White King hosts the party with ${whiteGuests} guests!`
       };
     }
 
     if (blackGuests > whiteGuests && blackGuests >= 3) {
       return {
-        winner: 'black',
+        winner: 'dark',
         reason: `Black King hosts the party with ${blackGuests} guests!`
       };
     }
@@ -248,8 +248,8 @@ class KingsChessEngine {
   }
 
   private isValidPawnMove([fromRow, fromCol]: [number, number], [toRow, toCol]: [number, number], piece: ChessPiece): boolean {
-    const direction = piece.color === 'white' ? -1 : 1;
-    const startRow = piece.color === 'white' ? this.board.height - 2 : 1;
+    const direction = piece.color === 'light' ? -1 : 1;
+    const startRow = piece.color === 'light' ? this.board.height - 2 : 1;
 
     // Forward move
     if (fromCol === toCol) {
@@ -309,7 +309,7 @@ class KingsChessEngine {
 
   // Public getters
   getBoard(): KingsChessBoard { return { ...this.board }; }
-  getCurrentPlayer(): 'white' | 'black' { return this.currentPlayer; }
+  getCurrentPlayer(): 'light' | 'dark' { return this.currentPlayer; }
   getMoveHistory(): KingsChessMove[] { return [...this.moveHistory]; }
   getPartyState(): PartyState { return { ...this.partyState }; }
 
@@ -336,7 +336,7 @@ class KingsChessEngine {
       return fen;
     }).join('/');
 
-    const turn = this.currentPlayer === 'white' ? 'w' : 'b';
+    const turn = this.currentPlayer === 'light' ? 'w' : 'b';
     const party = `${this.partyState.whiteKingGuests.length}-${this.partyState.blackKingGuests.length}`;
 
     return `${rows} ${turn} - - 0 ${this.moveHistory.length} ${this.board.width}x${this.board.height} ${party}`;
@@ -348,7 +348,7 @@ class KingsChessEngine {
       bishop: 'b', queen: 'q', king: 'k'
     };
     const symbol = symbols[piece.type];
-    return piece.color === 'white' ? symbol.toUpperCase() : symbol;
+    return piece.color === 'light' ? symbol.toUpperCase() : symbol;
   }
 }
 
@@ -388,7 +388,7 @@ class RandomSetupGenerator {
       if (pieces.length < boardWidth && available[pieceType] > 0) {
         pieces.push({
           type: pieceType,
-          color: 'white', // Color set later
+          color: 'light', // Color set later
           moveCount: 0
         });
         available[pieceType]--;
@@ -404,7 +404,7 @@ class RandomSetupGenerator {
       const randomPiece = remainingPieces[Math.floor(Math.random() * remainingPieces.length)];
       pieces.push({
         type: randomPiece,
-        color: 'white',
+        color: 'light',
         moveCount: 0
       });
 
@@ -638,8 +638,8 @@ class MoveValidator {
     piece: ChessPiece,
     board: KingsChessBoard
   ): { valid: boolean; reason?: string } {
-    const direction = piece.color === 'white' ? -1 : 1;
-    const startRow = piece.color === 'white' ? board.height - 2 : 1;
+    const direction = piece.color === 'light' ? -1 : 1;
+    const startRow = piece.color === 'light' ? board.height - 2 : 1;
 
     // Forward moves
     if (fromCol === toCol) {
@@ -684,7 +684,7 @@ export { MoveValidator };
 // lib/chess/gameSerializer.ts
 interface SerializedGameState {
   board: KingsChessBoard;
-  currentPlayer: 'white' | 'black';
+  currentPlayer: 'light' | 'dark';
   moveHistory: KingsChessMove[];
   partyState: PartyState;
   gamePhase: 'setup' | 'playing' | 'finished';
@@ -760,8 +760,8 @@ describe('KingsChessEngine', () => {
   beforeEach(() => {
     engine = new KingsChessEngine(8, 6);
     // Set up test position
-    engine.placePiece({ type: 'rook', color: 'white', moveCount: 0 }, [5, 0]);
-    engine.placePiece({ type: 'queen', color: 'black', moveCount: 0 }, [2, 3]);
+    engine.placePiece({ type: 'rook', color: 'light', moveCount: 0 }, [5, 0]);
+    engine.placePiece({ type: 'queen', color: 'dark', moveCount: 0 }, [2, 3]);
   });
 
   describe('off-board moves', () => {
@@ -777,14 +777,14 @@ describe('KingsChessEngine', () => {
 
     test('rook cannot move off-board with blocked path', () => {
       // Block path with another piece
-      engine.placePiece({ type: 'pawn', color: 'black', moveCount: 0 }, [5, 1]);
+      engine.placePiece({ type: 'pawn', color: 'dark', moveCount: 0 }, [5, 1]);
 
       const result = engine.makeMove([5, 0], 'off_board');
       expect(result).toBe(false);
     });
 
     test('pawn cannot move off-board', () => {
-      engine.placePiece({ type: 'pawn', color: 'white', moveCount: 0 }, [5, 7]);
+      engine.placePiece({ type: 'pawn', color: 'light', moveCount: 0 }, [5, 7]);
 
       const result = engine.makeMove([5, 7], 'off_board');
       expect(result).toBe(false);
@@ -793,7 +793,7 @@ describe('KingsChessEngine', () => {
 
   describe('capture mechanics', () => {
     test('captured piece joins opponent king party', () => {
-      engine.placePiece({ type: 'pawn', color: 'black', moveCount: 0 }, [4, 1]);
+      engine.placePiece({ type: 'pawn', color: 'dark', moveCount: 0 }, [4, 1]);
 
       const result = engine.makeMove([5, 0], [4, 0]);
       expect(result).toBe(true);
@@ -805,24 +805,24 @@ describe('KingsChessEngine', () => {
       const partyState = engine.getPartyState();
       expect(partyState.whiteKingGuests).toHaveLength(1);
       expect(partyState.whiteKingGuests[0].type).toBe('pawn');
-      expect(partyState.whiteKingGuests[0].color).toBe('black');
+      expect(partyState.whiteKingGuests[0].color).toBe('dark');
     });
   });
 
   describe('victory conditions', () => {
-    test('white wins with more party guests', () => {
+    test('light wins with more party guests', () => {
       const partyState = engine.getPartyState();
 
       // Add guests to white king's party
       partyState.whiteKingGuests.push(
-        { type: 'pawn', color: 'black', moveCount: 0 },
-        { type: 'knight', color: 'black', moveCount: 0 },
-        { type: 'bishop', color: 'black', moveCount: 0 },
-        { type: 'rook', color: 'black', moveCount: 0 }
+        { type: 'pawn', color: 'dark', moveCount: 0 },
+        { type: 'knight', color: 'dark', moveCount: 0 },
+        { type: 'bishop', color: 'dark', moveCount: 0 },
+        { type: 'rook', color: 'dark', moveCount: 0 }
       );
 
       const result = engine.checkGameEnd();
-      expect(result.winner).toBe('white');
+      expect(result.winner).toBe('light');
       expect(result.reason).toContain('White King hosts the party with 4 guests');
     });
   });
@@ -830,7 +830,7 @@ describe('KingsChessEngine', () => {
   describe('custom board sizes', () => {
     test('works with 10x8 board', () => {
       const largeEngine = new KingsChessEngine(10, 8);
-      largeEngine.placePiece({ type: 'queen', color: 'white', moveCount: 0 }, [7, 5]);
+      largeEngine.placePiece({ type: 'queen', color: 'light', moveCount: 0 }, [7, 5]);
 
       // Test move within larger board
       const result = largeEngine.makeMove([7, 5], [7, 9]);
@@ -839,7 +839,7 @@ describe('KingsChessEngine', () => {
 
     test('respects board boundaries', () => {
       const smallEngine = new KingsChessEngine(4, 4);
-      smallEngine.placePiece({ type: 'rook', color: 'white', moveCount: 0 }, [0, 0]);
+      smallEngine.placePiece({ type: 'rook', color: 'light', moveCount: 0 }, [0, 0]);
 
       // Try to move outside 4x4 board
       const result = smallEngine.isValidMove([0, 0], [0, 5]);
@@ -862,7 +862,7 @@ describe('Chess Engine Performance', () => {
     // Fill board with pieces
     for (let row = 0; row < 4; row++) {
       for (let col = 0; col < 12; col++) {
-        const piece = { type: 'pawn', color: row < 2 ? 'white' : 'black', moveCount: 0 };
+        const piece = { type: 'pawn', color: row < 2 ? 'light' : 'dark', moveCount: 0 };
         engine.placePiece(piece, [row, col]);
       }
     }
