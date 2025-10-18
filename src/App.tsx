@@ -1,5 +1,6 @@
 import { ReactElement, useReducer, useEffect, useState } from 'react';
 import { gameFlowReducer } from './lib/gameFlow/reducer';
+import type { GameFlowAction } from './types/gameFlow';
 import { storage, checkAndMigrateStorage } from './lib/storage/localStorage';
 import { useUrlState } from './hooks/useUrlState';
 import { ModeSelector } from './components/game/ModeSelector';
@@ -12,6 +13,54 @@ import { URLSharer } from './components/game/URLSharer';
 import { StoryPanel } from './components/game/StoryPanel';
 import { KingsChessEngine } from './lib/chess/KingsChessEngine';
 import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
+
+/**
+ * Player 2 Name Entry Screen Component
+ * Separate component to properly use React hooks
+ */
+function Player2NameEntryScreen({ dispatch }: { dispatch: React.Dispatch<GameFlowAction> }): ReactElement {
+  const [isNameValid, setIsNameValid] = useState(false);
+
+  return (
+    <div style={{
+      maxWidth: '600px',
+      margin: '0 auto',
+      padding: 'var(--spacing-xl)',
+    }}>
+      <h1 style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
+        Player 2's Turn
+      </h1>
+      <div className="card">
+        <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Enter Your Name</h2>
+        <p style={{ marginBottom: 'var(--spacing-md)', color: 'var(--text-secondary)' }}>
+          Before we continue, Player 2 needs to enter their name.
+        </p>
+        <NameForm
+          storageKey="player2"
+          onNameChange={(name) => {
+            // Name is saved to localStorage by NameForm
+            // Just track validation state for button
+            setIsNameValid(name.trim().length > 0);
+          }}
+        />
+        <button
+          onClick={() => {
+            // Get the saved name from localStorage
+            const player2Name = storage.getPlayer2Name();
+            if (player2Name && player2Name.trim().length > 0) {
+              dispatch({ type: 'SET_PLAYER2_NAME', name: player2Name });
+              dispatch({ type: 'COMPLETE_HANDOFF' });
+            }
+          }}
+          disabled={!isNameValid}
+          style={{ marginTop: 'var(--spacing-md)', width: '100%' }}
+        >
+          Continue to Game
+        </button>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Main App component for King's Cooking Chess Game.
@@ -445,40 +494,8 @@ export default function App(): ReactElement {
     if (state.mode === 'hotseat') {
       // If player2Name is empty on first handoff, prompt for name
       if (!state.player2Name || state.player2Name.trim().length === 0) {
-        return (
-          <div style={{
-            maxWidth: '600px',
-            margin: '0 auto',
-            padding: 'var(--spacing-xl)',
-          }}>
-            <h1 style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
-              Player 2's Turn
-            </h1>
-            <div className="card">
-              <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Enter Your Name</h2>
-              <p style={{ marginBottom: 'var(--spacing-md)', color: 'var(--text-secondary)' }}>
-                Before we continue, Player 2 needs to enter their name.
-              </p>
-              <NameForm
-                storageKey="player2"
-                onNameChange={(name) => {
-                  dispatch({ type: 'SET_PLAYER2_NAME', name });
-                }}
-              />
-              <button
-                onClick={() => {
-                  if (state.player2Name && state.player2Name.trim().length > 0) {
-                    dispatch({ type: 'COMPLETE_HANDOFF' });
-                  }
-                }}
-                disabled={!state.player2Name || state.player2Name.trim().length === 0}
-                style={{ marginTop: 'var(--spacing-md)', width: '100%' }}
-              >
-                Continue to Game
-              </button>
-            </div>
-          </div>
-        );
+        // Separate component to properly use hooks
+        return <Player2NameEntryScreen dispatch={dispatch} />;
       }
 
       // Show HandoffScreen with countdown
