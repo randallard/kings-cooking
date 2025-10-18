@@ -27,8 +27,8 @@ describe('App Component - Phase 5 Game Flow', () => {
       render(<App />);
 
       expect(screen.getByText(/Choose Your Game Mode/i)).toBeInTheDocument();
-      expect(screen.getByText(/Hot-Seat Mode/i)).toBeInTheDocument();
-      expect(screen.getByText(/URL Mode/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Hot-Seat Mode/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /URL Mode/i })).toBeInTheDocument();
     });
   });
 

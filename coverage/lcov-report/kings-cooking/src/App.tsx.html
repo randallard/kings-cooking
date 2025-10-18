@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">18.52% </span>
+                <span class="strong">18.78% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>73/394</span>
+                <span class='fraction'>74/394</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">11.76% </span>
+                <span class="strong">12.5% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/17</span>
+                <span class='fraction'>2/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">18.52% </span>
+                <span class="strong">18.78% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>73/394</span>
+                <span class='fraction'>74/394</span>
             </div>
         
             
@@ -609,7 +609,10 @@
 <a name='L544'></a><a href='#L544'>544</a>
 <a name='L545'></a><a href='#L545'>545</a>
 <a name='L546'></a><a href='#L546'>546</a>
-<a name='L547'></a><a href='#L547'>547</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L547'></a><a href='#L547'>547</a>
+<a name='L548'></a><a href='#L548'>548</a>
+<a name='L549'></a><a href='#L549'>549</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -1124,10 +1127,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1139,6 +1138,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1167,6 +1171,7 @@ import { HandoffScreen } from './components/game/HandoffScreen';
 import { VictoryScreen } from './components/game/VictoryScreen';
 import { URLSharer } from './components/game/URLSharer';
 import { KingsChessEngine } from './lib/chess/KingsChessEngine';
+import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
 &nbsp;
 /**
  * Main App component for King's Cooking Chess Game.
@@ -1669,10 +1674,6 @@ export default function App(): ReactElement {
 <span class="cstat-no" title="statement not covered" >      capturedWhite: state.gameState.capturedWhite,</span>
 <span class="cstat-no" title="statement not covered" >      capturedBlack: state.gameState.capturedBlack,</span>
 <span class="cstat-no" title="statement not covered" >      board: state.gameState.board,</span>
-<span class="cstat-no" title="statement not covered" >      onNewGame: <span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >        dispatch({ type: 'NEW_GAME' });</span>
-<span class="cstat-no" title="statement not covered" >        storage.clearAll();</span>
-<span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
     // Add optional props only if they have values
@@ -1689,9 +1690,14 @@ export default function App(): ReactElement {
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (state.mode === 'url') {</span>
+      // Generate full state URL for victory sharing
+<span class="cstat-no" title="statement not covered" >      const victoryUrlHash = buildFullStateUrl(state.gameState, state.player1Name);</span>
+<span class="cstat-no" title="statement not covered" >      const fullShareUrl = `${window.location.origin}${window.location.pathname}${victoryUrlHash}`;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      victoryProps.shareUrl = fullShareUrl;</span>
 <span class="cstat-no" title="statement not covered" >      victoryProps.onShare = <span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
-        // TODO: Generate victory URL for sharing
-<span class="cstat-no" title="statement not covered" >        console.log('Share victory result');</span>
+        // Callback is optional - VictoryScreen manages URLSharer visibility
+<span class="cstat-no" title="statement not covered" >        console.log('Share Result button clicked');</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
@@ -1708,7 +1714,7 @@ export default function App(): ReactElement {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-17T21:37:03.804Z
+                at 2025-10-18T00:58:50.329Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
