@@ -228,8 +228,8 @@ describe('HistoryViewer', () => {
 
       render(<HistoryViewer history={history} />);
 
-      expect(screen.getByText(/\(white\)/i)).toBeInTheDocument();
-      expect(screen.getByText(/\(black\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/\(light\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/\(dark\)/i)).toBeInTheDocument();
     });
 
     it('should show capture indicator when piece captured', () => {
@@ -238,7 +238,7 @@ describe('HistoryViewer', () => {
 
       render(<HistoryViewer history={history} />);
 
-      const captureIndicator = screen.getByTitle(/Captured black rook/i);
+      const captureIndicator = screen.getByTitle(/Captured dark rook/i);
       expect(captureIndicator).toBeInTheDocument();
     });
 
