@@ -5,6 +5,7 @@ import { storage, checkAndMigrateStorage } from './lib/storage/localStorage';
 import { useUrlState } from './hooks/useUrlState';
 import { ModeSelector } from './components/game/ModeSelector';
 import { NameForm } from './components/game/NameForm';
+import { PieceSelectionScreen } from './components/game/PieceSelectionScreen';
 import { GameBoard } from './components/game/GameBoard';
 import { MoveConfirmButton } from './components/game/MoveConfirmButton';
 import { HandoffScreen } from './components/game/HandoffScreen';
@@ -72,9 +73,10 @@ function Player2NameEntryScreen({ dispatch }: { dispatch: React.Dispatch<GameFlo
  * Phase flow:
  * 1. mode-selection: Choose game mode
  * 2. setup: Player 1 enters name
- * 3. playing: Active gameplay with move confirmation
- * 4. handoff: Transition between players (mode-specific UI)
- * 5. victory: Game end with statistics
+ * 3. piece-selection: Choose pieces and first mover (mirrored/independent/random)
+ * 4. playing: Active gameplay with move confirmation
+ * 5. handoff: Transition between players (mode-specific UI)
+ * 6. victory: Game end with statistics
  *
  * @returns App component
  */
@@ -250,13 +252,13 @@ export default function App(): ReactElement {
           <button
             onClick={() => {
               if (state.player1Name && state.player1Name.trim().length > 0) {
-                dispatch({ type: 'START_GAME' });
+                dispatch({ type: 'START_PIECE_SELECTION' });
               }
             }}
             disabled={!state.player1Name || state.player1Name.trim().length === 0}
             style={{ marginTop: 'var(--spacing-md)', width: '100%' }}
           >
-            Start Game
+            Continue to Piece Selection
           </button>
         </div>
       </div>
@@ -264,7 +266,14 @@ export default function App(): ReactElement {
   }
 
   // ===========================
-  // Phase 3: Playing
+  // Phase 3: Piece Selection
+  // ===========================
+  if (state.phase === 'piece-selection') {
+    return <PieceSelectionScreen state={state} dispatch={dispatch} />;
+  }
+
+  // ===========================
+  // Phase 4: Playing
   // ===========================
   if (state.phase === 'playing') {
     const handleCloseStoryPanel = (): void => {
@@ -491,7 +500,7 @@ export default function App(): ReactElement {
   }
 
   // ===========================
-  // Phase 4: Handoff
+  // Phase 5: Handoff
   // ===========================
   if (state.phase === 'handoff') {
     // Hot-seat mode: Show privacy screen with "I'm Ready" button
@@ -603,7 +612,7 @@ export default function App(): ReactElement {
   }
 
   // ===========================
-  // Phase 5: Victory
+  // Phase 6: Victory
   // ===========================
   if (state.phase === 'victory') {
     // Build VictoryScreen props conditionally to satisfy exactOptionalPropertyTypes
