@@ -121,6 +121,10 @@ export const GameBoard = ({
     if (!selectedPosition) {
       // Only select pieces owned by current player
       if (piece && piece.owner === gameState.currentPlayer) {
+        // Cancel any pending move when selecting a new piece
+        if (pendingMove && onCancelMove) {
+          onCancelMove();
+        }
         setSelectedPosition(position);
       }
       return;
