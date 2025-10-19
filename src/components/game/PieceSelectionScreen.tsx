@@ -115,7 +115,12 @@ export function PieceSelectionScreen({
   // Calculate available pieces for picker modal
   const getAvailableForPosition = (): PieceType[] => {
     const currentPieces = state.player1Pieces || [null, null, null];
-    const selected: PieceType[] = currentPieces.filter((p): p is PieceType => p !== null);
+
+    // Exclude the piece at the currently selected position so it can be changed
+    const selected: PieceType[] = currentPieces
+      .map((piece, index) => (index === selectedPosition ? null : piece))
+      .filter((p): p is PieceType => p !== null);
+
     return getAvailablePieces(selected);
   };
 
@@ -189,7 +194,7 @@ export function PieceSelectionScreen({
       {state.selectionMode !== null && state.selectionMode !== 'random' && (
         <div className={styles.boardSection}>
           <h2 className={styles.sectionTitle}>Select Your Pieces</h2>
-          <p className={styles.instruction}>Click each position to choose a piece</p>
+          <p className={styles.instruction}>Click any position to choose or change a piece</p>
 
           <div className={styles.board}>
             {/* Row 0: Player pieces (clickable) */}

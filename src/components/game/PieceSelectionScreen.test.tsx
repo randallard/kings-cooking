@@ -141,6 +141,25 @@ describe('PieceSelectionScreen', () => {
       // Rook should still be available (2 max)
       expect(screen.getByRole('button', { name: /select rook/i })).toBeInTheDocument();
     });
+
+    it('should allow changing an already-selected piece', async () => {
+      const user = userEvent.setup();
+      const stateWithOnePiece: PieceSelectionPhase = {
+        ...stateWithMode,
+        player1Pieces: ['rook', null, null] as unknown as SelectedPieces,
+      };
+      render(<PieceSelectionScreen state={stateWithOnePiece} dispatch={mockDispatch} />);
+
+      // Click on position 0 which already has a rook
+      await user.click(screen.getByRole('button', { name: /position 1: rook/i }));
+
+      // The current rook should be available to re-select (since we're changing this position)
+      expect(screen.getByRole('button', { name: /select rook/i })).toBeInTheDocument();
+
+      // We should also be able to select a different piece
+      expect(screen.getByRole('button', { name: /select knight/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /select bishop/i })).toBeInTheDocument();
+    });
   });
 
   describe('Mirrored Mode', () => {
