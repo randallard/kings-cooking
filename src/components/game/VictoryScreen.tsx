@@ -3,7 +3,7 @@
  * @module components/game/VictoryScreen
  */
 
-import { useState, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import type { Piece } from '@/lib/validation/schemas';
 import { URLSharer } from './URLSharer';
 import styles from './VictoryScreen.module.css';
@@ -15,10 +15,12 @@ interface VictoryScreenProps {
   winnerName?: string;
   /** Loser's player name */
   loserName?: string;
+  /** Light player's name (for stats section) */
+  player1Name?: string;
+  /** Dark player's name (for stats section) */
+  player2Name?: string;
   /** Total number of moves in the game */
   totalMoves: number;
-  /** Game duration in seconds */
-  gameDuration: number;
   /** Light pieces in Dark's court (scored by light) */
   lightCourt: Piece[];
   /** Dark pieces in Light's court (scored by dark) */
@@ -31,8 +33,6 @@ interface VictoryScreenProps {
   board: (Piece | null)[][];
   /** Shareable URL for game result */
   shareUrl?: string;
-  /** Callback for sharing the result */
-  onShare?: () => void;
   /** Callback for reviewing moves */
   onReviewMoves?: () => void;
 }
@@ -75,19 +75,17 @@ export const VictoryScreen = ({
   winner,
   winnerName,
   loserName,
+  player1Name,
+  player2Name,
   totalMoves,
-  gameDuration,
   lightCourt,
   darkCourt,
   capturedLight,
   capturedDark,
   board,
   shareUrl,
-  onShare,
   onReviewMoves,
 }: VictoryScreenProps): ReactElement => {
-  // URL sharing state
-  const [showUrlSharer, setShowUrlSharer] = useState(false);
 
   // Extract auto-scored pieces (pieces still on board when game ended)
   const getAutoScoredPieces = (owner: 'light' | 'dark'): Piece[] => {
@@ -107,13 +105,6 @@ export const VictoryScreen = ({
 
   const whiteAutoScored = getAutoScoredPieces('light');
   const blackAutoScored = getAutoScoredPieces('dark');
-
-  // Format duration from seconds to MM:SS
-  const formatDuration = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   // Get celebration message based on winner
   const getCelebrationMessage = (): string => {
@@ -177,6 +168,18 @@ export const VictoryScreen = ({
           {getSubtitle()}
         </p>
 
+        {/* URL Sharing - shown immediately in URL mode */}
+        {shareUrl && (
+          <div style={{ marginTop: 'var(--spacing-lg)', marginBottom: 'var(--spacing-lg)' }}>
+            <URLSharer
+              url={shareUrl}
+              onCopy={() => {
+                console.log('Victory URL copied successfully');
+              }}
+            />
+          </div>
+        )}
+
         {/* Game Statistics */}
         <div className={styles.stats}>
           <h2 className={styles.statsTitle}>Game Statistics</h2>
@@ -185,15 +188,11 @@ export const VictoryScreen = ({
               <span className={styles.statLabel}>Total Moves</span>
               <span className={styles.statValue}>{totalMoves}</span>
             </div>
-            <div className={styles.statItem}>
-              <span className={styles.statLabel}>Duration</span>
-              <span className={styles.statValue}>{formatDuration(gameDuration)}</span>
-            </div>
           </div>
 
           {/* Light Player Stats */}
           <div className={styles.playerStats}>
-            <h3 className={styles.playerStatsTitle}>Light Player (Player 1)</h3>
+            <h3 className={styles.playerStatsTitle}>{player1Name || 'Light Player (Player 1)'}</h3>
             <div className={styles.courtSection}>
               <div className={styles.courtLabel}>
                 <strong>Scored in Dark's Court:</strong> {lightCourt.length} piece{lightCourt.length !== 1 ? 's' : ''}
@@ -240,7 +239,7 @@ export const VictoryScreen = ({
 
           {/* Dark Player Stats */}
           <div className={styles.playerStats}>
-            <h3 className={styles.playerStatsTitle}>Dark Player (Player 2)</h3>
+            <h3 className={styles.playerStatsTitle}>{player2Name || 'Dark Player (Player 2)'}</h3>
             <div className={styles.courtSection}>
               <div className={styles.courtLabel}>
                 <strong>Scored in Light's Court:</strong> {darkCourt.length} piece{darkCourt.length !== 1 ? 's' : ''}
@@ -288,20 +287,6 @@ export const VictoryScreen = ({
 
         {/* Action Buttons */}
         <div className={styles.actions}>
-          {onShare && shareUrl && (
-            <button
-              type="button"
-              onClick={() => {
-                onShare();  // Call parent callback if provided
-                setShowUrlSharer(true);  // Show URLSharer
-              }}
-              className={`${styles.button} ${styles.primaryButton}`}
-              aria-label="Share game result"
-            >
-              Share Result
-            </button>
-          )}
-
           {onReviewMoves && (
             <button
               type="button"
@@ -313,18 +298,6 @@ export const VictoryScreen = ({
             </button>
           )}
         </div>
-
-        {/* URL Sharing */}
-        {showUrlSharer && shareUrl && (
-          <div style={{ marginTop: 'var(--spacing-lg)' }}>
-            <URLSharer
-              url={shareUrl}
-              onCopy={() => {
-                console.log('Victory URL copied successfully');
-              }}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

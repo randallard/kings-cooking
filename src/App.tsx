@@ -606,7 +606,6 @@ export default function App(): ReactElement {
     const victoryProps: Parameters<typeof VictoryScreen>[0] = {
       winner: state.winner,
       totalMoves: state.gameState.currentTurn,
-      gameDuration: 0, // TODO: Track game duration in state
       lightCourt: state.gameState.lightCourt,
       darkCourt: state.gameState.darkCourt,
       capturedLight: state.gameState.capturedLight,
@@ -627,16 +626,20 @@ export default function App(): ReactElement {
       }
     }
 
+    // Add player names for stats section
+    if (state.player1Name) {
+      victoryProps.player1Name = state.player1Name;
+    }
+    if (state.player2Name) {
+      victoryProps.player2Name = state.player2Name;
+    }
+
     if (state.mode === 'url') {
       // Generate full state URL for victory sharing
       const victoryUrlHash = buildFullStateUrl(state.gameState, state.player1Name);
       const fullShareUrl = `${window.location.origin}${window.location.pathname}${victoryUrlHash}`;
 
       victoryProps.shareUrl = fullShareUrl;
-      victoryProps.onShare = () => {
-        // Callback is optional - VictoryScreen manages URLSharer visibility
-        console.log('Share Result button clicked');
-      };
     }
 
     return <VictoryScreen {...victoryProps} />;

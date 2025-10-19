@@ -12,8 +12,9 @@ describe('VictoryScreen', () => {
     winner: 'light' as const,
     winnerName: 'Alice',
     loserName: 'Bob',
+    player1Name: 'Alice',
+    player2Name: 'Bob',
     totalMoves: 42,
-    gameDuration: 1234,
     lightCourt: [],
     darkCourt: [],
     capturedLight: [],
@@ -67,41 +68,32 @@ describe('VictoryScreen', () => {
       expect(screen.getByText('42')).toBeInTheDocument();
     });
 
-    it('should format duration correctly (MM:SS)', () => {
-      render(<VictoryScreen {...defaultProps} gameDuration={125} />);
-
-      expect(screen.getByText('Duration')).toBeInTheDocument();
-      expect(screen.getByText('2:05')).toBeInTheDocument();
-    });
-
-    it('should format duration with padding', () => {
-      render(<VictoryScreen {...defaultProps} gameDuration={65} />);
-
-      expect(screen.getByText('1:05')).toBeInTheDocument();
-    });
-
-    it('should display light player stats section', () => {
+    it('should display light player stats section with player name', () => {
       render(<VictoryScreen {...defaultProps} />);
+
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+    });
+
+    it('should display dark player stats section with player name', () => {
+      render(<VictoryScreen {...defaultProps} />);
+
+      expect(screen.getByText('Bob')).toBeInTheDocument();
+    });
+
+    it('should fallback to generic name when player1Name not provided', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { player1Name, ...propsWithoutPlayer1Name } = defaultProps;
+      render(<VictoryScreen {...propsWithoutPlayer1Name} />);
 
       expect(screen.getByText('Light Player (Player 1)')).toBeInTheDocument();
     });
 
-    it('should display dark player stats section', () => {
-      render(<VictoryScreen {...defaultProps} />);
+    it('should fallback to generic name when player2Name not provided', () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { player2Name, ...propsWithoutPlayer2Name } = defaultProps;
+      render(<VictoryScreen {...propsWithoutPlayer2Name} />);
 
       expect(screen.getByText('Dark Player (Player 2)')).toBeInTheDocument();
-    });
-
-    it('should handle zero duration', () => {
-      render(<VictoryScreen {...defaultProps} gameDuration={0} />);
-
-      expect(screen.getByText('0:00')).toBeInTheDocument();
-    });
-
-    it('should handle large duration', () => {
-      render(<VictoryScreen {...defaultProps} gameDuration={3661} />);
-
-      expect(screen.getByText('61:01')).toBeInTheDocument();
     });
   });
 
@@ -112,52 +104,27 @@ describe('VictoryScreen', () => {
       expect(screen.queryByText('New Game')).not.toBeInTheDocument();
     });
 
-    it('should render Share Result button when onShare and shareUrl are provided', () => {
-      const onShare = vi.fn();
-      const shareUrl = 'https://example.com/game#abc123';
-      render(<VictoryScreen {...defaultProps} onShare={onShare} shareUrl={shareUrl} />);
-
-      expect(screen.getByRole('button', { name: /share game result/i })).toBeInTheDocument();
-    });
-
-    it('should not render Share Result button when shareUrl is not provided', () => {
-      const onShare = vi.fn();
-      render(<VictoryScreen {...defaultProps} onShare={onShare} />);
-
-      expect(screen.queryByRole('button', { name: /share game result/i })).not.toBeInTheDocument();
-    });
-
-    it('should not render Share Result button when onShare is not provided', () => {
+    it('should not render Share Result button', () => {
       const shareUrl = 'https://example.com/game#abc123';
       render(<VictoryScreen {...defaultProps} shareUrl={shareUrl} />);
 
       expect(screen.queryByRole('button', { name: /share game result/i })).not.toBeInTheDocument();
     });
 
-    it('should show URLSharer when Share Result is clicked', () => {
-      const onShare = vi.fn();
+    it('should show URLSharer immediately when shareUrl is provided', () => {
       const shareUrl = 'https://example.com/game#abc123';
-      render(<VictoryScreen {...defaultProps} onShare={onShare} shareUrl={shareUrl} />);
+      render(<VictoryScreen {...defaultProps} shareUrl={shareUrl} />);
 
-      // URLSharer should not be visible initially
-      expect(screen.queryByText('Share this game:')).not.toBeInTheDocument();
-
-      // Click Share Result button
-      fireEvent.click(screen.getByRole('button', { name: /share game result/i }));
-
-      // URLSharer should now be visible
+      // URLSharer should be visible immediately
       expect(screen.getByText('Share this game:')).toBeInTheDocument();
       expect(screen.getByDisplayValue(shareUrl)).toBeInTheDocument();
     });
 
-    it('should call onShare callback when Share Result is clicked', () => {
-      const onShare = vi.fn();
-      const shareUrl = 'https://example.com/game#abc123';
-      render(<VictoryScreen {...defaultProps} onShare={onShare} shareUrl={shareUrl} />);
+    it('should not show URLSharer when shareUrl is not provided', () => {
+      render(<VictoryScreen {...defaultProps} />);
 
-      fireEvent.click(screen.getByRole('button', { name: /share game result/i }));
-
-      expect(onShare).toHaveBeenCalledTimes(1);
+      // URLSharer should not be visible
+      expect(screen.queryByText('Share this game:')).not.toBeInTheDocument();
     });
 
     it('should render Review Moves button when onReviewMoves is provided', () => {
@@ -184,17 +151,29 @@ describe('VictoryScreen', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('should render Share Result and Review Moves buttons when callbacks are provided', () => {
+    it('should render Review Moves button when onReviewMoves is provided', () => {
+      render(
+        <VictoryScreen
+          {...defaultProps}
+          onReviewMoves={vi.fn()}
+        />
+      );
+
+      expect(screen.getByRole('button', { name: /review game moves/i })).toBeInTheDocument();
+    });
+
+    it('should render both Copy and Review Moves buttons when shareUrl and onReviewMoves are provided', () => {
       const shareUrl = 'https://example.com/game#abc123';
       render(
         <VictoryScreen
           {...defaultProps}
           shareUrl={shareUrl}
-          onShare={vi.fn()}
           onReviewMoves={vi.fn()}
         />
       );
 
+      expect(screen.getByRole('button', { name: /copy/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /review game moves/i })).toBeInTheDocument();
       expect(screen.getAllByRole('button')).toHaveLength(2);
     });
   });
@@ -350,18 +329,14 @@ describe('VictoryScreen', () => {
       expect(dialog).toHaveAttribute('aria-describedby', 'victory-subtitle');
     });
 
-    it('should have accessible button labels', () => {
-      const shareUrl = 'https://example.com/game#abc123';
+    it('should have accessible button label for Review Moves', () => {
       render(
         <VictoryScreen
           {...defaultProps}
-          shareUrl={shareUrl}
-          onShare={vi.fn()}
           onReviewMoves={vi.fn()}
         />
       );
 
-      expect(screen.getByRole('button', { name: 'Share game result' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Review game moves' })).toBeInTheDocument();
     });
 
@@ -407,12 +382,10 @@ describe('VictoryScreen', () => {
         <VictoryScreen
           {...defaultProps}
           totalMoves={9999}
-          gameDuration={99999}
         />
       );
 
       expect(screen.getByText('9999')).toBeInTheDocument();
-      expect(screen.getByText('1666:39')).toBeInTheDocument();
     });
 
     it('should not crash with missing optional props', () => {
@@ -420,7 +393,6 @@ describe('VictoryScreen', () => {
         <VictoryScreen
           winner="light"
           totalMoves={10}
-          gameDuration={60}
           lightCourt={[]}
           darkCourt={[]}
           capturedLight={[]}
