@@ -99,6 +99,8 @@ export interface PlayingPhase {
  * Mode-specific UI:
  * - Hot-seat: Privacy screen with "I'm Ready" button
  * - URL: URLSharer with copy button
+ *
+ * Can also be used after piece-selection to collect Player 2's name in hot-seat mode.
  */
 export interface HandoffPhase {
   phase: 'handoff';
@@ -108,14 +110,22 @@ export interface HandoffPhase {
   player1Name: string;
   /** Player 2 name (empty string triggers name prompt in hot-seat) */
   player2Name: string;
-  /** Current game state after move */
-  gameState: GameState;
-  /** The move that was just made (can be off-board) */
-  lastMove: { from: Position; to: Position | 'off_board' };
-  /** Countdown timer (hot-seat only, 3 seconds) */
-  countdown: number;
+  /** Current game state after move (null when collecting player2 name after piece-selection) */
+  gameState: GameState | null;
+  /** The move that was just made (can be off-board) - optional when coming from piece-selection */
+  lastMove?: { from: Position; to: Position | 'off_board' };
+  /** Countdown timer (hot-seat only, 3 seconds) - optional when coming from piece-selection */
+  countdown?: number;
   /** Generated URL (URL mode only, set after URL_GENERATED action) */
-  generatedUrl: string | null;
+  generatedUrl?: string | null;
+  /** Piece selection data - present when coming from piece-selection phase */
+  selectionMode?: 'mirrored' | 'independent' | 'random';
+  /** Player 1 selected pieces - present when coming from piece-selection phase */
+  player1Pieces?: SelectedPieces;
+  /** Player 2 selected pieces - present when coming from piece-selection phase */
+  player2Pieces?: SelectedPieces;
+  /** First mover selection - present when coming from piece-selection phase */
+  firstMover?: 'player1' | 'player2';
 }
 
 /**

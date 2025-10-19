@@ -367,6 +367,23 @@ export function gameFlowReducer(
         return state;
       }
 
+      // In hot-seat mode, check if player2Name is missing
+      if (state.mode === 'hotseat' && (!state.player2Name || state.player2Name.trim().length === 0)) {
+        // Transition to handoff to collect player 2's name
+        return {
+          phase: 'handoff',
+          mode: state.mode,
+          player1Name: state.player1Name,
+          player2Name: '',
+          // Store piece selection data to use after name collection
+          selectionMode: state.selectionMode,
+          player1Pieces: state.player1Pieces,
+          player2Pieces: state.player2Pieces,
+          firstMover: state.firstMover,
+          gameState: null as never, // Will be created after name collection
+        };
+      }
+
       // Create board with selected pieces
       const board = createBoardWithPieces(
         state.player1Pieces,
@@ -377,11 +394,11 @@ export function gameFlowReducer(
       // Create game state with custom board
       const lightPlayer = {
         id: crypto.randomUUID() as never,
-        name: state.firstMover === 'player1' ? state.player1Name : state.player2Name,
+        name: state.firstMover === 'player1' ? state.player1Name : state.player2Name || 'Player 2',
       };
       const darkPlayer = {
         id: crypto.randomUUID() as never,
-        name: state.firstMover === 'player1' ? state.player2Name : state.player1Name,
+        name: state.firstMover === 'player1' ? state.player2Name || 'Player 2' : state.player1Name,
       };
 
       // Use the custom board in a new engine instance
@@ -491,8 +508,67 @@ export function gameFlowReducer(
       if (state.phase !== 'handoff' || state.mode !== 'url') return state;
       return { ...state, generatedUrl: action.url };
 
-    case 'COMPLETE_HANDOFF':
+    case 'COMPLETE_HANDOFF': {
       if (state.phase !== 'handoff') return state;
+
+      // Check if we're coming from piece-selection (gameState is null)
+      if (!state.gameState && 'selectionMode' in state && state.selectionMode) {
+        // We need to create the game state now that we have player2Name
+        const board = createBoardWithPieces(
+          state.player1Pieces!,
+          state.player2Pieces!,
+          state.firstMover!
+        );
+
+        const lightPlayer = {
+          id: crypto.randomUUID() as never,
+          name: state.firstMover === 'player1' ? state.player1Name : state.player2Name,
+        };
+        const darkPlayer = {
+          id: crypto.randomUUID() as never,
+          name: state.firstMover === 'player1' ? state.player2Name : state.player1Name,
+        };
+
+        const gameState: GameState = {
+          version: '1.0.0',
+          gameId: crypto.randomUUID() as never,
+          board,
+          lightCourt: [],
+          darkCourt: [],
+          capturedLight: [],
+          capturedDark: [],
+          currentTurn: 0,
+          currentPlayer: 'light',
+          lightPlayer,
+          darkPlayer,
+          status: 'playing',
+          winner: null,
+          moveHistory: [],
+          checksum: '',
+        };
+
+        const engine = new KingsChessEngine(lightPlayer, darkPlayer, gameState);
+        const finalGameState = engine.getGameState();
+
+        return {
+          phase: 'playing',
+          mode: state.mode,
+          player1Name: state.player1Name,
+          player2Name: state.player2Name,
+          gameState: finalGameState,
+          selectedPosition: null,
+          legalMoves: [],
+          pendingMove: null,
+        };
+      }
+
+      // Normal handoff (between turns)
+      // At this point, gameState should never be null (we handled that case above)
+      if (!state.gameState) {
+        console.error('Invalid state: COMPLETE_HANDOFF with null gameState in normal flow');
+        return state;
+      }
+
       return {
         phase: 'playing',
         mode: state.mode,
@@ -503,6 +579,7 @@ export function gameFlowReducer(
         legalMoves: [],
         pendingMove: null,
       };
+    }
 
     case 'GAME_OVER':
       if (state.phase !== 'playing') return state;

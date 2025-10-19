@@ -511,7 +511,35 @@ export default function App(): ReactElement {
         return <Player2NameEntryScreen dispatch={dispatch} />;
       }
 
-      // Show HandoffScreen with countdown
+      // gameState might be null if coming from piece-selection
+      // In that case, the COMPLETE_HANDOFF will create it
+      if (!state.gameState) {
+        // Coming from piece-selection, just show a simple "Continue" button
+        return (
+          <div style={{
+            maxWidth: '600px',
+            margin: '0 auto',
+            padding: 'var(--spacing-xl)',
+          }}>
+            <h1 style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
+              Ready to Play!
+            </h1>
+            <div className="card">
+              <p style={{ marginBottom: 'var(--spacing-md)', textAlign: 'center' }}>
+                All players are set. Click Continue to start the game!
+              </p>
+              <button
+                onClick={() => dispatch({ type: 'COMPLETE_HANDOFF' })}
+                style={{ width: '100%' }}
+              >
+                Continue to Game
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      // Show HandoffScreen with countdown (normal turn-based handoff)
       const previousPlayer = state.gameState.currentPlayer === 'light' ? 'dark' : 'light';
       const previousPlayerName = previousPlayer === 'light'
         ? (state.player1Name || 'Light')
