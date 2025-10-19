@@ -13,6 +13,7 @@
 
 import { z } from 'zod';
 import { GameStateSchema, type GameState } from '../validation/schemas';
+import { SelectedPiecesSchema, type SelectedPieces } from '../pieceSelection/types';
 
 // ============================================================================
 // Storage Version Management
@@ -58,6 +59,18 @@ export const STORAGE_KEYS = {
 
   /** Selected game mode */
   GAME_MODE: 'kings-cooking:game-mode',
+
+  /** Piece selection mode (mirrored/independent/random) */
+  PIECE_SELECTION_MODE: 'kings-cooking:piece-selection-mode',
+
+  /** Player 1 selected pieces */
+  PLAYER1_PIECES: 'kings-cooking:player1-pieces',
+
+  /** Player 2 selected pieces */
+  PLAYER2_PIECES: 'kings-cooking:player2-pieces',
+
+  /** First mover (player1/player2) */
+  FIRST_MOVER: 'kings-cooking:first-mover',
 
   /** Player 1 has seen story/instructions */
   PLAYER1_SEEN_STORY: 'kings-cooking:player1-seen-story',
@@ -228,6 +241,8 @@ const NameSchema = z.string().min(1).max(20);
 const PlayerIdSchema = z.string().uuid();
 const GameModeSchema = z.enum(['hotseat', 'url']);
 const SeenStorySchema = z.boolean();
+const PieceSelectionModeSchema = z.enum(['mirrored', 'independent', 'random']);
+const FirstMoverSchema = z.enum(['player1', 'player2']);
 
 /**
  * Typed storage interface with validation.
@@ -277,6 +292,31 @@ export const storage = {
 
   setGameState: (state: GameState): boolean =>
     setValidatedItem(STORAGE_KEYS.GAME_STATE, state, GameStateSchema),
+
+  // Piece selection state
+  getPieceSelectionMode: (): 'mirrored' | 'independent' | 'random' | null =>
+    getValidatedItem(STORAGE_KEYS.PIECE_SELECTION_MODE, PieceSelectionModeSchema),
+
+  setPieceSelectionMode: (mode: 'mirrored' | 'independent' | 'random'): boolean =>
+    setValidatedItem(STORAGE_KEYS.PIECE_SELECTION_MODE, mode, PieceSelectionModeSchema),
+
+  getPlayer1Pieces: (): SelectedPieces | null =>
+    getValidatedItem(STORAGE_KEYS.PLAYER1_PIECES, SelectedPiecesSchema) as SelectedPieces | null,
+
+  setPlayer1Pieces: (pieces: SelectedPieces): boolean =>
+    setValidatedItem(STORAGE_KEYS.PLAYER1_PIECES, pieces, SelectedPiecesSchema),
+
+  getPlayer2Pieces: (): SelectedPieces | null =>
+    getValidatedItem(STORAGE_KEYS.PLAYER2_PIECES, SelectedPiecesSchema) as SelectedPieces | null,
+
+  setPlayer2Pieces: (pieces: SelectedPieces): boolean =>
+    setValidatedItem(STORAGE_KEYS.PLAYER2_PIECES, pieces, SelectedPiecesSchema),
+
+  getFirstMover: (): 'player1' | 'player2' | null =>
+    getValidatedItem(STORAGE_KEYS.FIRST_MOVER, FirstMoverSchema),
+
+  setFirstMover: (mover: 'player1' | 'player2'): boolean =>
+    setValidatedItem(STORAGE_KEYS.FIRST_MOVER, mover, FirstMoverSchema),
 
   // Story/instructions panel flags
   getPlayer1SeenStory: (): boolean | null =>
