@@ -64,6 +64,9 @@ export const STORAGE_KEYS = {
 
   /** Player 2 has seen story/instructions */
   PLAYER2_SEEN_STORY: 'kings-cooking:player2-seen-story',
+
+  /** Victory screen URL was copied (enables New Game button in URL mode) */
+  VICTORY_URL_COPIED: 'kings-cooking:victory-url-copied',
 } as const;
 
 // ============================================================================

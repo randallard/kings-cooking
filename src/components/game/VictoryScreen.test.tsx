@@ -3,8 +3,8 @@
  * @module components/game/VictoryScreen.test
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { VictoryScreen } from './VictoryScreen';
 
 describe('VictoryScreen', () => {
@@ -175,6 +175,85 @@ describe('VictoryScreen', () => {
       expect(screen.getByRole('button', { name: /copy/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /review game moves/i })).toBeInTheDocument();
       expect(screen.getAllByRole('button')).toHaveLength(2);
+    });
+
+    // TASK 1: RED - New Game button tests (these will FAIL initially)
+    it('should render New Game button when onNewGame is provided (hot-seat mode)', () => {
+      const onNewGame = vi.fn();
+
+      render(<VictoryScreen {...defaultProps} onNewGame={onNewGame} />);
+
+      expect(screen.getByRole('button', { name: /new game/i })).toBeInTheDocument();
+    });
+
+    it('should call onNewGame when New Game button is clicked', () => {
+      const onNewGame = vi.fn();
+
+      render(<VictoryScreen {...defaultProps} onNewGame={onNewGame} />);
+
+      fireEvent.click(screen.getByRole('button', { name: /new game/i }));
+
+      expect(onNewGame).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not render New Game button when onNewGame is not provided', () => {
+      render(<VictoryScreen {...defaultProps} />);
+
+      expect(screen.queryByRole('button', { name: /new game/i })).not.toBeInTheDocument();
+    });
+
+    describe('New Game Button - URL Mode', () => {
+      beforeEach(() => {
+        // Clear localStorage before each test
+        localStorage.clear();
+      });
+
+      it('should NOT show New Game button in URL mode before copy', () => {
+        const onNewGame = vi.fn();
+        const shareUrl = 'https://example.com/game#abc123';
+
+        render(<VictoryScreen {...defaultProps} shareUrl={shareUrl} onNewGame={onNewGame} />);
+
+        expect(screen.queryByRole('button', { name: /new game/i })).not.toBeInTheDocument();
+      });
+
+      it('should show New Game button in URL mode after copy is clicked', async () => {
+        const onNewGame = vi.fn();
+        const shareUrl = 'https://example.com/game#abc123';
+
+        render(<VictoryScreen {...defaultProps} shareUrl={shareUrl} onNewGame={onNewGame} />);
+
+        // Click copy button
+        const copyButton = screen.getByRole('button', { name: /copy/i });
+        fireEvent.click(copyButton);
+
+        // New Game button should now appear
+        await waitFor(() => {
+          expect(screen.getByRole('button', { name: /new game/i })).toBeInTheDocument();
+        });
+      });
+
+      it('should show New Game button on mount if localStorage flag exists', () => {
+        // Simulate previous copy action
+        localStorage.setItem('kings-cooking:victory-url-copied', 'true');
+
+        const onNewGame = vi.fn();
+        const shareUrl = 'https://example.com/game#abc123';
+
+        render(<VictoryScreen {...defaultProps} shareUrl={shareUrl} onNewGame={onNewGame} />);
+
+        // Button should be visible on mount
+        expect(screen.getByRole('button', { name: /new game/i })).toBeInTheDocument();
+      });
+
+      it('should not interfere with hot-seat mode (no shareUrl)', () => {
+        const onNewGame = vi.fn();
+
+        render(<VictoryScreen {...defaultProps} onNewGame={onNewGame} />);
+
+        // Button should show immediately in hot-seat mode
+        expect(screen.getByRole('button', { name: /new game/i })).toBeInTheDocument();
+      });
     });
   });
 

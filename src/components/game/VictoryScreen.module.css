@@ -140,6 +140,15 @@
   color: var(--text-secondary, #495057);
 }
 
+.newGameSection {
+  margin: var(--spacing-lg, 1.5rem) 0;
+  text-align: center;
+}
+
+.newGameSection .button {
+  min-width: 200px;
+}
+
 .stats {
   margin-bottom: var(--spacing-xl, 2rem);
   padding: var(--spacing-lg, 1.5rem);

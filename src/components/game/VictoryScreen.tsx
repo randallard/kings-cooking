@@ -3,10 +3,13 @@
  * @module components/game/VictoryScreen
  */
 
-import type { ReactElement } from 'react';
+import { useState, useEffect, type ReactElement } from 'react';
 import type { Piece } from '@/lib/validation/schemas';
 import { URLSharer } from './URLSharer';
 import styles from './VictoryScreen.module.css';
+
+// Storage key constant
+const VICTORY_URL_COPIED_KEY = 'kings-cooking:victory-url-copied';
 
 interface VictoryScreenProps {
   /** Winner of the game */
@@ -35,6 +38,8 @@ interface VictoryScreenProps {
   shareUrl?: string;
   /** Callback for reviewing moves */
   onReviewMoves?: () => void;
+  /** Callback for starting a new game */
+  onNewGame?: () => void;
 }
 
 /**
@@ -85,7 +90,37 @@ export const VictoryScreen = ({
   board,
   shareUrl,
   onReviewMoves,
+  onNewGame,
 }: VictoryScreenProps): ReactElement => {
+
+  // Track whether URL has been copied (URL mode only)
+  const [urlWasCopied, setUrlWasCopied] = useState(false);
+
+  /**
+   * Check localStorage on mount for URL copied flag.
+   * This allows button to appear when user returns after sharing.
+   */
+  useEffect(() => {
+    if (shareUrl) {
+      const flag = localStorage.getItem(VICTORY_URL_COPIED_KEY);
+      setUrlWasCopied(flag === 'true');
+    }
+  }, [shareUrl]);
+
+  /**
+   * Handle Copy button click - set flag in localStorage.
+   */
+  const handleUrlCopied = (): void => {
+    localStorage.setItem(VICTORY_URL_COPIED_KEY, 'true');
+    setUrlWasCopied(true);
+  };
+
+  /**
+   * Determine if New Game button should be shown.
+   * - Hot-seat mode: Always show if onNewGame provided
+   * - URL mode: Show only if URL was copied
+   */
+  const showNewGameButton = onNewGame && (!shareUrl || urlWasCopied);
 
   // Extract auto-scored pieces (pieces still on board when game ended)
   const getAutoScoredPieces = (owner: 'light' | 'dark'): Piece[] => {
@@ -168,14 +203,27 @@ export const VictoryScreen = ({
           {getSubtitle()}
         </p>
 
+        {/* NEW GAME BUTTON - Hot-seat mode always shows, URL mode conditional */}
+        {showNewGameButton && (
+          <div className={styles.newGameSection}>
+            <button
+              type="button"
+              onClick={onNewGame}
+              className={`${styles.button} ${styles.primaryButton}`}
+              aria-label="Start a new game and return to mode selection"
+              data-testid="new-game-button"
+            >
+              New Game
+            </button>
+          </div>
+        )}
+
         {/* URL Sharing - shown immediately in URL mode */}
         {shareUrl && (
           <div style={{ marginTop: 'var(--spacing-lg)', marginBottom: 'var(--spacing-lg)' }}>
             <URLSharer
               url={shareUrl}
-              onCopy={() => {
-                console.log('Victory URL copied successfully');
-              }}
+              onCopy={handleUrlCopied}
             />
           </div>
         )}
