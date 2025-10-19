@@ -6,22 +6,25 @@
 import type { GameState, Position } from '../lib/validation/schemas';
 import type { FullStatePayload, DeltaPayload } from '../lib/urlEncoding/types';
 import type { KingsChessEngine } from '../lib/chess/KingsChessEngine';
+import type { SelectionMode, SelectedPieces, FirstMover } from '../lib/pieceSelection/types';
 
 /**
- * Game flow state - discriminated union with 5 phases.
+ * Game flow state - discriminated union with 6 phases.
  *
  * The state machine transitions through these phases:
  * 1. mode-selection: User chooses hot-seat or URL mode
  * 2. setup: Player 1 enters name
- * 3. playing: Active gameplay with move selection
- * 4. handoff: After move confirmation (mode-specific UI)
- * 5. victory: Game ended, show results
+ * 3. piece-selection: Players choose starting pieces
+ * 4. playing: Active gameplay with move selection
+ * 5. handoff: After move confirmation (mode-specific UI)
+ * 6. victory: Game ended, show results
  *
  * Each phase has specific fields and transitions.
  */
 export type GameFlowState =
   | ModeSelectionPhase
   | SetupPhase
+  | PieceSelectionPhase
   | PlayingPhase
   | HandoffPhase
   | VictoryPhase;
@@ -47,7 +50,29 @@ export interface SetupPhase {
 }
 
 /**
- * Phase 3: Playing phase.
+ * Phase 3: Piece selection phase.
+ * Players choose their starting pieces before gameplay begins.
+ */
+export interface PieceSelectionPhase {
+  phase: 'piece-selection';
+  /** Selected game mode */
+  mode: 'hotseat' | 'url';
+  /** Player 1 name */
+  player1Name: string;
+  /** Player 2 name (empty string until set) */
+  player2Name: string;
+  /** Selection mode (null until chosen) */
+  selectionMode: SelectionMode | null;
+  /** Player 1's selected pieces (null until complete) */
+  player1Pieces: SelectedPieces | null;
+  /** Player 2's selected pieces (null until complete) */
+  player2Pieces: SelectedPieces | null;
+  /** Who goes first (null until chosen) */
+  firstMover: FirstMover | null;
+}
+
+/**
+ * Phase 4: Playing phase.
  * Active gameplay with move selection and confirmation.
  */
 export interface PlayingPhase {
@@ -69,7 +94,7 @@ export interface PlayingPhase {
 }
 
 /**
- * Phase 4: Handoff phase.
+ * Phase 5: Handoff phase.
  * After move confirmation, transition between players.
  * Mode-specific UI:
  * - Hot-seat: Privacy screen with "I'm Ready" button
@@ -94,7 +119,7 @@ export interface HandoffPhase {
 }
 
 /**
- * Phase 5: Victory phase.
+ * Phase 6: Victory phase.
  * Game ended, show winner and statistics.
  */
 export interface VictoryPhase {
