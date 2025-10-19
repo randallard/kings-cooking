@@ -8,6 +8,7 @@ import type { DeltaPayload, FullStatePayload } from '../urlEncoding/types';
 import type { GameState } from '../validation/schemas';
 import { KingsChessEngine } from '../chess/KingsChessEngine';
 import { storage } from '../storage/localStorage';
+import { createBoardWithPieces } from '../pieceSelection/logic';
 
 /**
  * Creates initial game state for a new game.
@@ -287,7 +288,7 @@ function handleUrlLoad(
 /**
  * Game flow reducer - handles all state transitions.
  *
- * Implements a finite state machine with 5 phases and 11 action types.
+ * Implements a finite state machine with 6 phases and 16 action types.
  * Includes exhaustive checking to ensure all actions are handled.
  *
  * @param state - Current game flow state
@@ -320,6 +321,98 @@ export function gameFlowReducer(
         player1Name: state.player1Name,
         player2Name: null, // Collected later
         gameState,
+        selectedPosition: null,
+        legalMoves: [],
+        pendingMove: null,
+      };
+    }
+
+    case 'START_PIECE_SELECTION':
+      if (state.phase !== 'setup' || !state.player1Name) return state;
+      return {
+        phase: 'piece-selection',
+        mode: state.mode,
+        player1Name: state.player1Name,
+        player2Name: '',
+        selectionMode: null,
+        player1Pieces: null,
+        player2Pieces: null,
+        firstMover: null,
+      };
+
+    case 'SET_SELECTION_MODE':
+      if (state.phase !== 'piece-selection') return state;
+      return { ...state, selectionMode: action.mode };
+
+    case 'SET_PLAYER_PIECES':
+      if (state.phase !== 'piece-selection') return state;
+      if (action.player === 'player1') {
+        return { ...state, player1Pieces: action.pieces };
+      } else {
+        return { ...state, player2Pieces: action.pieces };
+      }
+
+    case 'SET_FIRST_MOVER':
+      if (state.phase !== 'piece-selection') return state;
+      return { ...state, firstMover: action.mover };
+
+    case 'COMPLETE_PIECE_SELECTION': {
+      if (state.phase !== 'piece-selection') return state;
+      if (
+        !state.selectionMode ||
+        !state.player1Pieces ||
+        !state.player2Pieces ||
+        !state.firstMover
+      ) {
+        return state;
+      }
+
+      // Create board with selected pieces
+      const board = createBoardWithPieces(
+        state.player1Pieces,
+        state.player2Pieces,
+        state.firstMover
+      );
+
+      // Create game state with custom board
+      const lightPlayer = {
+        id: crypto.randomUUID() as never,
+        name: state.firstMover === 'player1' ? state.player1Name : state.player2Name,
+      };
+      const darkPlayer = {
+        id: crypto.randomUUID() as never,
+        name: state.firstMover === 'player1' ? state.player2Name : state.player1Name,
+      };
+
+      // Use the custom board in a new engine instance
+      const gameState: GameState = {
+        version: '1.0.0',
+        gameId: crypto.randomUUID() as never,
+        board,
+        lightCourt: [],
+        darkCourt: [],
+        capturedLight: [],
+        capturedDark: [],
+        currentTurn: 0,
+        currentPlayer: 'light',
+        lightPlayer,
+        darkPlayer,
+        status: 'playing',
+        winner: null,
+        moveHistory: [],
+        checksum: '', // Will be set by engine
+      };
+
+      // Create engine to calculate checksum
+      const engine = new KingsChessEngine(lightPlayer, darkPlayer, gameState);
+      const finalGameState = engine.getGameState();
+
+      return {
+        phase: 'playing',
+        mode: state.mode,
+        player1Name: state.player1Name,
+        player2Name: state.player2Name,
+        gameState: finalGameState,
         selectedPosition: null,
         legalMoves: [],
         pendingMove: null,

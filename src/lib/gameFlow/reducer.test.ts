@@ -218,6 +218,54 @@ describe('gameFlowReducer', () => {
       player1Name: null,
     };
 
+    describe('START_PIECE_SELECTION action', () => {
+      it('should transition to piece-selection phase when player1Name is set', () => {
+        const stateWithName: GameFlowState = {
+          ...setupState,
+          player1Name: 'Alice',
+        };
+        const action: GameFlowAction = { type: 'START_PIECE_SELECTION' };
+        const result = gameFlowReducer(stateWithName, action);
+
+        expect(result).toEqual({
+          phase: 'piece-selection',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+          player2Name: '',
+          selectionMode: null,
+          player1Pieces: null,
+          player2Pieces: null,
+          firstMover: null,
+        });
+      });
+
+      it('should fail if player1Name is null', () => {
+        const action: GameFlowAction = { type: 'START_PIECE_SELECTION' };
+        const result = gameFlowReducer(setupState, action);
+
+        expect(result).toBe(setupState);
+      });
+
+      it('should fail if player1Name is empty string', () => {
+        const stateWithEmptyName: GameFlowState = {
+          ...setupState,
+          player1Name: '',
+        };
+        const action: GameFlowAction = { type: 'START_PIECE_SELECTION' };
+        const result = gameFlowReducer(stateWithEmptyName, action);
+
+        expect(result).toBe(stateWithEmptyName);
+      });
+
+      it('should return unchanged state if not in setup phase', () => {
+        const modeSelectionState: GameFlowState = { phase: 'mode-selection' };
+        const action: GameFlowAction = { type: 'START_PIECE_SELECTION' };
+        const result = gameFlowReducer(modeSelectionState, action);
+
+        expect(result).toBe(modeSelectionState);
+      });
+    });
+
     describe('SET_PLAYER1_NAME action', () => {
       it('should set player1Name in setup phase', () => {
         const action: GameFlowAction = { type: 'SET_PLAYER1_NAME', name: 'Alice' };
@@ -335,6 +383,248 @@ describe('gameFlowReducer', () => {
         const result = gameFlowReducer(modeSelectionState, action);
 
         expect(result).toBe(modeSelectionState);
+      });
+    });
+  });
+
+  // ==========================================================================
+  // Phase 2.5: Piece Selection
+  // ==========================================================================
+
+  describe('Phase 2.5: Piece Selection', () => {
+    let pieceSelectionState: GameFlowState;
+
+    beforeEach(() => {
+      pieceSelectionState = {
+        phase: 'piece-selection',
+        mode: 'hotseat',
+        player1Name: 'Alice',
+        player2Name: '',
+        selectionMode: null,
+        player1Pieces: null,
+        player2Pieces: null,
+        firstMover: null,
+      };
+    });
+
+    describe('SET_SELECTION_MODE action', () => {
+      it('should set selection mode to mirrored', () => {
+        const action: GameFlowAction = { type: 'SET_SELECTION_MODE', mode: 'mirrored' };
+        const result = gameFlowReducer(pieceSelectionState, action);
+
+        if (result.phase === 'piece-selection') {
+          expect(result.selectionMode).toBe('mirrored');
+        }
+      });
+
+      it('should set selection mode to independent', () => {
+        const action: GameFlowAction = { type: 'SET_SELECTION_MODE', mode: 'independent' };
+        const result = gameFlowReducer(pieceSelectionState, action);
+
+        if (result.phase === 'piece-selection') {
+          expect(result.selectionMode).toBe('independent');
+        }
+      });
+
+      it('should set selection mode to random', () => {
+        const action: GameFlowAction = { type: 'SET_SELECTION_MODE', mode: 'random' };
+        const result = gameFlowReducer(pieceSelectionState, action);
+
+        if (result.phase === 'piece-selection') {
+          expect(result.selectionMode).toBe('random');
+        }
+      });
+
+      it('should return unchanged state if not in piece-selection phase', () => {
+        const setupState: GameFlowState = {
+          phase: 'setup',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+        };
+        const action: GameFlowAction = { type: 'SET_SELECTION_MODE', mode: 'mirrored' };
+        const result = gameFlowReducer(setupState, action);
+
+        expect(result).toBe(setupState);
+      });
+    });
+
+    describe('SET_PLAYER_PIECES action', () => {
+      it('should set player1 pieces', () => {
+        const action: GameFlowAction = {
+          type: 'SET_PLAYER_PIECES',
+          player: 'player1',
+          pieces: ['rook', 'knight', 'bishop'],
+        };
+        const result = gameFlowReducer(pieceSelectionState, action);
+
+        if (result.phase === 'piece-selection') {
+          expect(result.player1Pieces).toEqual(['rook', 'knight', 'bishop']);
+        }
+      });
+
+      it('should set player2 pieces', () => {
+        const action: GameFlowAction = {
+          type: 'SET_PLAYER_PIECES',
+          player: 'player2',
+          pieces: ['queen', 'pawn', 'pawn'],
+        };
+        const result = gameFlowReducer(pieceSelectionState, action);
+
+        if (result.phase === 'piece-selection') {
+          expect(result.player2Pieces).toEqual(['queen', 'pawn', 'pawn']);
+        }
+      });
+
+      it('should return unchanged state if not in piece-selection phase', () => {
+        const playingState: GameFlowState = {
+          phase: 'playing',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+          player2Name: 'Bob',
+          gameState: createMockGameState(),
+          selectedPosition: null,
+          legalMoves: [],
+          pendingMove: null,
+        };
+        const action: GameFlowAction = {
+          type: 'SET_PLAYER_PIECES',
+          player: 'player1',
+          pieces: ['rook', 'knight', 'bishop'],
+        };
+        const result = gameFlowReducer(playingState, action);
+
+        expect(result).toBe(playingState);
+      });
+    });
+
+    describe('SET_FIRST_MOVER action', () => {
+      it('should set first mover to player1', () => {
+        const action: GameFlowAction = { type: 'SET_FIRST_MOVER', mover: 'player1' };
+        const result = gameFlowReducer(pieceSelectionState, action);
+
+        if (result.phase === 'piece-selection') {
+          expect(result.firstMover).toBe('player1');
+        }
+      });
+
+      it('should set first mover to player2', () => {
+        const action: GameFlowAction = { type: 'SET_FIRST_MOVER', mover: 'player2' };
+        const result = gameFlowReducer(pieceSelectionState, action);
+
+        if (result.phase === 'piece-selection') {
+          expect(result.firstMover).toBe('player2');
+        }
+      });
+
+      it('should return unchanged state if not in piece-selection phase', () => {
+        const setupState: GameFlowState = {
+          phase: 'setup',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+        };
+        const action: GameFlowAction = { type: 'SET_FIRST_MOVER', mover: 'player1' };
+        const result = gameFlowReducer(setupState, action);
+
+        expect(result).toBe(setupState);
+      });
+    });
+
+    describe('COMPLETE_PIECE_SELECTION action', () => {
+      it('should transition to playing phase with created board', () => {
+        const completeState: GameFlowState = {
+          phase: 'piece-selection',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+          player2Name: 'Bob',
+          selectionMode: 'independent',
+          player1Pieces: ['rook', 'knight', 'bishop'],
+          player2Pieces: ['queen', 'pawn', 'pawn'],
+          firstMover: 'player1',
+        };
+
+        const action: GameFlowAction = { type: 'COMPLETE_PIECE_SELECTION' };
+        const result = gameFlowReducer(completeState, action);
+
+        expect(result.phase).toBe('playing');
+        if (result.phase === 'playing') {
+          expect(result.player1Name).toBe('Alice');
+          expect(result.player2Name).toBe('Bob');
+          expect(result.gameState).toBeDefined();
+          expect(result.gameState.board).toBeDefined();
+          expect(result.selectedPosition).toBeNull();
+          expect(result.legalMoves).toEqual([]);
+          expect(result.pendingMove).toBeNull();
+        }
+      });
+
+      it('should fail if selectionMode is null', () => {
+        const action: GameFlowAction = { type: 'COMPLETE_PIECE_SELECTION' };
+        const result = gameFlowReducer(pieceSelectionState, action);
+
+        expect(result).toBe(pieceSelectionState);
+      });
+
+      it('should fail if player1Pieces is null', () => {
+        const incompleteState: GameFlowState = {
+          phase: 'piece-selection',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+          player2Name: '',
+          selectionMode: 'independent',
+          player1Pieces: null,
+          player2Pieces: ['queen', 'pawn', 'pawn'],
+          firstMover: 'player1',
+        };
+        const action: GameFlowAction = { type: 'COMPLETE_PIECE_SELECTION' };
+        const result = gameFlowReducer(incompleteState, action);
+
+        expect(result).toBe(incompleteState);
+      });
+
+      it('should fail if player2Pieces is null', () => {
+        const incompleteState: GameFlowState = {
+          phase: 'piece-selection',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+          player2Name: '',
+          selectionMode: 'independent',
+          player1Pieces: ['rook', 'knight', 'bishop'],
+          player2Pieces: null,
+          firstMover: 'player1',
+        };
+        const action: GameFlowAction = { type: 'COMPLETE_PIECE_SELECTION' };
+        const result = gameFlowReducer(incompleteState, action);
+
+        expect(result).toBe(incompleteState);
+      });
+
+      it('should fail if firstMover is null', () => {
+        const incompleteState: GameFlowState = {
+          phase: 'piece-selection',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+          player2Name: '',
+          selectionMode: 'independent',
+          player1Pieces: ['rook', 'knight', 'bishop'],
+          player2Pieces: ['queen', 'pawn', 'pawn'],
+          firstMover: null,
+        };
+        const action: GameFlowAction = { type: 'COMPLETE_PIECE_SELECTION' };
+        const result = gameFlowReducer(incompleteState, action);
+
+        expect(result).toBe(incompleteState);
+      });
+
+      it('should return unchanged state if not in piece-selection phase', () => {
+        const setupState: GameFlowState = {
+          phase: 'setup',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+        };
+        const action: GameFlowAction = { type: 'COMPLETE_PIECE_SELECTION' };
+        const result = gameFlowReducer(setupState, action);
+
+        expect(result).toBe(setupState);
       });
     });
   });
@@ -1584,11 +1874,16 @@ describe('gameFlowReducer', () => {
   // ==========================================================================
 
   describe('Exhaustive Action Checking', () => {
-    it('should handle all 11 action types', () => {
+    it('should handle all 16 action types', () => {
       const actions: GameFlowAction['type'][] = [
         'SELECT_MODE',
         'SET_PLAYER1_NAME',
         'START_GAME',
+        'START_PIECE_SELECTION',
+        'SET_SELECTION_MODE',
+        'SET_PLAYER_PIECES',
+        'SET_FIRST_MOVER',
+        'COMPLETE_PIECE_SELECTION',
         'SELECT_PIECE',
         'DESELECT_PIECE',
         'STAGE_MOVE',
@@ -1602,7 +1897,7 @@ describe('gameFlowReducer', () => {
       ];
 
       // Verify all action types are tested
-      expect(actions).toHaveLength(13);
+      expect(actions).toHaveLength(18);
     });
 
     it('should never throw for valid action types', () => {
@@ -1612,6 +1907,11 @@ describe('gameFlowReducer', () => {
         { type: 'SELECT_MODE', mode: 'hotseat' },
         { type: 'SET_PLAYER1_NAME', name: 'Alice' },
         { type: 'START_GAME' },
+        { type: 'START_PIECE_SELECTION' },
+        { type: 'SET_SELECTION_MODE', mode: 'mirrored' },
+        { type: 'SET_PLAYER_PIECES', player: 'player1', pieces: ['rook', 'knight', 'bishop'] },
+        { type: 'SET_FIRST_MOVER', mover: 'player1' },
+        { type: 'COMPLETE_PIECE_SELECTION' },
         { type: 'SELECT_PIECE', position: [2, 0], legalMoves: [[1, 0]] },
         { type: 'DESELECT_PIECE' },
         { type: 'STAGE_MOVE', from: [2, 0], to: [1, 0] },

@@ -137,7 +137,7 @@ export interface VictoryPhase {
 }
 
 /**
- * Game flow actions - discriminated union with 11 action types.
+ * Game flow actions - discriminated union with 16 action types.
  *
  * Actions trigger state transitions in the game flow reducer.
  * Some actions are mode-specific (hot-seat only or URL only).
@@ -146,6 +146,11 @@ export type GameFlowAction =
   | SelectModeAction
   | SetPlayer1NameAction
   | StartGameAction
+  | StartPieceSelectionAction
+  | SetSelectionModeAction
+  | SetPlayerPiecesAction
+  | SetFirstMoverAction
+  | CompletePieceSelectionAction
   | SelectPieceAction
   | DeselectPieceAction
   | StageMoveAction
@@ -179,11 +184,56 @@ export interface SetPlayer1NameAction {
 
 /**
  * START_GAME action.
- * Transition from setup to playing phase.
+ * Transition from setup to piece-selection phase.
  * Requires player1Name to be set.
  */
 export interface StartGameAction {
   type: 'START_GAME';
+}
+
+/**
+ * START_PIECE_SELECTION action.
+ * Transition from setup to piece-selection phase.
+ */
+export interface StartPieceSelectionAction {
+  type: 'START_PIECE_SELECTION';
+}
+
+/**
+ * SET_SELECTION_MODE action.
+ * Player chooses piece selection mode (mirrored/independent/random).
+ */
+export interface SetSelectionModeAction {
+  type: 'SET_SELECTION_MODE';
+  mode: SelectionMode;
+}
+
+/**
+ * SET_PLAYER_PIECES action.
+ * Set pieces for a player (position-based array).
+ */
+export interface SetPlayerPiecesAction {
+  type: 'SET_PLAYER_PIECES';
+  player: 'player1' | 'player2';
+  pieces: SelectedPieces;
+}
+
+/**
+ * SET_FIRST_MOVER action.
+ * Choose who goes first (determines light/dark).
+ */
+export interface SetFirstMoverAction {
+  type: 'SET_FIRST_MOVER';
+  mover: FirstMover;
+}
+
+/**
+ * COMPLETE_PIECE_SELECTION action.
+ * Transition from piece-selection to playing phase.
+ * Creates initial game state with selected pieces.
+ */
+export interface CompletePieceSelectionAction {
+  type: 'COMPLETE_PIECE_SELECTION';
 }
 
 /**

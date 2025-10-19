@@ -4,7 +4,7 @@
  */
 
 import { type ReactElement } from 'react';
-import type { Piece } from '@/lib/validation/schemas';
+import type { Piece, PieceType } from '@/lib/validation/schemas';
 import { OffBoardButton } from './OffBoardButton';
 import styles from './CourtArea.module.css';
 
@@ -22,7 +22,7 @@ interface CourtAreaProps {
   /** Current player's turn */
   currentPlayer: 'light' | 'dark';
   /** Selected piece type (if any) */
-  selectedPieceType: 'rook' | 'knight' | 'bishop' | null;
+  selectedPieceType: PieceType | null;
 }
 
 // Helper: Unicode piece lookup
@@ -30,6 +30,8 @@ const PIECE_UNICODE: Record<string, { light: string; dark: string }> = {
   rook: { light: '♜', dark: '♖' },
   knight: { light: '♞', dark: '♘' },
   bishop: { light: '♝', dark: '♗' },
+  queen: { light: '♛', dark: '♕' },
+  pawn: { light: '♟', dark: '♙' },
 };
 
 /**
