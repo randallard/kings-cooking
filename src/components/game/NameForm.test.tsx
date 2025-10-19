@@ -444,6 +444,81 @@ describe('NameForm', () => {
         ).toBeInTheDocument();
       }, { timeout: 1000 });
     });
+
+    it('should call onNameChange on mount when saved name exists (my-name)', async () => {
+      // RED: This test will FAIL initially
+      vi.mocked(storage.getMyName).mockReturnValue('Alice');
+      const onNameChange = vi.fn();
+
+      render(<NameForm storageKey="my-name" onNameChange={onNameChange} />);
+
+      await waitFor(() => {
+        expect(onNameChange).toHaveBeenCalledWith('Alice');
+      });
+    });
+
+    it('should call onNameChange on mount when saved name exists (player1)', async () => {
+      vi.mocked(storage.getPlayer1Name).mockReturnValue('Bob');
+      const onNameChange = vi.fn();
+
+      render(<NameForm storageKey="player1" onNameChange={onNameChange} />);
+
+      await waitFor(() => {
+        expect(onNameChange).toHaveBeenCalledWith('Bob');
+      });
+    });
+
+    it('should call onNameChange on mount when saved name exists (player2)', async () => {
+      vi.mocked(storage.getPlayer2Name).mockReturnValue('Charlie');
+      const onNameChange = vi.fn();
+
+      render(<NameForm storageKey="player2" onNameChange={onNameChange} />);
+
+      await waitFor(() => {
+        expect(onNameChange).toHaveBeenCalledWith('Charlie');
+      });
+    });
+
+    it('should not call onNameChange when no saved name exists', () => {
+      vi.mocked(storage.getMyName).mockReturnValue(null);
+      const onNameChange = vi.fn();
+
+      render(<NameForm storageKey="my-name" onNameChange={onNameChange} />);
+
+      // Should NOT call callback when no saved name
+      expect(onNameChange).not.toHaveBeenCalled();
+    });
+
+    it('should handle empty string from localStorage gracefully', () => {
+      vi.mocked(storage.getMyName).mockReturnValue('');
+      const onNameChange = vi.fn();
+
+      render(<NameForm storageKey="my-name" onNameChange={onNameChange} />);
+
+      // Should NOT call callback for empty string
+      expect(onNameChange).not.toHaveBeenCalled();
+    });
+
+    it('should handle whitespace-only name from localStorage', async () => {
+      vi.mocked(storage.getMyName).mockReturnValue('   ');
+      const onNameChange = vi.fn();
+
+      render(<NameForm storageKey="my-name" onNameChange={onNameChange} />);
+
+      // Should call callback (validation happens separately)
+      await waitFor(() => {
+        expect(onNameChange).toHaveBeenCalledWith('   ');
+      });
+    });
+
+    it('should not crash when onNameChange is undefined on mount', () => {
+      vi.mocked(storage.getMyName).mockReturnValue('Alice');
+
+      // Should not crash without callback
+      expect(() => {
+        render(<NameForm storageKey="my-name" />);
+      }).not.toThrow();
+    });
   });
 
   describe('Accessibility', () => {
