@@ -455,6 +455,7 @@ export default function App(): ReactElement {
               dispatch({ type: 'STAGE_MOVE', from, to });
             }}
             isPlayerTurn={true}
+            pendingMove={state.pendingMove}
           />
 
           {state.pendingMove && (

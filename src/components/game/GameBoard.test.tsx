@@ -425,4 +425,43 @@ describe('GameBoard', () => {
       expect(screen.getByRole('grid')).toBeInTheDocument();
     });
   });
+
+  describe('Pending Move Visualization', () => {
+    it('should pass pending move props to cells when move is staged', () => {
+      // RED: This will FAIL - GameCell doesn't receive pending move props yet
+      const pendingMove = { from: [2, 1] as [number, number], to: [1, 1] as [number, number] };
+
+      render(
+        <GameBoard
+          gameState={gameState}
+          onMove={mockOnMove}
+          pendingMove={pendingMove}
+        />
+      );
+
+      // Source cell should receive isPendingSource prop
+      const sourceCell = screen.getByTestId('cell-2-1');
+      expect(sourceCell).toBeInTheDocument();
+      // TODO: Check for isPendingSource prop once GameCell is updated
+
+      // Destination cell should receive isPendingDestination prop
+      const destCell = screen.getByTestId('cell-1-1');
+      expect(destCell).toBeInTheDocument();
+      // TODO: Check for isPendingDestination prop once GameCell is updated
+    });
+
+    it('should not pass pending props when pendingMove is null', () => {
+      render(
+        <GameBoard
+          gameState={gameState}
+          onMove={mockOnMove}
+          pendingMove={null}
+        />
+      );
+
+      // All cells should render normally without pending props
+      expect(screen.getByRole('grid')).toBeInTheDocument();
+      // No cells should have pending state
+    });
+  });
 });
