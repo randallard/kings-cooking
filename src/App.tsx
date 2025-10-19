@@ -642,6 +642,14 @@ export default function App(): ReactElement {
       victoryProps.shareUrl = fullShareUrl;
     }
 
+    // Add New Game callback
+    victoryProps.onNewGame = () => {
+      // Clear victory URL copied flag
+      localStorage.removeItem('kings-cooking:victory-url-copied');
+      // Dispatch NEW_GAME action
+      dispatch({ type: 'NEW_GAME' });
+    };
+
     return <VictoryScreen {...victoryProps} />;
   }
 
