@@ -118,6 +118,7 @@ export const GameCell = ({
       {/* Actual piece (or moved piece at destination) */}
       {pieceChar && (
         <span
+          key={isPendingDestination ? `animated-${piece?.id || 'piece'}` : `static-${piece?.id || 'piece'}`}
           className={`${styles.piece} ${isPendingDestination ? styles.animatedPiece : ''}`}
           aria-hidden="true"
         >

@@ -20,6 +20,8 @@ interface GameBoardProps {
   gameState: GameState;
   /** Callback when move is completed */
   onMove: (from: Position, to: Position | 'off_board') => void;
+  /** Callback to cancel pending move */
+  onCancelMove?: () => void;
   /** Is it this player's turn? */
   isPlayerTurn?: boolean;
   /** Staged move awaiting confirmation */
@@ -49,6 +51,7 @@ interface GameBoardProps {
 export const GameBoard = ({
   gameState,
   onMove,
+  onCancelMove,
   isPlayerTurn = true,
   pendingMove,
 }: GameBoardProps): ReactElement => {
@@ -129,6 +132,10 @@ export const GameBoard = ({
       selectedPosition[1] === position[1]
     ) {
       setSelectedPosition(null);
+      // Cancel any pending move when deselecting
+      if (pendingMove && onCancelMove) {
+        onCancelMove();
+      }
       return;
     }
 
@@ -145,10 +152,14 @@ export const GameBoard = ({
     } else {
       // Select different piece if it's current player's
       if (piece && piece.owner === gameState.currentPlayer) {
+        // Cancel any pending move when selecting a new piece
+        if (pendingMove && onCancelMove) {
+          onCancelMove();
+        }
         setSelectedPosition(position);
       }
     }
-  }, [selectedPosition, legalMoves, gameState, isPlayerTurn, onMove]);
+  }, [selectedPosition, legalMoves, gameState, isPlayerTurn, onMove, pendingMove, onCancelMove]);
 
   // Helper: Check if position is a legal move
   const isLegalMove = useCallback((position: Position): boolean => {
