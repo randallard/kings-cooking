@@ -301,13 +301,13 @@ export const storage = {
     setValidatedItem(STORAGE_KEYS.PIECE_SELECTION_MODE, mode, PieceSelectionModeSchema),
 
   getPlayer1Pieces: (): SelectedPieces | null =>
-    getValidatedItem(STORAGE_KEYS.PLAYER1_PIECES, SelectedPiecesSchema) as SelectedPieces | null,
+    getValidatedItem(STORAGE_KEYS.PLAYER1_PIECES, SelectedPiecesSchema),
 
   setPlayer1Pieces: (pieces: SelectedPieces): boolean =>
     setValidatedItem(STORAGE_KEYS.PLAYER1_PIECES, pieces, SelectedPiecesSchema),
 
   getPlayer2Pieces: (): SelectedPieces | null =>
-    getValidatedItem(STORAGE_KEYS.PLAYER2_PIECES, SelectedPiecesSchema) as SelectedPieces | null,
+    getValidatedItem(STORAGE_KEYS.PLAYER2_PIECES, SelectedPiecesSchema),
 
   setPlayer2Pieces: (pieces: SelectedPieces): boolean =>
     setValidatedItem(STORAGE_KEYS.PLAYER2_PIECES, pieces, SelectedPiecesSchema),

@@ -54,28 +54,28 @@ export function PiecePickerModal({
   const firstButtonRef = useRef<HTMLButtonElement>(null);
 
   // Focus first button when modal opens
-  useEffect(() => {
+  useEffect((): void => {
     if (isOpen && firstButtonRef.current) {
       firstButtonRef.current.focus();
     }
   }, [isOpen]);
 
   // Handle Escape key
-  useEffect(() => {
+  useEffect((): (() => void) | void => {
     if (!isOpen) return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') {
         onClose();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    return (): void => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
   // Handle focus trapping
-  useEffect(() => {
+  useEffect((): (() => void) | void => {
     if (!isOpen || !dialogRef.current) return;
 
     const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
@@ -84,7 +84,7 @@ export function PiecePickerModal({
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 
-    const handleTabKey = (e: KeyboardEvent) => {
+    const handleTabKey = (e: KeyboardEvent): void => {
       if (e.key !== 'Tab') return;
 
       if (e.shiftKey) {
@@ -103,19 +103,19 @@ export function PiecePickerModal({
     };
 
     document.addEventListener('keydown', handleTabKey);
-    return () => document.removeEventListener('keydown', handleTabKey);
+    return (): void => document.removeEventListener('keydown', handleTabKey);
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  const handleBackdropClick = (e: React.MouseEvent): void => {
     // Only close if clicking the backdrop itself, not the dialog
     if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
-  const handlePieceClick = (piece: PieceType) => {
+  const handlePieceClick = (piece: PieceType): void => {
     onSelect(piece);
   };
 

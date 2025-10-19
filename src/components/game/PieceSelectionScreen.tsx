@@ -39,7 +39,7 @@ export function PieceSelectionScreen({
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
 
   // Handle random mode auto-generation
-  useEffect(() => {
+  useEffect((): void => {
     if (state.selectionMode === 'random' && !state.player1Pieces) {
       const seed = `${state.player1Name}-${state.player2Name}-${Date.now()}`;
       const pieces = generateRandomPieces(seed);
@@ -57,19 +57,19 @@ export function PieceSelectionScreen({
     }
   }, [state.selectionMode, state.player1Pieces, state.player1Name, state.player2Name, dispatch]);
 
-  const handleModeSelect = (mode: 'mirrored' | 'independent' | 'random') => {
+  const handleModeSelect = (mode: 'mirrored' | 'independent' | 'random'): void => {
     dispatch({
       type: 'SET_SELECTION_MODE',
       mode,
     });
   };
 
-  const handlePositionClick = (position: number) => {
+  const handlePositionClick = (position: number): void => {
     setSelectedPosition(position);
     setModalOpen(true);
   };
 
-  const handlePieceSelect = (piece: PieceType) => {
+  const handlePieceSelect = (piece: PieceType): void => {
     if (selectedPosition === null) return;
 
     // Build new pieces array
@@ -99,14 +99,14 @@ export function PieceSelectionScreen({
     setSelectedPosition(null);
   };
 
-  const handleFirstMoverSelect = (mover: 'player1' | 'player2') => {
+  const handleFirstMoverSelect = (mover: 'player1' | 'player2'): void => {
     dispatch({
       type: 'SET_FIRST_MOVER',
       mover,
     });
   };
 
-  const handleStartGame = () => {
+  const handleStartGame = (): void => {
     dispatch({
       type: 'COMPLETE_PIECE_SELECTION',
     });
