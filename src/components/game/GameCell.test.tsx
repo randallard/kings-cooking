@@ -206,4 +206,99 @@ describe('GameCell', () => {
 
     expect(screen.getByRole('gridcell')).toHaveAttribute('tabindex', '0');
   });
+
+  describe('Pending Move Visualization', () => {
+    it('should show ghost piece at source', () => {
+      const piece = {
+        type: 'rook' as const,
+        owner: 'light' as const,
+        position: [2, 1] as [number, number],
+        moveCount: 0,
+        id: 'light-rook-1',
+      };
+
+      render(
+        <GameCell
+          position={[2, 1]}
+          piece={null}
+          isSelected={false}
+          isLegalMove={false}
+          isLastMove={false}
+          isPendingSource={true}
+          ghostPiece={piece}
+          onClick={vi.fn()}
+        />
+      );
+
+      const cell = screen.getByRole('gridcell');
+      // CSS Modules hash class names, so check className includes 'pendingSource'
+      expect(cell.className).toMatch(/pendingSource/);
+      // Ghost piece should be rendered
+      expect(cell.textContent).toBeTruthy();
+    });
+
+    it('should show animated piece at destination', () => {
+      const piece = {
+        type: 'rook' as const,
+        owner: 'light' as const,
+        position: [1, 1] as [number, number],
+        moveCount: 1,
+        id: 'light-rook-1',
+      };
+
+      render(
+        <GameCell
+          position={[1, 1]}
+          piece={piece}
+          isSelected={false}
+          isLegalMove={false}
+          isLastMove={false}
+          isPendingDestination={true}
+          onClick={vi.fn()}
+        />
+      );
+
+      const cell = screen.getByRole('gridcell');
+      // CSS Modules hash class names, so check className includes 'pendingDestination'
+      expect(cell.className).toMatch(/pendingDestination/);
+      // Piece should be rendered with animation class
+      expect(cell.textContent).toBeTruthy();
+    });
+
+    it('should highlight pending destination square', () => {
+      render(
+        <GameCell
+          position={[1, 1]}
+          piece={null}
+          isSelected={false}
+          isLegalMove={false}
+          isLastMove={false}
+          isPendingDestination={true}
+          onClick={vi.fn()}
+        />
+      );
+
+      const cell = screen.getByRole('gridcell');
+      // CSS Modules hash class names, so check className includes 'pendingDestination'
+      expect(cell.className).toMatch(/pendingDestination/);
+    });
+
+    it('should not show pending styles when not pending', () => {
+      render(
+        <GameCell
+          position={[1, 1]}
+          piece={null}
+          isSelected={false}
+          isLegalMove={false}
+          isLastMove={false}
+          onClick={vi.fn()}
+        />
+      );
+
+      const cell = screen.getByRole('gridcell');
+      // CSS Modules hash class names, so check className doesn't include them
+      expect(cell.className).not.toMatch(/pendingSource/);
+      expect(cell.className).not.toMatch(/pendingDestination/);
+    });
+  });
 });

@@ -454,7 +454,11 @@ export default function App(): ReactElement {
             onMove={(from, to) => {
               dispatch({ type: 'STAGE_MOVE', from, to });
             }}
+            onCancelMove={() => {
+              dispatch({ type: 'DESELECT_PIECE' });
+            }}
             isPlayerTurn={true}
+            pendingMove={state.pendingMove}
           />
 
           {state.pendingMove && (

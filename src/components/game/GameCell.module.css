@@ -92,3 +92,41 @@
 :global([data-theme='dark']) .selected {
   background-color: var(--bg-selected-dark, #66b3ff);
 }
+
+/* Pending move states */
+.ghostPiece {
+  opacity: 0.3;
+  filter: grayscale(50%);
+  pointer-events: none;
+  font-size: inherit;
+}
+
+.pendingSource {
+  background-color: var(--bg-pending-source, rgba(128, 128, 128, 0.2)) !important;
+}
+
+.pendingDestination {
+  background-color: var(--bg-pending-dest, rgba(0, 123, 255, 0.3)) !important;
+  box-shadow: inset 0 0 0 2px var(--color-primary, #007bff);
+}
+
+/* Animated piece sliding to destination */
+.animatedPiece {
+  animation: slideToDestination 300ms ease-out;
+}
+
+@keyframes slideToDestination {
+  from {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Ensure smooth transitions */
+.piece {
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+}

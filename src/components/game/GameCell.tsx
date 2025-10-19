@@ -18,6 +18,12 @@ interface GameCellProps {
   isLegalMove: boolean;
   /** Was this cell part of the last move? */
   isLastMove: boolean;
+  /** Is this the source of a pending move? */
+  isPendingSource?: boolean;
+  /** Is this the destination of a pending move? */
+  isPendingDestination?: boolean;
+  /** Ghost piece to show at source during pending move */
+  ghostPiece?: Piece | null;
   /** Click handler */
   onClick: (position: Position) => void;
   /** Is it this player's turn? */
@@ -50,6 +56,9 @@ export const GameCell = ({
   isSelected,
   isLegalMove,
   isLastMove,
+  isPendingSource = false,
+  isPendingDestination = false,
+  ghostPiece = null,
   onClick,
   disabled = false,
 }: GameCellProps): ReactElement => {
@@ -67,6 +76,8 @@ export const GameCell = ({
     isSelected && styles.selected,
     isLegalMove && styles.legalMove,
     isLastMove && styles.lastMove,
+    isPendingSource && styles.pendingSource,
+    isPendingDestination && styles.pendingDestination,
     disabled && styles.disabled,
   ].filter(Boolean).join(' ');
 
@@ -97,11 +108,25 @@ export const GameCell = ({
       onClick={handleClick}
       tabIndex={isSelected ? 0 : -1}
     >
+      {/* Ghost piece at source during pending move */}
+      {ghostPiece && (
+        <span className={styles.ghostPiece} aria-hidden="true">
+          {getPieceUnicode(ghostPiece)}
+        </span>
+      )}
+
+      {/* Actual piece (or moved piece at destination) */}
       {pieceChar && (
-        <span className={styles.piece} aria-hidden="true">
+        <span
+          key={isPendingDestination ? `animated-${piece?.id || 'piece'}` : `static-${piece?.id || 'piece'}`}
+          className={`${styles.piece} ${isPendingDestination ? styles.animatedPiece : ''}`}
+          aria-hidden="true"
+        >
           {pieceChar}
         </span>
       )}
+
+      {/* Legal move indicator */}
       {isLegalMove && <span className={styles.moveIndicator} aria-hidden="true" />}
     </div>
   );

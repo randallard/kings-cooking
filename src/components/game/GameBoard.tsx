@@ -20,8 +20,12 @@ interface GameBoardProps {
   gameState: GameState;
   /** Callback when move is completed */
   onMove: (from: Position, to: Position | 'off_board') => void;
+  /** Callback to cancel pending move */
+  onCancelMove?: () => void;
   /** Is it this player's turn? */
   isPlayerTurn?: boolean;
+  /** Staged move awaiting confirmation */
+  pendingMove?: { from: Position; to: Position | 'off_board' } | null;
 }
 
 /**
@@ -47,7 +51,9 @@ interface GameBoardProps {
 export const GameBoard = ({
   gameState,
   onMove,
+  onCancelMove,
   isPlayerTurn = true,
+  pendingMove,
 }: GameBoardProps): ReactElement => {
   // State: Currently selected position
   const [selectedPosition, setSelectedPosition] = useState<Position>(null);
@@ -115,6 +121,10 @@ export const GameBoard = ({
     if (!selectedPosition) {
       // Only select pieces owned by current player
       if (piece && piece.owner === gameState.currentPlayer) {
+        // Cancel any pending move when selecting a new piece
+        if (pendingMove && onCancelMove) {
+          onCancelMove();
+        }
         setSelectedPosition(position);
       }
       return;
@@ -126,6 +136,10 @@ export const GameBoard = ({
       selectedPosition[1] === position[1]
     ) {
       setSelectedPosition(null);
+      // Cancel any pending move when deselecting
+      if (pendingMove && onCancelMove) {
+        onCancelMove();
+      }
       return;
     }
 
@@ -142,10 +156,14 @@ export const GameBoard = ({
     } else {
       // Select different piece if it's current player's
       if (piece && piece.owner === gameState.currentPlayer) {
+        // Cancel any pending move when selecting a new piece
+        if (pendingMove && onCancelMove) {
+          onCancelMove();
+        }
         setSelectedPosition(position);
       }
     }
-  }, [selectedPosition, legalMoves, gameState, isPlayerTurn, onMove]);
+  }, [selectedPosition, legalMoves, gameState, isPlayerTurn, onMove, pendingMove, onCancelMove]);
 
   // Helper: Check if position is a legal move
   const isLegalMove = useCallback((position: Position): boolean => {
@@ -207,14 +225,49 @@ export const GameBoard = ({
                 selectedPosition[0] === rowIndex &&
                 selectedPosition[1] === colIndex;
 
+              // Pending move logic
+              const isPendingSource = Boolean(
+                pendingMove &&
+                  pendingMove.from &&
+                  pendingMove.from[0] === rowIndex &&
+                  pendingMove.from[1] === colIndex
+              );
+
+              const isPendingDest = Boolean(
+                pendingMove &&
+                  pendingMove.to !== 'off_board' &&
+                  Array.isArray(pendingMove.to) &&
+                  pendingMove.to[0] === rowIndex &&
+                  pendingMove.to[1] === colIndex
+              );
+
+              // Determine which piece to display
+              let displayedPiece = piece;
+              let ghostPiece: Piece | null = null;
+
+              if (isPendingDest && pendingMove && pendingMove.to !== 'off_board' && pendingMove.from) {
+                // Show moving piece at destination
+                const [fromRow, fromCol] = pendingMove.from;
+                displayedPiece = gameState.board[fromRow]?.[fromCol] ?? null;
+              }
+
+              if (isPendingSource && piece) {
+                // Show ghost piece at source
+                ghostPiece = piece;
+                displayedPiece = null; // Clear actual piece at source
+              }
+
               return (
                 <GameCell
                   key={`${rowIndex}-${colIndex}`}
                   position={position}
-                  piece={piece}
+                  piece={displayedPiece}
                   isSelected={Boolean(isSelected)}
                   isLegalMove={isLegalMove(position)}
                   isLastMove={isLastMovePosition(position)}
+                  isPendingSource={isPendingSource}
+                  isPendingDestination={isPendingDest}
+                  ghostPiece={ghostPiece}
                   onClick={handleCellClick}
                   disabled={!isPlayerTurn}
                 />
