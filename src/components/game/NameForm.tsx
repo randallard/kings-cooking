@@ -53,7 +53,10 @@ export const NameForm = ({
   const [isDirty, setIsDirty] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load saved name from localStorage on mount
+  /**
+   * Load saved name from localStorage on mount.
+   * Calls onNameChange callback to notify parent of pre-filled valid name.
+   */
   useEffect(() => {
     let savedName: string | null = null;
 
@@ -68,7 +71,11 @@ export const NameForm = ({
     if (savedName) {
       setName(savedName);
       setIsValid(true);
+
+      // Notify parent that valid name was loaded from storage
+      onNameChange?.(savedName);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- onNameChange intentionally omitted to prevent re-running on parent re-renders
   }, [storageKey]);
 
   // Validate name
