@@ -6,24 +6,26 @@
 import type { GameState, Position } from '../lib/validation/schemas';
 import type { FullStatePayload, DeltaPayload } from '../lib/urlEncoding/types';
 import type { KingsChessEngine } from '../lib/chess/KingsChessEngine';
-import type { SelectionMode, SelectedPieces, FirstMover } from '../lib/pieceSelection/types';
+import type { SelectionMode, SelectedPieces } from '../lib/pieceSelection/types';
 
 /**
- * Game flow state - discriminated union with 6 phases.
+ * Game flow state - discriminated union with 7 phases.
  *
  * The state machine transitions through these phases:
  * 1. mode-selection: User chooses hot-seat or URL mode
  * 2. setup: Player 1 enters name
- * 3. piece-selection: Players choose starting pieces
- * 4. playing: Active gameplay with move selection
- * 5. handoff: After move confirmation (mode-specific UI)
- * 6. victory: Game ended, show results
+ * 3. color-selection: Player 1 chooses light (goes first) or dark (goes second)
+ * 4. piece-selection: Players choose starting pieces
+ * 5. playing: Active gameplay with move selection
+ * 6. handoff: After move confirmation (mode-specific UI)
+ * 7. victory: Game ended, show results
  *
  * Each phase has specific fields and transitions.
  */
 export type GameFlowState =
   | ModeSelectionPhase
   | SetupPhase
+  | ColorSelectionPhase
   | PieceSelectionPhase
   | PlayingPhase
   | HandoffPhase
@@ -50,7 +52,20 @@ export interface SetupPhase {
 }
 
 /**
- * Phase 3: Piece selection phase.
+ * Phase 3: Color selection phase.
+ * Player 1 chooses which color to play (light or dark).
+ * Light player goes first, dark player goes second.
+ */
+export interface ColorSelectionPhase {
+  phase: 'color-selection';
+  /** Selected game mode */
+  mode: 'hotseat' | 'url';
+  /** Player 1 name */
+  player1Name: string;
+}
+
+/**
+ * Phase 4: Piece selection phase.
  * Players choose their starting pieces before gameplay begins.
  */
 export interface PieceSelectionPhase {
@@ -67,12 +82,12 @@ export interface PieceSelectionPhase {
   player1Pieces: SelectedPieces | null;
   /** Player 2's selected pieces (null until complete) */
   player2Pieces: SelectedPieces | null;
-  /** Who goes first (null until chosen) */
-  firstMover: FirstMover | null;
+  /** Player 1's color choice (determines who goes first) */
+  player1Color: 'light' | 'dark' | null;
 }
 
 /**
- * Phase 4: Playing phase.
+ * Phase 5: Playing phase.
  * Active gameplay with move selection and confirmation.
  */
 export interface PlayingPhase {
@@ -94,7 +109,7 @@ export interface PlayingPhase {
 }
 
 /**
- * Phase 5: Handoff phase.
+ * Phase 6: Handoff phase.
  * After move confirmation, transition between players.
  * Mode-specific UI:
  * - Hot-seat: Privacy screen with "I'm Ready" button
@@ -124,12 +139,12 @@ export interface HandoffPhase {
   player1Pieces?: SelectedPieces;
   /** Player 2 selected pieces - present when coming from piece-selection phase */
   player2Pieces?: SelectedPieces;
-  /** First mover selection - present when coming from piece-selection phase */
-  firstMover?: 'player1' | 'player2';
+  /** Player 1's color choice - present when coming from piece-selection phase */
+  player1Color?: 'light' | 'dark';
 }
 
 /**
- * Phase 6: Victory phase.
+ * Phase 7: Victory phase.
  * Game ended, show winner and statistics.
  */
 export interface VictoryPhase {
@@ -147,7 +162,7 @@ export interface VictoryPhase {
 }
 
 /**
- * Game flow actions - discriminated union with 16 action types.
+ * Game flow actions - discriminated union with 17 action types.
  *
  * Actions trigger state transitions in the game flow reducer.
  * Some actions are mode-specific (hot-seat only or URL only).
@@ -156,10 +171,11 @@ export type GameFlowAction =
   | SelectModeAction
   | SetPlayer1NameAction
   | StartGameAction
+  | StartColorSelectionAction
+  | SetPlayerColorAction
   | StartPieceSelectionAction
   | SetSelectionModeAction
   | SetPlayerPiecesAction
-  | SetFirstMoverAction
   | CompletePieceSelectionAction
   | SelectPieceAction
   | DeselectPieceAction
@@ -202,8 +218,27 @@ export interface StartGameAction {
 }
 
 /**
+ * START_COLOR_SELECTION action.
+ * Transition from setup to color-selection phase.
+ */
+export interface StartColorSelectionAction {
+  type: 'START_COLOR_SELECTION';
+}
+
+/**
+ * SET_PLAYER_COLOR action.
+ * Player 1 chooses which color to play (light or dark).
+ * Automatically transitions to piece-selection phase.
+ */
+export interface SetPlayerColorAction {
+  type: 'SET_PLAYER_COLOR';
+  /** Color choice: light (goes first) or dark (goes second) */
+  color: 'light' | 'dark';
+}
+
+/**
  * START_PIECE_SELECTION action.
- * Transition from setup to piece-selection phase.
+ * Transition from color-selection to piece-selection phase.
  */
 export interface StartPieceSelectionAction {
   type: 'START_PIECE_SELECTION';
@@ -226,15 +261,6 @@ export interface SetPlayerPiecesAction {
   type: 'SET_PLAYER_PIECES';
   player: 'player1' | 'player2';
   pieces: SelectedPieces;
-}
-
-/**
- * SET_FIRST_MOVER action.
- * Choose who goes first (determines light/dark).
- */
-export interface SetFirstMoverAction {
-  type: 'SET_FIRST_MOVER';
-  mover: FirstMover;
 }
 
 /**

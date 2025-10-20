@@ -99,13 +99,6 @@ export function PieceSelectionScreen({
     setSelectedPosition(null);
   };
 
-  const handleFirstMoverSelect = (mover: 'player1' | 'player2'): void => {
-    dispatch({
-      type: 'SET_FIRST_MOVER',
-      mover,
-    });
-  };
-
   const handleStartGame = (): void => {
     dispatch({
       type: 'COMPLETE_PIECE_SELECTION',
@@ -130,16 +123,7 @@ export function PieceSelectionScreen({
     state.player1Pieces !== null &&
     state.player2Pieces !== null &&
     state.player1Pieces.every((p) => p !== null) &&
-    state.player2Pieces.every((p) => p !== null) &&
-    state.firstMover !== null;
-
-  const needsFirstMover =
-    state.selectionMode !== null &&
-    state.player1Pieces !== null &&
-    state.player2Pieces !== null &&
-    state.player1Pieces.every((p) => p !== null) &&
-    state.player2Pieces.every((p) => p !== null) &&
-    state.firstMover === null;
+    state.player2Pieces.every((p) => p !== null);
 
   return (
     <div className={styles.container}>
@@ -258,30 +242,6 @@ export function PieceSelectionScreen({
                 <span className={styles.pieceName}>{piece}</span>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* First Mover Selection */}
-      {needsFirstMover && (
-        <div className={styles.firstMoverSection}>
-          <h2 className={styles.sectionTitle}>Who Goes First?</h2>
-          <p className={styles.instruction}>First player gets light pieces</p>
-          <div className={styles.firstMoverButtons}>
-            <button
-              type="button"
-              onClick={() => handleFirstMoverSelect('player1')}
-              className={styles.firstMoverButton}
-            >
-              {state.player1Name}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleFirstMoverSelect('player2')}
-              className={styles.firstMoverButton}
-            >
-              {state.player2Name || 'Player 2'}
-            </button>
           </div>
         </div>
       )}

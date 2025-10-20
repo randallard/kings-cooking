@@ -4,7 +4,7 @@
  */
 
 import { PIECE_POOL } from './types';
-import type { PieceType, SelectedPieces, FirstMover } from './types';
+import type { PieceType, SelectedPieces } from './types';
 import type { GameState } from '@/lib/validation/schemas';
 
 /**
@@ -66,17 +66,17 @@ export function generateRandomPieces(seed: string): SelectedPieces {
 
 /**
  * Create initial board with selected pieces.
- * Places pieces in row 0 (light) and row 2 (dark) based on firstMover.
+ * Places pieces based on player1's color choice.
  *
  * @param player1Pieces - Player 1's selected pieces
  * @param player2Pieces - Player 2's selected pieces
- * @param firstMover - Who goes first (determines light/dark assignment)
+ * @param player1Color - Player 1's color choice (light or dark)
  * @returns 3x3 board with pieces placed
  */
 export function createBoardWithPieces(
   player1Pieces: SelectedPieces,
   player2Pieces: SelectedPieces,
-  firstMover: FirstMover
+  player1Color: 'light' | 'dark'
 ): GameState['board'] {
   // Empty 3x3 board
   const board: GameState['board'] = [
@@ -85,27 +85,29 @@ export function createBoardWithPieces(
     [null, null, null],
   ];
 
-  // Determine which player is light (goes first)
-  const lightPieces = firstMover === 'player1' ? player1Pieces : player2Pieces;
-  const darkPieces = firstMover === 'player1' ? player2Pieces : player1Pieces;
+  // Determine piece placement based on player1's color choice
+  // Light pieces go on row 2 (bottom), dark pieces on row 0 (top)
+  const p1Row = player1Color === 'light' ? 2 : 0;
+  const p2Row = player1Color === 'light' ? 0 : 2;
+  const p2Color = player1Color === 'light' ? 'dark' : 'light';
 
-  // Place light pieces (row 0)
-  lightPieces.forEach((type, col) => {
-    board[0]![col] = {
+  // Place Player 1's pieces
+  player1Pieces.forEach((type, col) => {
+    board[p1Row]![col] = {
       type,
-      owner: 'light',
-      position: [0, col],
+      owner: player1Color,
+      position: [p1Row, col],
       moveCount: 0,
       id: crypto.randomUUID(),
     };
   });
 
-  // Place dark pieces (row 2)
-  darkPieces.forEach((type, col) => {
-    board[2]![col] = {
+  // Place Player 2's pieces
+  player2Pieces.forEach((type, col) => {
+    board[p2Row]![col] = {
       type,
-      owner: 'dark',
-      position: [2, col],
+      owner: p2Color,
+      position: [p2Row, col],
       moveCount: 0,
       id: crypto.randomUUID(),
     };

@@ -312,6 +312,27 @@ export function gameFlowReducer(
       if (state.phase !== 'setup') return state;
       return { ...state, player1Name: action.name };
 
+    case 'START_COLOR_SELECTION':
+      if (state.phase !== 'setup' || !state.player1Name) return state;
+      return {
+        phase: 'color-selection',
+        mode: state.mode,
+        player1Name: state.player1Name,
+      };
+
+    case 'SET_PLAYER_COLOR':
+      if (state.phase !== 'color-selection') return state;
+      return {
+        phase: 'piece-selection',
+        mode: state.mode,
+        player1Name: state.player1Name,
+        player2Name: '',
+        selectionMode: null,
+        player1Pieces: null,
+        player2Pieces: null,
+        player1Color: action.color,
+      };
+
     case 'START_GAME': {
       if (state.phase !== 'setup' || !state.player1Name) return state;
       const gameState = createInitialGameState();
@@ -328,17 +349,8 @@ export function gameFlowReducer(
     }
 
     case 'START_PIECE_SELECTION':
-      if (state.phase !== 'setup' || !state.player1Name) return state;
-      return {
-        phase: 'piece-selection',
-        mode: state.mode,
-        player1Name: state.player1Name,
-        player2Name: '',
-        selectionMode: null,
-        player1Pieces: null,
-        player2Pieces: null,
-        firstMover: null,
-      };
+      // This is now unused - SET_PLAYER_COLOR handles transition to piece-selection
+      return state;
 
     case 'SET_SELECTION_MODE':
       if (state.phase !== 'piece-selection') return state;
@@ -352,23 +364,21 @@ export function gameFlowReducer(
         return { ...state, player2Pieces: action.pieces };
       }
 
-    case 'SET_FIRST_MOVER':
-      if (state.phase !== 'piece-selection') return state;
-      return { ...state, firstMover: action.mover };
-
     case 'COMPLETE_PIECE_SELECTION': {
       if (state.phase !== 'piece-selection') return state;
       if (
         !state.selectionMode ||
         !state.player1Pieces ||
         !state.player2Pieces ||
-        !state.firstMover
+        !state.player1Color
       ) {
         return state;
       }
 
-      // In hot-seat mode, check if player2Name is missing
-      if (state.mode === 'hotseat' && (!state.player2Name || state.player2Name.trim().length === 0)) {
+      // In hot-seat mode, check if player2Name is missing (only for mirrored/random modes)
+      if (state.selectionMode !== 'independent' &&
+          state.mode === 'hotseat' &&
+          (!state.player2Name || state.player2Name.trim().length === 0)) {
         // Transition to handoff to collect player 2's name
         return {
           phase: 'handoff',
@@ -379,7 +389,7 @@ export function gameFlowReducer(
           selectionMode: state.selectionMode,
           player1Pieces: state.player1Pieces,
           player2Pieces: state.player2Pieces,
-          firstMover: state.firstMover,
+          player1Color: state.player1Color,
           gameState: null as never, // Will be created after name collection
         };
       }
@@ -388,17 +398,17 @@ export function gameFlowReducer(
       const board = createBoardWithPieces(
         state.player1Pieces,
         state.player2Pieces,
-        state.firstMover
+        state.player1Color
       );
 
       // Create game state with custom board
       const lightPlayer = {
         id: crypto.randomUUID() as never,
-        name: state.firstMover === 'player1' ? state.player1Name : state.player2Name || 'Player 2',
+        name: state.player1Color === 'light' ? state.player1Name : state.player2Name || 'Player 2',
       };
       const darkPlayer = {
         id: crypto.randomUUID() as never,
-        name: state.firstMover === 'player1' ? state.player2Name || 'Player 2' : state.player1Name,
+        name: state.player1Color === 'light' ? state.player2Name || 'Player 2' : state.player1Name,
       };
 
       // Use the custom board in a new engine instance
@@ -424,6 +434,20 @@ export function gameFlowReducer(
       const engine = new KingsChessEngine(lightPlayer, darkPlayer, gameState);
       const finalGameState = engine.getGameState();
 
+      // Check if current device holder (Player 1) doesn't match light player
+      const currentPlayerIsLight = state.player1Color === 'light';
+      if (!currentPlayerIsLight) {
+        // Need to handoff to light player before game starts
+        return {
+          phase: 'handoff',
+          mode: state.mode,
+          player1Name: state.player1Name,
+          player2Name: state.player2Name,
+          gameState: finalGameState,
+        };
+      }
+
+      // Device holder is light player, start game directly
       return {
         phase: 'playing',
         mode: state.mode,
@@ -517,16 +541,16 @@ export function gameFlowReducer(
         const board = createBoardWithPieces(
           state.player1Pieces!,
           state.player2Pieces!,
-          state.firstMover!
+          state.player1Color!
         );
 
         const lightPlayer = {
           id: crypto.randomUUID() as never,
-          name: state.firstMover === 'player1' ? state.player1Name : state.player2Name,
+          name: state.player1Color === 'light' ? state.player1Name : state.player2Name,
         };
         const darkPlayer = {
           id: crypto.randomUUID() as never,
-          name: state.firstMover === 'player1' ? state.player2Name : state.player1Name,
+          name: state.player1Color === 'light' ? state.player2Name : state.player1Name,
         };
 
         const gameState: GameState = {

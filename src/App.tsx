@@ -5,6 +5,7 @@ import { storage, checkAndMigrateStorage } from './lib/storage/localStorage';
 import { useUrlState } from './hooks/useUrlState';
 import { ModeSelector } from './components/game/ModeSelector';
 import { NameForm } from './components/game/NameForm';
+import { ColorSelectionScreen } from './components/game/ColorSelectionScreen';
 import { PieceSelectionScreen } from './components/game/PieceSelectionScreen';
 import { GameBoard } from './components/game/GameBoard';
 import { MoveConfirmButton } from './components/game/MoveConfirmButton';
@@ -252,13 +253,13 @@ export default function App(): ReactElement {
           <button
             onClick={() => {
               if (state.player1Name && state.player1Name.trim().length > 0) {
-                dispatch({ type: 'START_PIECE_SELECTION' });
+                dispatch({ type: 'START_COLOR_SELECTION' });
               }
             }}
             disabled={!state.player1Name || state.player1Name.trim().length === 0}
             style={{ marginTop: 'var(--spacing-md)', width: '100%' }}
           >
-            Continue to Piece Selection
+            Continue
           </button>
         </div>
       </div>
@@ -266,7 +267,14 @@ export default function App(): ReactElement {
   }
 
   // ===========================
-  // Phase 3: Piece Selection
+  // Phase 3: Color Selection
+  // ===========================
+  if (state.phase === 'color-selection') {
+    return <ColorSelectionScreen player1Name={state.player1Name} dispatch={dispatch} />;
+  }
+
+  // ===========================
+  // Phase 4: Piece Selection
   // ===========================
   if (state.phase === 'piece-selection') {
     return <PieceSelectionScreen state={state} dispatch={dispatch} />;

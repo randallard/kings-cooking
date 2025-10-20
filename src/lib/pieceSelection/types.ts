@@ -22,13 +22,6 @@ export const SelectionModeSchema = z.enum(['mirrored', 'independent', 'random'])
 export type SelectionMode = z.infer<typeof SelectionModeSchema>;
 
 /**
- * First mover designation.
- * Determines which player goes first (and gets light pieces).
- */
-export const FirstMoverSchema = z.enum(['player1', 'player2']);
-export type FirstMover = z.infer<typeof FirstMoverSchema>;
-
-/**
  * Exactly 3 selected pieces (tuple).
  * Players must select exactly 3 pieces for their starting row.
  */
@@ -41,13 +34,13 @@ export type SelectedPieces = z.infer<typeof SelectedPiecesSchema>;
 
 /**
  * Complete piece selection data.
- * Includes mode, both players' pieces, and first mover choice.
+ * Includes mode, both players' pieces, and player 1's color choice.
  */
 export const PieceSelectionDataSchema = z.object({
   mode: SelectionModeSchema,
   player1Pieces: SelectedPiecesSchema,
   player2Pieces: SelectedPiecesSchema,
-  firstMover: FirstMoverSchema,
+  player1Color: z.enum(['light', 'dark']),
 });
 export type PieceSelectionData = z.infer<typeof PieceSelectionDataSchema>;
 
