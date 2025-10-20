@@ -169,7 +169,7 @@ export const VictoryScreen = ({
       rook: { light: '♜', dark: '♖' },
       bishop: { light: '♝', dark: '♗' },
       knight: { light: '♞', dark: '♘' },
-      pawn: { light: '♟', dark: '♙' },
+      pawn: { light: '♙', dark: '♟' },
     };
     return symbols[piece.type]?.[piece.owner] || '?';
   };
