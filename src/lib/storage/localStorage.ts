@@ -69,8 +69,8 @@ export const STORAGE_KEYS = {
   /** Player 2 selected pieces */
   PLAYER2_PIECES: 'kings-cooking:player2-pieces',
 
-  /** First mover (player1/player2) */
-  FIRST_MOVER: 'kings-cooking:first-mover',
+  /** Player 1's chosen color (light/dark) */
+  PLAYER1_COLOR: 'kings-cooking:player1-color',
 
   /** Player 1 has seen story/instructions */
   PLAYER1_SEEN_STORY: 'kings-cooking:player1-seen-story',
@@ -242,7 +242,7 @@ const PlayerIdSchema = z.string().uuid();
 const GameModeSchema = z.enum(['hotseat', 'url']);
 const SeenStorySchema = z.boolean();
 const PieceSelectionModeSchema = z.enum(['mirrored', 'independent', 'random']);
-const FirstMoverSchema = z.enum(['player1', 'player2']);
+const Player1ColorSchema = z.enum(['light', 'dark']);
 
 /**
  * Typed storage interface with validation.
@@ -312,11 +312,11 @@ export const storage = {
   setPlayer2Pieces: (pieces: SelectedPieces): boolean =>
     setValidatedItem(STORAGE_KEYS.PLAYER2_PIECES, pieces, SelectedPiecesSchema),
 
-  getFirstMover: (): 'player1' | 'player2' | null =>
-    getValidatedItem(STORAGE_KEYS.FIRST_MOVER, FirstMoverSchema),
+  getPlayer1Color: (): 'light' | 'dark' | null =>
+    getValidatedItem(STORAGE_KEYS.PLAYER1_COLOR, Player1ColorSchema),
 
-  setFirstMover: (mover: 'player1' | 'player2'): boolean =>
-    setValidatedItem(STORAGE_KEYS.FIRST_MOVER, mover, FirstMoverSchema),
+  setPlayer1Color: (color: 'light' | 'dark'): boolean =>
+    setValidatedItem(STORAGE_KEYS.PLAYER1_COLOR, color, Player1ColorSchema),
 
   // Story/instructions panel flags
   getPlayer1SeenStory: (): boolean | null =>
