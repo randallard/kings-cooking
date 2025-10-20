@@ -7,7 +7,6 @@ import { describe, it, expect } from 'vitest';
 import {
   PieceTypeSchema,
   SelectionModeSchema,
-  FirstMoverSchema,
   SelectedPiecesSchema,
   PieceSelectionDataSchema,
   PIECE_POOL,
@@ -43,17 +42,6 @@ describe('Piece Selection Types', () => {
     });
   });
 
-  describe('FirstMoverSchema', () => {
-    it('should accept valid first mover values', () => {
-      expect(FirstMoverSchema.parse('player1')).toBe('player1');
-      expect(FirstMoverSchema.parse('player2')).toBe('player2');
-    });
-
-    it('should reject invalid first mover values', () => {
-      expect(() => FirstMoverSchema.parse('invalid')).toThrow();
-      expect(() => FirstMoverSchema.parse('player3')).toThrow();
-    });
-  });
 
   describe('SelectedPiecesSchema', () => {
     it('should accept exactly 3 pieces', () => {
@@ -83,7 +71,7 @@ describe('Piece Selection Types', () => {
         mode: 'mirrored',
         player1Pieces: ['rook', 'knight', 'bishop'],
         player2Pieces: ['rook', 'knight', 'bishop'],
-        firstMover: 'player1',
+        player1Color: 'light',
       };
       expect(() => PieceSelectionDataSchema.parse(valid)).not.toThrow();
     });
@@ -93,7 +81,7 @@ describe('Piece Selection Types', () => {
         mode: 'invalid',
         player1Pieces: ['rook', 'knight', 'bishop'],
         player2Pieces: ['rook', 'knight', 'bishop'],
-        firstMover: 'player1',
+        player1Color: 'light',
       };
       expect(() => PieceSelectionDataSchema.parse(invalid)).toThrow();
     });
@@ -103,7 +91,7 @@ describe('Piece Selection Types', () => {
         mode: 'mirrored',
         player1Pieces: ['rook', 'knight'], // only 2
         player2Pieces: ['rook', 'knight', 'bishop'],
-        firstMover: 'player1',
+        player1Color: 'light',
       };
       expect(() => PieceSelectionDataSchema.parse(invalid)).toThrow();
     });
@@ -112,7 +100,7 @@ describe('Piece Selection Types', () => {
       const invalid = {
         mode: 'mirrored',
         player1Pieces: ['rook', 'knight', 'bishop'],
-        // missing player2Pieces and firstMover
+        // missing player2Pieces and player1Color
       };
       expect(() => PieceSelectionDataSchema.parse(invalid)).toThrow();
     });

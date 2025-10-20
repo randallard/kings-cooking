@@ -219,13 +219,61 @@ describe('gameFlowReducer', () => {
     };
 
     describe('START_PIECE_SELECTION action', () => {
-      it('should transition to piece-selection phase when player1Name is set', () => {
+      it('should return unchanged state (deprecated action)', () => {
         const stateWithName: GameFlowState = {
           ...setupState,
           player1Name: 'Alice',
         };
         const action: GameFlowAction = { type: 'START_PIECE_SELECTION' };
         const result = gameFlowReducer(stateWithName, action);
+
+        // START_PIECE_SELECTION is now deprecated - SET_PLAYER_COLOR handles the transition
+        expect(result).toBe(stateWithName);
+      });
+    });
+
+    describe('START_COLOR_SELECTION action', () => {
+      it('should transition to color-selection phase when player1Name is set', () => {
+        const stateWithName: GameFlowState = {
+          ...setupState,
+          player1Name: 'Alice',
+        };
+        const action: GameFlowAction = { type: 'START_COLOR_SELECTION' };
+        const result = gameFlowReducer(stateWithName, action);
+
+        expect(result).toEqual({
+          phase: 'color-selection',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+        });
+      });
+
+      it('should fail if player1Name is null', () => {
+        const action: GameFlowAction = { type: 'START_COLOR_SELECTION' };
+        const result = gameFlowReducer(setupState, action);
+
+        expect(result).toBe(setupState);
+      });
+
+      it('should return unchanged state if not in setup phase', () => {
+        const modeSelectionState: GameFlowState = { phase: 'mode-selection' };
+        const action: GameFlowAction = { type: 'START_COLOR_SELECTION' };
+        const result = gameFlowReducer(modeSelectionState, action);
+
+        expect(result).toBe(modeSelectionState);
+      });
+    });
+
+    describe('SET_PLAYER_COLOR action', () => {
+      const colorSelectionState: GameFlowState = {
+        phase: 'color-selection',
+        mode: 'hotseat',
+        player1Name: 'Alice',
+      };
+
+      it('should transition to piece-selection phase with light color', () => {
+        const action: GameFlowAction = { type: 'SET_PLAYER_COLOR', color: 'light' };
+        const result = gameFlowReducer(colorSelectionState, action);
 
         expect(result).toEqual({
           phase: 'piece-selection',
@@ -235,34 +283,31 @@ describe('gameFlowReducer', () => {
           selectionMode: null,
           player1Pieces: null,
           player2Pieces: null,
-          firstMover: null,
+          player1Color: 'light',
         });
       });
 
-      it('should fail if player1Name is null', () => {
-        const action: GameFlowAction = { type: 'START_PIECE_SELECTION' };
+      it('should transition to piece-selection phase with dark color', () => {
+        const action: GameFlowAction = { type: 'SET_PLAYER_COLOR', color: 'dark' };
+        const result = gameFlowReducer(colorSelectionState, action);
+
+        expect(result).toEqual({
+          phase: 'piece-selection',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+          player2Name: '',
+          selectionMode: null,
+          player1Pieces: null,
+          player2Pieces: null,
+          player1Color: 'dark',
+        });
+      });
+
+      it('should return unchanged state if not in color-selection phase', () => {
+        const action: GameFlowAction = { type: 'SET_PLAYER_COLOR', color: 'light' };
         const result = gameFlowReducer(setupState, action);
 
         expect(result).toBe(setupState);
-      });
-
-      it('should fail if player1Name is empty string', () => {
-        const stateWithEmptyName: GameFlowState = {
-          ...setupState,
-          player1Name: '',
-        };
-        const action: GameFlowAction = { type: 'START_PIECE_SELECTION' };
-        const result = gameFlowReducer(stateWithEmptyName, action);
-
-        expect(result).toBe(stateWithEmptyName);
-      });
-
-      it('should return unchanged state if not in setup phase', () => {
-        const modeSelectionState: GameFlowState = { phase: 'mode-selection' };
-        const action: GameFlowAction = { type: 'START_PIECE_SELECTION' };
-        const result = gameFlowReducer(modeSelectionState, action);
-
-        expect(result).toBe(modeSelectionState);
       });
     });
 
@@ -403,7 +448,7 @@ describe('gameFlowReducer', () => {
         selectionMode: null,
         player1Pieces: null,
         player2Pieces: null,
-        firstMover: null,
+        player1Color: null,
       };
     });
 
@@ -497,38 +542,6 @@ describe('gameFlowReducer', () => {
       });
     });
 
-    describe('SET_FIRST_MOVER action', () => {
-      it('should set first mover to player1', () => {
-        const action: GameFlowAction = { type: 'SET_FIRST_MOVER', mover: 'player1' };
-        const result = gameFlowReducer(pieceSelectionState, action);
-
-        if (result.phase === 'piece-selection') {
-          expect(result.firstMover).toBe('player1');
-        }
-      });
-
-      it('should set first mover to player2', () => {
-        const action: GameFlowAction = { type: 'SET_FIRST_MOVER', mover: 'player2' };
-        const result = gameFlowReducer(pieceSelectionState, action);
-
-        if (result.phase === 'piece-selection') {
-          expect(result.firstMover).toBe('player2');
-        }
-      });
-
-      it('should return unchanged state if not in piece-selection phase', () => {
-        const setupState: GameFlowState = {
-          phase: 'setup',
-          mode: 'hotseat',
-          player1Name: 'Alice',
-        };
-        const action: GameFlowAction = { type: 'SET_FIRST_MOVER', mover: 'player1' };
-        const result = gameFlowReducer(setupState, action);
-
-        expect(result).toBe(setupState);
-      });
-    });
-
     describe('COMPLETE_PIECE_SELECTION action', () => {
       it('should transition to playing phase with created board', () => {
         const completeState: GameFlowState = {
@@ -539,7 +552,7 @@ describe('gameFlowReducer', () => {
           selectionMode: 'independent',
           player1Pieces: ['rook', 'knight', 'bishop'],
           player2Pieces: ['queen', 'pawn', 'pawn'],
-          firstMover: 'player1',
+          player1Color: 'light',
         };
 
         const action: GameFlowAction = { type: 'COMPLETE_PIECE_SELECTION' };
@@ -573,7 +586,7 @@ describe('gameFlowReducer', () => {
           selectionMode: 'independent',
           player1Pieces: null,
           player2Pieces: ['queen', 'pawn', 'pawn'],
-          firstMover: 'player1',
+          player1Color: 'light',
         };
         const action: GameFlowAction = { type: 'COMPLETE_PIECE_SELECTION' };
         const result = gameFlowReducer(incompleteState, action);
@@ -590,7 +603,7 @@ describe('gameFlowReducer', () => {
           selectionMode: 'independent',
           player1Pieces: ['rook', 'knight', 'bishop'],
           player2Pieces: null,
-          firstMover: 'player1',
+          player1Color: 'light',
         };
         const action: GameFlowAction = { type: 'COMPLETE_PIECE_SELECTION' };
         const result = gameFlowReducer(incompleteState, action);
@@ -598,7 +611,7 @@ describe('gameFlowReducer', () => {
         expect(result).toBe(incompleteState);
       });
 
-      it('should fail if firstMover is null', () => {
+      it('should fail if player1Color is null', () => {
         const incompleteState: GameFlowState = {
           phase: 'piece-selection',
           mode: 'hotseat',
@@ -607,7 +620,7 @@ describe('gameFlowReducer', () => {
           selectionMode: 'independent',
           player1Pieces: ['rook', 'knight', 'bishop'],
           player2Pieces: ['queen', 'pawn', 'pawn'],
-          firstMover: null,
+          player1Color: null,
         };
         const action: GameFlowAction = { type: 'COMPLETE_PIECE_SELECTION' };
         const result = gameFlowReducer(incompleteState, action);
@@ -1874,15 +1887,16 @@ describe('gameFlowReducer', () => {
   // ==========================================================================
 
   describe('Exhaustive Action Checking', () => {
-    it('should handle all 16 action types', () => {
+    it('should handle all action types', () => {
       const actions: GameFlowAction['type'][] = [
         'SELECT_MODE',
         'SET_PLAYER1_NAME',
         'START_GAME',
+        'START_COLOR_SELECTION',
+        'SET_PLAYER_COLOR',
         'START_PIECE_SELECTION',
         'SET_SELECTION_MODE',
         'SET_PLAYER_PIECES',
-        'SET_FIRST_MOVER',
         'COMPLETE_PIECE_SELECTION',
         'SELECT_PIECE',
         'DESELECT_PIECE',
@@ -1897,7 +1911,7 @@ describe('gameFlowReducer', () => {
       ];
 
       // Verify all action types are tested
-      expect(actions).toHaveLength(18);
+      expect(actions).toHaveLength(19);
     });
 
     it('should never throw for valid action types', () => {
@@ -1907,10 +1921,11 @@ describe('gameFlowReducer', () => {
         { type: 'SELECT_MODE', mode: 'hotseat' },
         { type: 'SET_PLAYER1_NAME', name: 'Alice' },
         { type: 'START_GAME' },
+        { type: 'START_COLOR_SELECTION' },
+        { type: 'SET_PLAYER_COLOR', color: 'light' },
         { type: 'START_PIECE_SELECTION' },
         { type: 'SET_SELECTION_MODE', mode: 'mirrored' },
         { type: 'SET_PLAYER_PIECES', player: 'player1', pieces: ['rook', 'knight', 'bishop'] },
-        { type: 'SET_FIRST_MOVER', mover: 'player1' },
         { type: 'COMPLETE_PIECE_SELECTION' },
         { type: 'SELECT_PIECE', position: [2, 0], legalMoves: [[1, 0]] },
         { type: 'DESELECT_PIECE' },

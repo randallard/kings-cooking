@@ -78,7 +78,7 @@ describe('Piece Selection Logic', () => {
       const board = createBoardWithPieces(
         ['rook', 'knight', 'bishop'],
         ['rook', 'knight', 'bishop'],
-        'player1'
+        'light'
       );
 
       expect(board.length).toBe(3);
@@ -87,53 +87,53 @@ describe('Piece Selection Logic', () => {
       expect(board[2]!.length).toBe(3);
     });
 
-    it('should place player1 pieces as light when they go first', () => {
+    it('should place player1 pieces as light on row 2 (bottom)', () => {
       const board = createBoardWithPieces(
         ['rook', 'knight', 'bishop'],
         ['queen', 'pawn', 'pawn'],
-        'player1'
+        'light'
       );
 
-      // Player1 goes first = light = row 0
-      expect(board[0]![0]?.type).toBe('rook');
-      expect(board[0]![1]?.type).toBe('knight');
-      expect(board[0]![2]?.type).toBe('bishop');
-      expect(board[0]![0]?.owner).toBe('light');
-      expect(board[0]![1]?.owner).toBe('light');
-      expect(board[0]![2]?.owner).toBe('light');
-
-      // Player2 = dark = row 2
-      expect(board[2]![0]?.type).toBe('queen');
-      expect(board[2]![1]?.type).toBe('pawn');
-      expect(board[2]![2]?.type).toBe('pawn');
-      expect(board[2]![0]?.owner).toBe('dark');
-    });
-
-    it('should place player2 pieces as light when they go first', () => {
-      const board = createBoardWithPieces(
-        ['rook', 'knight', 'bishop'],
-        ['bishop', 'knight', 'rook'],
-        'player2'
-      );
-
-      // Player2 goes first = light = row 0
-      expect(board[0]![0]?.type).toBe('bishop');
-      expect(board[0]![1]?.type).toBe('knight');
-      expect(board[0]![2]?.type).toBe('rook');
-      expect(board[0]![0]?.owner).toBe('light');
-
-      // Player1 = dark = row 2
+      // Player1 chose light = row 2 (bottom)
       expect(board[2]![0]?.type).toBe('rook');
       expect(board[2]![1]?.type).toBe('knight');
       expect(board[2]![2]?.type).toBe('bishop');
-      expect(board[2]![0]?.owner).toBe('dark');
+      expect(board[2]![0]?.owner).toBe('light');
+      expect(board[2]![1]?.owner).toBe('light');
+      expect(board[2]![2]?.owner).toBe('light');
+
+      // Player2 = dark = row 0 (top)
+      expect(board[0]![0]?.type).toBe('queen');
+      expect(board[0]![1]?.type).toBe('pawn');
+      expect(board[0]![2]?.type).toBe('pawn');
+      expect(board[0]![0]?.owner).toBe('dark');
+    });
+
+    it('should place player1 pieces as dark on row 0 (top)', () => {
+      const board = createBoardWithPieces(
+        ['rook', 'knight', 'bishop'],
+        ['bishop', 'knight', 'rook'],
+        'dark'
+      );
+
+      // Player1 chose dark = row 0 (top)
+      expect(board[0]![0]?.type).toBe('rook');
+      expect(board[0]![1]?.type).toBe('knight');
+      expect(board[0]![2]?.type).toBe('bishop');
+      expect(board[0]![0]?.owner).toBe('dark');
+
+      // Player2 = light = row 2 (bottom)
+      expect(board[2]![0]?.type).toBe('bishop');
+      expect(board[2]![1]?.type).toBe('knight');
+      expect(board[2]![2]?.type).toBe('rook');
+      expect(board[2]![0]?.owner).toBe('light');
     });
 
     it('should have empty middle row', () => {
       const board = createBoardWithPieces(
         ['rook', 'knight', 'bishop'],
         ['rook', 'knight', 'bishop'],
-        'player1'
+        'light'
       );
 
       expect(board[1]![0]).toBeNull();
@@ -145,7 +145,7 @@ describe('Piece Selection Logic', () => {
       const board = createBoardWithPieces(
         ['rook', 'knight', 'bishop'],
         ['rook', 'knight', 'bishop'],
-        'player1'
+        'light'
       );
 
       expect(board[0]![0]?.position).toEqual([0, 0]);
@@ -160,7 +160,7 @@ describe('Piece Selection Logic', () => {
       const board = createBoardWithPieces(
         ['rook', 'knight', 'bishop'],
         ['rook', 'knight', 'bishop'],
-        'player1'
+        'light'
       );
 
       expect(board[0]![0]?.moveCount).toBe(0);

@@ -21,7 +21,7 @@ describe('PieceSelectionScreen', () => {
     selectionMode: null,
     player1Pieces: null,
     player2Pieces: null,
-    firstMover: null,
+    player1Color: null,
   };
 
   beforeEach(() => {
@@ -214,43 +214,13 @@ describe('PieceSelectionScreen', () => {
     });
   });
 
-  describe('First Mover Selection', () => {
-    const stateWithAllPieces: PieceSelectionPhase = {
-      ...baseState,
-      selectionMode: 'independent',
-      player1Pieces: ['rook', 'knight', 'bishop'],
-      player2Pieces: ['queen', 'pawn', 'pawn'],
-      firstMover: null,
-    };
-
-    it('should show first mover selection when all pieces chosen', () => {
-      render(<PieceSelectionScreen state={stateWithAllPieces} dispatch={mockDispatch} />);
-
-      expect(screen.getByText(/who goes first/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /alice/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /bob/i })).toBeInTheDocument();
-    });
-
-    it('should dispatch SET_FIRST_MOVER when player selected', async () => {
-      const user = userEvent.setup();
-      render(<PieceSelectionScreen state={stateWithAllPieces} dispatch={mockDispatch} />);
-
-      await user.click(screen.getByRole('button', { name: /alice/i }));
-
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: 'SET_FIRST_MOVER',
-        mover: 'player1',
-      });
-    });
-  });
-
   describe('Start Game Button', () => {
     const completeState: PieceSelectionPhase = {
       ...baseState,
       selectionMode: 'independent',
       player1Pieces: ['rook', 'knight', 'bishop'],
       player2Pieces: ['queen', 'pawn', 'pawn'],
-      firstMover: 'player1',
+      player1Color: 'light',
     };
 
     it('should show start game button when selection complete', () => {
@@ -259,10 +229,10 @@ describe('PieceSelectionScreen', () => {
       expect(screen.getByRole('button', { name: /start game/i })).toBeInTheDocument();
     });
 
-    it('should not show start game button when incomplete', () => {
+    it('should not show start game button when pieces incomplete', () => {
       const incompleteState: PieceSelectionPhase = {
         ...completeState,
-        firstMover: null,
+        player1Pieces: null,
       };
       render(<PieceSelectionScreen state={incompleteState} dispatch={mockDispatch} />);
 

@@ -16,7 +16,7 @@ describe('GameFlowState - Piece Selection Phase', () => {
       selectionMode: null,
       player1Pieces: null,
       player2Pieces: null,
-      firstMover: null,
+      player1Color: null,
     };
 
     // Type check should pass
@@ -32,14 +32,14 @@ describe('GameFlowState - Piece Selection Phase', () => {
       selectionMode: 'mirrored',
       player1Pieces: ['rook', 'knight', 'bishop'],
       player2Pieces: ['rook', 'knight', 'bishop'],
-      firstMover: 'player1',
+      player1Color: 'light',
     };
 
     // Type check should pass
     expect(state.phase).toBe('piece-selection');
     if (state.phase === 'piece-selection') {
       expect(state.selectionMode).toBe('mirrored');
-      expect(state.firstMover).toBe('player1');
+      expect(state.player1Color).toBe('light');
     }
   });
 
@@ -52,7 +52,7 @@ describe('GameFlowState - Piece Selection Phase', () => {
       selectionMode: 'independent',
       player1Pieces: ['queen', 'knight', 'bishop'],
       player2Pieces: ['rook', 'rook', 'pawn'],
-      firstMover: 'player2',
+      player1Color: 'dark',
     };
 
     expect(state.selectionMode).toBe('independent');
@@ -69,7 +69,7 @@ describe('GameFlowState - Piece Selection Phase', () => {
       selectionMode: 'random',
       player1Pieces: ['pawn', 'pawn', 'pawn'],
       player2Pieces: ['pawn', 'pawn', 'pawn'],
-      firstMover: 'player1',
+      player1Color: 'light',
     };
 
     expect(state.selectionMode).toBe('random');
@@ -84,7 +84,7 @@ describe('GameFlowState - Piece Selection Phase', () => {
       selectionMode: null,
       player1Pieces: null,
       player2Pieces: null,
-      firstMover: null,
+      player1Color: null,
     };
 
     const afterModeSelection: PieceSelectionPhase = {
@@ -100,12 +100,12 @@ describe('GameFlowState - Piece Selection Phase', () => {
 
     const complete: PieceSelectionPhase = {
       ...afterPieceSelection,
-      firstMover: 'player1',
+      player1Color: 'light',
     };
 
     expect(initialState.selectionMode).toBeNull();
     expect(afterModeSelection.selectionMode).toBe('mirrored');
     expect(afterPieceSelection.player1Pieces).toBeTruthy();
-    expect(complete.firstMover).toBe('player1');
+    expect(complete.player1Color).toBe('light');
   });
 });
