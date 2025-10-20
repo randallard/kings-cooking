@@ -119,7 +119,7 @@ export function StoryPanel({ isOpen, onClose }: StoryPanelProps): ReactElement |
 
         {/* Story section */}
         <section className={styles.storySection} aria-label="Game story">
-          <p className={styles.stageDirection}>(flapping)</p>
+          <p className={styles.stageDirection}>(wings flapping)</p>
           <p className={styles.dialogue}>
             <strong>Dark King:</strong> A pigeon... what's up Glinda?
           </p>
