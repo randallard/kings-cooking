@@ -25,25 +25,30 @@ interface CourtAreaProps {
   selectedPieceType: PieceType | null;
 }
 
-// Helper: Unicode piece lookup
+/**
+ * Unicode chess piece symbols.
+ * Light pieces use OUTLINED symbols, dark pieces use FILLED symbols.
+ */
 const PIECE_UNICODE: Record<string, { light: string; dark: string }> = {
-  rook: { light: '♜', dark: '♖' },
-  knight: { light: '♞', dark: '♘' },
-  bishop: { light: '♝', dark: '♗' },
-  queen: { light: '♛', dark: '♕' },
-  pawn: { light: '♟', dark: '♙' },
+  rook: { light: '♖', dark: '♜' },
+  knight: { light: '♘', dark: '♞' },
+  bishop: { light: '♗', dark: '♝' },
+  queen: { light: '♕', dark: '♛' },
+  pawn: { light: '♙', dark: '♟' },
+  king: { light: '♔', dark: '♚' },
 };
 
 /**
  * Get Unicode icon for piece.
+ * Returns different symbols for light (outlined) vs dark (filled) pieces.
  *
  * @param piece - Piece to get icon for
  * @returns Unicode chess piece character
  */
 function getPieceIcon(piece: Piece): string {
-  const icons = PIECE_UNICODE[piece.type];
-  if (!icons) return '?';
-  return piece.owner === 'light' ? icons.light : icons.dark;
+  const symbols = PIECE_UNICODE[piece.type];
+  if (!symbols) return '?';
+  return piece.owner === 'light' ? symbols.light : symbols.dark;
 }
 
 /**

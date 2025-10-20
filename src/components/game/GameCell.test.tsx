@@ -42,7 +42,7 @@ describe('GameCell', () => {
     );
 
     expect(screen.getByLabelText(/light rook at A1/i)).toBeInTheDocument();
-    expect(screen.getByText('♜')).toBeInTheDocument();
+    expect(screen.getByText('♖')).toBeInTheDocument(); // Light rook - outlined
   });
 
   it('should call onClick when clicked', async () => {
@@ -153,7 +153,7 @@ describe('GameCell', () => {
       />
     );
 
-    expect(screen.getByText('♘')).toBeInTheDocument();
+    expect(screen.getByText('♞')).toBeInTheDocument(); // Dark knight - filled
   });
 
   it('should render bishop piece correctly', () => {
@@ -176,7 +176,7 @@ describe('GameCell', () => {
       />
     );
 
-    expect(screen.getByText('♝')).toBeInTheDocument();
+    expect(screen.getByText('♗')).toBeInTheDocument(); // Light bishop - outlined
   });
 
   it('should have correct tabIndex when selected', () => {
@@ -323,7 +323,7 @@ describe('GameCell', () => {
         />
       );
 
-      expect(screen.getByText('♛')).toBeInTheDocument();
+      expect(screen.getByText('♕')).toBeInTheDocument(); // Light queen (outlined)
     });
 
     it('should render pawn unicode', () => {
@@ -346,7 +346,7 @@ describe('GameCell', () => {
         />
       );
 
-      expect(screen.getByText('♙')).toBeInTheDocument();
+      expect(screen.getByText('♟')).toBeInTheDocument();
     });
   });
 });

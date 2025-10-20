@@ -163,16 +163,19 @@ export const VictoryScreen = ({
   };
 
   // Get piece symbol for display
+  // Light pieces use OUTLINED symbols, dark pieces use FILLED symbols
   const getPieceSymbol = (piece: Piece): string => {
-    const symbols: Record<string, string> = {
-      king: '♔',
-      queen: '♕',
-      rook: '♖',
-      bishop: '♗',
-      knight: '♘',
-      pawn: '♙',
+    const symbols: Record<string, { light: string; dark: string }> = {
+      rook: { light: '♖', dark: '♜' },
+      knight: { light: '♘', dark: '♞' },
+      bishop: { light: '♗', dark: '♝' },
+      queen: { light: '♕', dark: '♛' },
+      pawn: { light: '♙', dark: '♟' },
+      king: { light: '♔', dark: '♚' },
     };
-    return symbols[piece.type] || '?';
+    const pieceSymbols = symbols[piece.type];
+    if (!pieceSymbols) return '?';
+    return piece.owner === 'light' ? pieceSymbols.light : pieceSymbols.dark;
   };
 
   return (

@@ -90,9 +90,9 @@ describe('PieceSelectionScreen', () => {
       };
       render(<PieceSelectionScreen state={stateWithPieces} dispatch={mockDispatch} />);
 
-      expect(screen.getByText('♜')).toBeInTheDocument(); // Rook unicode
-      expect(screen.getByText('♞')).toBeInTheDocument(); // Knight unicode
-      expect(screen.getByText('♝')).toBeInTheDocument(); // Bishop unicode
+      expect(screen.getByText('♖')).toBeInTheDocument(); // Rook unicode (outlined for light)
+      expect(screen.getByText('♘')).toBeInTheDocument(); // Knight unicode (outlined for light)
+      expect(screen.getByText('♗')).toBeInTheDocument(); // Bishop unicode (outlined for light)
     });
   });
 
@@ -302,9 +302,9 @@ describe('PieceSelectionScreen', () => {
       };
       render(<PieceSelectionScreen state={partialState} dispatch={mockDispatch} />);
 
-      // Should show rook and bishop, position 2 should be empty
-      expect(screen.getByText('♜')).toBeInTheDocument();
-      expect(screen.getByText('♝')).toBeInTheDocument();
+      // Should show rook and bishop (outlined for light), position 2 should be empty
+      expect(screen.getByText('♖')).toBeInTheDocument();
+      expect(screen.getByText('♗')).toBeInTheDocument();
     });
   });
 });
