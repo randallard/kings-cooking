@@ -155,7 +155,7 @@ export function PiecePickerModal({
                 aria-label={`Select ${piece}`}
               >
                 <span className={styles.pieceIcon} aria-hidden="true">
-                  {pieceData.unicode.light}
+                  {pieceData.unicode.dark}
                 </span>
                 <span className={styles.pieceName}>{piece}</span>
               </button>

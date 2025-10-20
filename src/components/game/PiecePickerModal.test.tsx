@@ -142,10 +142,10 @@ describe('PiecePickerModal', () => {
     it('should have accessible piece labels with unicode icons', () => {
       render(<PiecePickerModal {...defaultProps} />);
 
-      // Check that unicode icons are present
-      expect(screen.getByText('♜')).toBeInTheDocument(); // Rook
-      expect(screen.getByText('♞')).toBeInTheDocument(); // Knight
-      expect(screen.getByText('♝')).toBeInTheDocument(); // Bishop
+      // Check that unicode icons are present (dark/outline symbols)
+      expect(screen.getByText('♖')).toBeInTheDocument(); // Rook (dark)
+      expect(screen.getByText('♘')).toBeInTheDocument(); // Knight (dark)
+      expect(screen.getByText('♗')).toBeInTheDocument(); // Bishop (dark)
     });
   });
 
