@@ -96,6 +96,75 @@ export const GameBoard = ({
         return canKnightJumpOffBoard(selectedPosition, piece);
       case 'bishop':
         return canBishopMoveOffBoard(selectedPosition, piece, getPiece);
+      case 'queen': {
+        // Queen can move off-board like rook OR bishop
+        // Check rook-like path: straight line to opponent's edge
+        const directions: [number, number][] = [
+          [0, 1],
+          [0, -1],
+          [1, 0],
+          [-1, 0],
+        ];
+
+        for (const [dr, dc] of directions) {
+          let row = selectedPosition[0] + dr;
+          let col = selectedPosition[1] + dc;
+          let pathClear = true;
+
+          while (row >= 0 && row < 3 && col >= 0 && col < 3) {
+            if (getPiece([row, col])) {
+              pathClear = false;
+              break;
+            }
+            row += dr;
+            col += dc;
+          }
+
+          if (pathClear) {
+            // Check if we exited through opponent's edge
+            const exitRow = row;
+            if (piece.owner === 'light' && exitRow < 0) return true;
+            if (piece.owner === 'dark' && exitRow > 2) return true;
+          }
+        }
+
+        // Check bishop-like path: diagonal through middle column
+        // Rule 1: Already on opponent's starting row
+        const onOpponentStartingRow =
+          (piece.owner === 'light' && selectedPosition[0] === 0) ||
+          (piece.owner === 'dark' && selectedPosition[0] === 2);
+
+        if (onOpponentStartingRow) return true;
+
+        // Rule 2: Diagonal path through middle column
+        const diagonals: [number, number][] = [
+          [1, 1],
+          [1, -1],
+          [-1, 1],
+          [-1, -1],
+        ];
+
+        for (const [dr, dc] of diagonals) {
+          let row = selectedPosition[0] + dr;
+          let col = selectedPosition[1] + dc;
+
+          while (row >= 0 && row < 3 && col >= 0 && col < 3) {
+            if (getPiece([row, col])) break;
+            row += dr;
+            col += dc;
+          }
+
+          const exitedThroughOpponentEdge =
+            piece.owner === 'light' ? row < 0 : row > 2;
+
+          if (!exitedThroughOpponentEdge) continue;
+
+          const crossingColumn = col - dc;
+          if (crossingColumn === 1) return true;
+        }
+
+        return false;
+      }
       default:
         return false;
     }

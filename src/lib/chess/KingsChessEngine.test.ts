@@ -198,6 +198,110 @@ describe('KingsChessEngine', () => {
       // This requires specific board setup - test will be in integration tests
       expect(true).toBe(true);
     });
+
+    test('should allow queen to move off-board with clear straight path', () => {
+      // Setup: Place light queen at [2,1] with clear path to opponent's edge
+      const state = engine.getGameState();
+      const lightQueen = {
+        type: 'queen' as const,
+        owner: 'light' as const,
+        position: [2, 1] as Position,
+        moveCount: 1,
+        id: uuid(),
+      };
+      state.board[2]![1] = lightQueen;
+      state.board[1]![1] = null; // Clear middle
+      state.board[0]![1] = null; // Clear opponent's edge
+
+      const testEngine = new KingsChessEngine(lightPlayer, darkPlayer, state);
+      const result = testEngine.makeMove([2, 1], 'off_board');
+
+      expect(result.success).toBe(true);
+      expect(testEngine.getGameState().lightCourt).toHaveLength(1);
+      expect(testEngine.getGameState().lightCourt[0]?.type).toBe('queen');
+    });
+
+    test('should allow queen to move off-board via diagonal through middle column', () => {
+      // Setup: Place light queen at [1,0] with clear diagonal through [0,1] (middle column)
+      const state = engine.getGameState();
+      const lightQueen = {
+        type: 'queen' as const,
+        owner: 'light' as const,
+        position: [1, 0] as Position,
+        moveCount: 1,
+        id: uuid(),
+      };
+      state.board[1]![0] = lightQueen;
+      state.board[0]![1] = null; // Clear middle column at opponent's row
+
+      const testEngine = new KingsChessEngine(lightPlayer, darkPlayer, state);
+      const result = testEngine.makeMove([1, 0], 'off_board');
+
+      expect(result.success).toBe(true);
+      expect(testEngine.getGameState().lightCourt).toHaveLength(1);
+      expect(testEngine.getGameState().lightCourt[0]?.type).toBe('queen');
+    });
+
+    test('should allow queen to move off-board if already on opponent starting row', () => {
+      // Setup: Place light queen at [0,2] (opponent's starting row)
+      const state = engine.getGameState();
+      const lightQueen = {
+        type: 'queen' as const,
+        owner: 'light' as const,
+        position: [0, 2] as Position,
+        moveCount: 2,
+        id: uuid(),
+      };
+      state.board[0]![2] = lightQueen; // Replace dark bishop
+      state.board[2]![2] = null; // Remove light bishop from original position
+
+      const testEngine = new KingsChessEngine(lightPlayer, darkPlayer, state);
+      const result = testEngine.makeMove([0, 2], 'off_board');
+
+      expect(result.success).toBe(true);
+      expect(testEngine.getGameState().lightCourt).toHaveLength(1);
+    });
+
+    test('should reject queen off-board if no valid path exists', () => {
+      // Setup: Place light queen at [1,1] with all paths blocked
+      const state = engine.getGameState();
+      const lightQueen = {
+        type: 'queen' as const,
+        owner: 'light' as const,
+        position: [1, 1] as Position,
+        moveCount: 1,
+        id: uuid(),
+      };
+      state.board[1]![1] = lightQueen;
+      // All surrounding squares have pieces - no clear path
+
+      const testEngine = new KingsChessEngine(lightPlayer, darkPlayer, state);
+      const result = testEngine.makeMove([1, 1], 'off_board');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('clear straight path OR diagonal');
+    });
+
+    test('should reject pawn trying to move off-board', () => {
+      // Setup: Place light pawn at [0,1] (opponent's edge)
+      const state = engine.getGameState();
+      const lightPawn = {
+        type: 'pawn' as const,
+        owner: 'light' as const,
+        position: [0, 1] as Position,
+        moveCount: 3,
+        id: uuid(),
+      };
+      state.board[0]![1] = lightPawn; // Replace dark knight
+      state.board[2]![1] = null; // Remove light knight from original position
+
+      const testEngine = new KingsChessEngine(lightPlayer, darkPlayer, state);
+      const result = testEngine.makeMove([0, 1], 'off_board');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Pawns cannot move off-board');
+      expect(result.error).toContain('captured');
+    });
   });
 
   describe('victory conditions', () => {
@@ -350,6 +454,77 @@ describe('KingsChessEngine', () => {
 
       const moves = engine.getValidMoves([1, 1]);
       expect(moves.length).toBeGreaterThan(0);
+    });
+
+    test('should return valid moves for queen', () => {
+      // Manually place a queen on the board for testing
+      const state = engine.getGameState();
+      const queen = {
+        type: 'queen' as const,
+        owner: 'light' as const,
+        position: [1, 1] as Position,
+        moveCount: 0,
+        id: uuid(),
+      };
+      state.board[1]![1] = queen;
+
+      const testEngine = new KingsChessEngine(lightPlayer, darkPlayer, state);
+      const moves = testEngine.getValidMoves([1, 1]);
+
+      expect(moves.length).toBeGreaterThan(0);
+      // Queen should have both rook-like and bishop-like moves from center
+      expect(moves).toContainEqual([0, 1]); // Up - captures dark knight (rook move)
+      expect(moves).toContainEqual([1, 0]); // Left (rook move)
+      expect(moves).toContainEqual([1, 2]); // Right (rook move)
+      expect(moves).toContainEqual([0, 0]); // Up-left diagonal - captures dark rook (bishop move)
+      expect(moves).toContainEqual([0, 2]); // Up-right diagonal - captures dark bishop (bishop move)
+    });
+
+    test('should return valid moves for pawn', () => {
+      // Manually place a light pawn on the board, clear blocking pieces
+      const state = engine.getGameState();
+      const pawn = {
+        type: 'pawn' as const,
+        owner: 'light' as const,
+        position: [2, 1] as Position,
+        moveCount: 0,
+        id: uuid(),
+      };
+      state.board[2]![1] = pawn; // Place pawn (replaces light knight)
+      state.board[1]![1] = null; // Clear middle square
+      state.board[0]![1] = null; // Clear dark knight at destination
+
+      const testEngine = new KingsChessEngine(lightPlayer, darkPlayer, state);
+      const moves = testEngine.getValidMoves([2, 1]);
+
+      expect(moves.length).toBeGreaterThan(0);
+      // Pawn should be able to move forward (light pawns move toward row 0)
+      expect(moves).toContainEqual([1, 1]); // One square forward
+      expect(moves).toContainEqual([0, 1]); // Two squares forward (first move)
+    });
+
+    test('should return valid pawn moves with diagonal captures', () => {
+      // Setup: light pawn at [1,1] with dark pieces at [0,0] and [0,2]
+      // Note: Dark knight at [0,1] blocks forward movement
+      const state = engine.getGameState();
+      const lightPawn = {
+        type: 'pawn' as const,
+        owner: 'light' as const,
+        position: [1, 1] as Position,
+        moveCount: 1,
+        id: uuid(),
+      };
+      state.board[1]![1] = lightPawn;
+      // Dark knight at [0,1] blocks forward movement (pawns can't capture forward)
+
+      const testEngine = new KingsChessEngine(lightPlayer, darkPlayer, state);
+      const moves = testEngine.getValidMoves([1, 1]);
+
+      expect(moves.length).toBeGreaterThan(0);
+      // Pawn can only capture diagonally (forward is blocked by dark knight)
+      expect(moves).toContainEqual([0, 0]); // Diagonal capture dark rook
+      expect(moves).toContainEqual([0, 2]); // Diagonal capture dark bishop
+      // Should NOT contain [0,1] because forward is blocked and pawns can't capture straight ahead
     });
   });
 });

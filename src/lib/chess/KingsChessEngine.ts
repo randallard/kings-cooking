@@ -29,6 +29,8 @@ import {
   getRookMoves,
   getKnightMoves,
   getBishopMoves,
+  getQueenMoves,
+  getPawnMoves,
 } from './pieceMovement';
 
 /**
@@ -184,13 +186,19 @@ export class KingsChessEngine {
       };
     }
 
+    // Get last move for en passant detection
+    const lastMove = this.gameState.moveHistory.length > 0
+      ? this.gameState.moveHistory[this.gameState.moveHistory.length - 1]
+      : null;
+
     // Validate move
     const validation = validateMove(
       from,
       to,
       piece,
       this.getPieceAt.bind(this),
-      this.gameState.currentPlayer
+      this.gameState.currentPlayer,
+      lastMove
     );
 
     if (!validation.valid) {
@@ -339,6 +347,11 @@ export class KingsChessEngine {
     if (!piece) return [];
     if (piece.owner !== this.gameState.currentPlayer) return [];
 
+    // Get last move for en passant detection
+    const lastMove = this.gameState.moveHistory.length > 0
+      ? this.gameState.moveHistory[this.gameState.moveHistory.length - 1]
+      : null;
+
     switch (piece.type) {
       case 'rook':
         return getRookMoves(
@@ -357,6 +370,20 @@ export class KingsChessEngine {
           position,
           this.getPieceAt.bind(this),
           this.gameState.currentPlayer
+        );
+      case 'queen':
+        return getQueenMoves(
+          position,
+          this.getPieceAt.bind(this),
+          this.gameState.currentPlayer
+        );
+      case 'pawn':
+        return getPawnMoves(
+          position,
+          piece,
+          this.getPieceAt.bind(this),
+          this.gameState.currentPlayer,
+          lastMove
         );
       default:
         return [];

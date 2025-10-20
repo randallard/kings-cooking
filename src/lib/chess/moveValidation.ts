@@ -8,12 +8,14 @@
  * - Capture rules
  */
 
-import type { Piece, Position } from '../validation/schemas';
+import type { Piece, Position, Move } from '../validation/schemas';
 import type { ValidationResult } from './types';
 import {
   getRookMoves,
   getKnightMoves,
   getBishopMoves,
+  getQueenMoves,
+  getPawnMoves,
   hasRookPathToEdge,
   canKnightJumpOffBoard,
   canBishopMoveOffBoard,
@@ -27,6 +29,7 @@ import {
  * @param piece - Piece being moved
  * @param getPiece - Function to get piece at position
  * @param currentPlayer - Current player
+ * @param lastMove - Last move from history (for en passant)
  * @returns Validation result with success status and error details
  */
 export function validateMove(
@@ -34,7 +37,8 @@ export function validateMove(
   to: Position | 'off_board',
   piece: Piece,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'light' | 'dark'
+  currentPlayer: 'light' | 'dark',
+  lastMove?: Move | null
 ): ValidationResult {
   // Check it's this piece's turn
   if (piece.owner !== currentPlayer) {
@@ -50,7 +54,7 @@ export function validateMove(
   }
 
   // Handle standard on-board moves
-  return validateStandardMove(from, to, piece, getPiece, currentPlayer);
+  return validateStandardMove(from, to, piece, getPiece, currentPlayer, lastMove);
 }
 
 /**
@@ -113,6 +117,107 @@ function validateOffBoardMove(
     };
   }
 
+  if (piece.type === 'queen') {
+    if (!from) {
+      return {
+        valid: false,
+        reason: 'Invalid position',
+      };
+    }
+
+    // Queen can move off-board like rook OR bishop
+    // Check rook-like path: straight line to opponent's edge
+    let hasRookPath = false;
+    const directions: [number, number][] = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+
+    for (const [dr, dc] of directions) {
+      let row = from[0] + dr;
+      let col = from[1] + dc;
+      let pathClear = true;
+
+      while (row >= 0 && row < 3 && col >= 0 && col < 3) {
+        if (getPiece([row, col])) {
+          pathClear = false;
+          break;
+        }
+        row += dr;
+        col += dc;
+      }
+
+      if (pathClear) {
+        // Check if we exited through opponent's edge
+        const exitRow = row;
+        if (piece.owner === 'light' && exitRow < 0) {
+          hasRookPath = true;
+          break;
+        }
+        if (piece.owner === 'dark' && exitRow > 2) {
+          hasRookPath = true;
+          break;
+        }
+      }
+    }
+
+    // Check bishop-like path: diagonal through middle column
+    let hasBishopPath = false;
+
+    // Rule 1: Already on opponent's starting row
+    const onOpponentStartingRow =
+      (piece.owner === 'light' && from[0] === 0) ||
+      (piece.owner === 'dark' && from[0] === 2);
+
+    if (onOpponentStartingRow) {
+      hasBishopPath = true;
+    } else {
+      // Rule 2: Diagonal path through middle column
+      const diagonals: [number, number][] = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+
+      for (const [dr, dc] of diagonals) {
+        let row = from[0] + dr;
+        let col = from[1] + dc;
+
+        while (row >= 0 && row < 3 && col >= 0 && col < 3) {
+          if (getPiece([row, col])) break;
+          row += dr;
+          col += dc;
+        }
+
+        const exitedThroughOpponentEdge =
+          piece.owner === 'light' ? row < 0 : row > 2;
+
+        if (!exitedThroughOpponentEdge) continue;
+
+        const crossingColumn = col - dc;
+        if (crossingColumn === 1) {
+          hasBishopPath = true;
+          break;
+        }
+      }
+    }
+
+    if (!hasRookPath && !hasBishopPath) {
+      return {
+        valid: false,
+        reason: 'Queen must have clear straight path OR diagonal through middle column to move off-board',
+      };
+    }
+    return {
+      valid: true,
+      warnings: [`${piece.owner} queen moves to opponent's court`],
+    };
+  }
+
+  if (piece.type === 'pawn') {
+    // TODO: Issue #25 - Implement pawn promotion instead of blocking off-board
+    // Current: Pawns cannot move off-board (King's Cooking variant rule)
+    // Future: Pawns should promote to queen/other piece when reaching opposite edge
+    // Edge case: En passant should still apply after 2-square jump to promotion row
+    return {
+      valid: false,
+      reason: 'Pawns cannot move off-board. They score by being captured.',
+    };
+  }
+
   // Unknown piece type
   return {
     valid: false,
@@ -128,6 +233,7 @@ function validateOffBoardMove(
  * @param piece - Piece being moved
  * @param getPiece - Function to get piece at position
  * @param currentPlayer - Current player
+ * @param lastMove - Last move from history (for en passant)
  * @returns Validation result
  */
 function validateStandardMove(
@@ -135,7 +241,8 @@ function validateStandardMove(
   to: Position,
   piece: Piece,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'light' | 'dark'
+  currentPlayer: 'light' | 'dark',
+  lastMove?: Move | null
 ): ValidationResult {
   // Ensure to is not null
   if (!to) {
@@ -157,6 +264,12 @@ function validateStandardMove(
       break;
     case 'bishop':
       validMoves = getBishopMoves(from, getPiece, currentPlayer);
+      break;
+    case 'queen':
+      validMoves = getQueenMoves(from, getPiece, currentPlayer);
+      break;
+    case 'pawn':
+      validMoves = getPawnMoves(from, piece, getPiece, currentPlayer, lastMove);
       break;
     default:
       return {
@@ -199,12 +312,14 @@ function validateStandardMove(
  * @param pieces - Array of current player's pieces on board
  * @param getPiece - Function to get piece at position
  * @param currentPlayer - Current player
+ * @param lastMove - Last move from history (for en passant)
  * @returns True if no legal moves exist
  */
 export function isStalemate(
   pieces: Piece[],
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'light' | 'dark'
+  currentPlayer: 'light' | 'dark',
+  lastMove?: Move | null
 ): boolean {
   for (const piece of pieces) {
     if (piece.position === null) continue; // Off-board
@@ -213,7 +328,8 @@ export function isStalemate(
       piece.position,
       piece,
       getPiece,
-      currentPlayer
+      currentPlayer,
+      lastMove
     );
 
     if (validMoves.length > 0) return false; // Has moves
@@ -229,7 +345,8 @@ function getValidMovesForPiece(
   from: Position,
   piece: Piece,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'light' | 'dark'
+  currentPlayer: 'light' | 'dark',
+  lastMove?: Move | null
 ): Position[] {
   switch (piece.type) {
     case 'rook':
@@ -238,6 +355,10 @@ function getValidMovesForPiece(
       return getKnightMoves(from, getPiece, currentPlayer);
     case 'bishop':
       return getBishopMoves(from, getPiece, currentPlayer);
+    case 'queen':
+      return getQueenMoves(from, getPiece, currentPlayer);
+    case 'pawn':
+      return getPawnMoves(from, piece, getPiece, currentPlayer, lastMove);
     default:
       return [];
   }
