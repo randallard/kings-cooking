@@ -138,7 +138,7 @@ const PIECE_UNICODE: Record<string, { light: string; dark: string }> = {
   knight: { light: '♞', dark: '♘' },
   bishop: { light: '♝', dark: '♗' },
   queen: { light: '♛', dark: '♕' },
-  pawn: { light: '♟', dark: '♙' },
+  pawn: { light: '♙', dark: '♟' },
 };
 
 function getPieceUnicode(piece: Piece): string {
