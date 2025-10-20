@@ -199,12 +199,13 @@ describe('getRookMoves', () => {
      - Check if it landed beside current pawn (same row, adjacent column)
      - Add en passant capture position (diagonal behind the enemy pawn)
 
-6. **Pawn Promotion Not Needed Yet**:
+6. **Pawn Promotion Deferred**:
    - Standard chess promotes pawns reaching opposite edge
-   - King's Cooking: pawns reaching edge go "off-board" to court (handled by off-board logic)
-   - **Solution**: No promotion logic needed in this task
+   - Promotion will be implemented in a future task/issue
+   - For now, pawns reaching the back row can move off-board
+   - **Solution**: Allow pawn off-board movement from opponent's starting row
 
-6. **Off-Board Movement for Queen and Pawn**:
+7. **Off-Board Movement for Queen and Pawn**:
    - Queens can move off-board (combine rook and bishop off-board rules)
    - Pawns likely can move off-board when reaching opponent's starting row
    - Current off-board logic in `moveValidation.ts` only handles rook, knight, bishop
@@ -1390,7 +1391,7 @@ git reset --hard HEAD  # Nuclear option
 2. Pawn CAN move 2 squares on first move (moveCount === 0) on 3x3 board
 3. **En passant IS implemented** (user confirmed - 3x3 is sufficient)
 4. En passant requires tracking lastMove from moveHistory
-5. Pawn promotion handled by off-board logic (out of scope)
+5. Pawn promotion deferred to future issue (out of scope for this PRP)
 6. Queen can move off-board using rook OR bishop rules
 7. Pawn can move off-board only from opponent's starting row
 8. Direction convention: Light toward row 0, Dark toward row 2
@@ -1403,12 +1404,14 @@ git reset --hard HEAD  # Nuclear option
 
 - This completes the piece selection feature (Issue #6)
 - All 5 piece types now fully functional: rook, knight, bishop, queen, pawn
+- Pawn promotion will be implemented in a separate issue (out of scope for this PRP)
 - TDD approach: Red → Green → Refactor
 - Reference CLAUDE-REACT.md for React 19 patterns
 - Unicode characters sourced from PIECE_POOL in pieceSelection/types.ts
 - GameCell.tsx has its own PIECE_UNICODE lookup (intentional duplication for separation of concerns)
 - Tests use uuid for piece IDs (follow existing test patterns)
 - Off-board logic allows scoring by moving pieces to opponent's court
+- En passant fully implemented using moveHistory tracking
 
 ---
 
