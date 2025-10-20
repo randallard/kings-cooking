@@ -26,12 +26,14 @@ describe('Zod Schemas', () => {
       expect(PieceTypeSchema.parse('rook')).toBe('rook');
       expect(PieceTypeSchema.parse('knight')).toBe('knight');
       expect(PieceTypeSchema.parse('bishop')).toBe('bishop');
+      expect(PieceTypeSchema.parse('queen')).toBe('queen');
+      expect(PieceTypeSchema.parse('pawn')).toBe('pawn');
     });
 
     it('should reject invalid piece types', () => {
-      expect(() => PieceTypeSchema.parse('pawn')).toThrow();
       expect(() => PieceTypeSchema.parse('king')).toThrow();
-      expect(() => PieceTypeSchema.parse('queen')).toThrow();
+      expect(() => PieceTypeSchema.parse('wizard')).toThrow();
+      expect(() => PieceTypeSchema.parse('')).toThrow();
     });
   });
 

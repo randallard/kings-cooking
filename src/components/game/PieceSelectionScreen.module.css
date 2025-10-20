@@ -1,0 +1,342 @@
+/**
+ * PieceSelectionScreen styles
+ * Main piece selection interface with mode selection, board grid, and controls
+ */
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 0.5rem;
+  color: var(--color-text-primary, #1a1a1a);
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 1.125rem;
+  color: var(--color-text-secondary, #666666);
+  margin: 0 0 2rem;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 1rem;
+  color: var(--color-text-primary, #1a1a1a);
+}
+
+.instruction {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #666666);
+  margin: 0 0 1.5rem;
+}
+
+/* Mode Selection */
+.modeSelection {
+  margin-bottom: 3rem;
+}
+
+.modeButtons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modeButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.5rem;
+  background-color: var(--color-bg-secondary, #f3f4f6);
+  border: 2px solid var(--color-border, #e5e7eb);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.modeButton:hover {
+  background-color: var(--color-bg-hover, #e5e7eb);
+  border-color: var(--color-primary, #3b82f6);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.modeButton:focus {
+  outline: 2px solid var(--color-primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+.modeIcon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.modeName {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1a1a1a);
+}
+
+.modeDescription {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #666666);
+  line-height: 1.4;
+}
+
+/* Board Section */
+.boardSection {
+  margin-bottom: 3rem;
+}
+
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.cell {
+  aspect-ratio: 1;
+  border: 2px solid var(--color-border, #e5e7eb);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  padding: 1rem;
+}
+
+/* Chess board light square - beige/cream color */
+.cell.lightSquare,
+.cellDisplay.lightSquare {
+  background-color: #f0d9b5;
+}
+
+/* Chess board dark square - brown color */
+.cell.darkSquare,
+.cellDisplay.darkSquare {
+  background-color: #b58863;
+}
+
+.cell:hover {
+  border-color: var(--color-primary, #3b82f6);
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.cell:focus {
+  outline: 2px solid var(--color-primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+.cellDisplay {
+  aspect-ratio: 1;
+  border: 2px solid var(--color-border-light, #d0d0d0);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  padding: 1rem;
+  opacity: 0.7;
+}
+
+.emptyRow {
+  aspect-ratio: 1;
+  background-color: transparent;
+  border: 1px dashed var(--color-border-light, #f3f4f6);
+  border-radius: 0.5rem;
+}
+
+.pieceIcon {
+  line-height: 1;
+}
+
+.emptyCell {
+  font-size: 1.5rem;
+  color: var(--color-text-tertiary, #9ca3af);
+  font-weight: 600;
+}
+
+/* Random Display */
+.randomDisplay {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.randomPiece {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 1rem;
+  background-color: var(--color-bg-secondary, #f3f4f6);
+  border: 2px solid var(--color-border, #e5e7eb);
+  border-radius: 0.5rem;
+}
+
+.randomPiece .pieceIcon {
+  font-size: 3rem;
+}
+
+.pieceName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  color: var(--color-text-primary, #1a1a1a);
+}
+
+/* First Mover Selection */
+.firstMoverSection {
+  margin-bottom: 3rem;
+}
+
+.firstMoverButtons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.firstMoverButton {
+  padding: 1.5rem 2rem;
+  background-color: var(--color-bg-secondary, #f3f4f6);
+  border: 2px solid var(--color-border, #e5e7eb);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1a1a1a);
+}
+
+.firstMoverButton:hover {
+  background-color: var(--color-primary, #3b82f6);
+  border-color: var(--color-primary, #3b82f6);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.firstMoverButton:focus {
+  outline: 2px solid var(--color-primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Start Game Button */
+.startSection {
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.startButton {
+  padding: 1rem 3rem;
+  background-color: var(--color-primary, #3b82f6);
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.startButton:hover {
+  background-color: var(--color-primary-dark, #2563eb);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.startButton:focus {
+  outline: 2px solid var(--color-primary, #3b82f6);
+  outline-offset: 4px;
+}
+
+.startButton:active {
+  transform: translateY(0);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .container {
+    padding: 1.5rem 1rem;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .modeButtons {
+    grid-template-columns: 1fr;
+  }
+
+  .modeButton {
+    padding: 1.5rem 1rem;
+  }
+
+  .board,
+  .randomDisplay,
+  .firstMoverButtons {
+    max-width: 100%;
+  }
+
+  .cell,
+  .cellDisplay {
+    font-size: 2.5rem;
+    padding: 0.75rem;
+  }
+
+  .emptyCell {
+    font-size: 1.25rem;
+  }
+
+  .startButton {
+    padding: 0.875rem 2rem;
+    font-size: 1.125rem;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .modeButton,
+  .cell,
+  .firstMoverButton,
+  .startButton {
+    transition: none;
+  }
+
+  .modeButton:hover,
+  .cell:hover,
+  .firstMoverButton:hover,
+  .startButton:hover {
+    transform: none;
+  }
+}

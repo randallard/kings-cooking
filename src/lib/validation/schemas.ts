@@ -51,9 +51,10 @@ export type MoveId = z.infer<typeof MoveIdSchema>;
 
 /**
  * Chess piece types available in King's Cooking.
- * Initial implementation: rook, knight, bishop (no pawns, no king/queen).
+ * Includes all standard pieces except king (kings are off-board).
+ * Piece selection (Issue #6) allows players to choose from this pool.
  */
-export const PieceTypeSchema = z.enum(['rook', 'knight', 'bishop']);
+export const PieceTypeSchema = z.enum(['rook', 'knight', 'bishop', 'queen', 'pawn']);
 export type PieceType = z.infer<typeof PieceTypeSchema>;
 
 /**

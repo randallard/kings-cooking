@@ -6,22 +6,27 @@
 import type { GameState, Position } from '../lib/validation/schemas';
 import type { FullStatePayload, DeltaPayload } from '../lib/urlEncoding/types';
 import type { KingsChessEngine } from '../lib/chess/KingsChessEngine';
+import type { SelectionMode, SelectedPieces } from '../lib/pieceSelection/types';
 
 /**
- * Game flow state - discriminated union with 5 phases.
+ * Game flow state - discriminated union with 7 phases.
  *
  * The state machine transitions through these phases:
  * 1. mode-selection: User chooses hot-seat or URL mode
  * 2. setup: Player 1 enters name
- * 3. playing: Active gameplay with move selection
- * 4. handoff: After move confirmation (mode-specific UI)
- * 5. victory: Game ended, show results
+ * 3. color-selection: Player 1 chooses light (goes first) or dark (goes second)
+ * 4. piece-selection: Players choose starting pieces
+ * 5. playing: Active gameplay with move selection
+ * 6. handoff: After move confirmation (mode-specific UI)
+ * 7. victory: Game ended, show results
  *
  * Each phase has specific fields and transitions.
  */
 export type GameFlowState =
   | ModeSelectionPhase
   | SetupPhase
+  | ColorSelectionPhase
+  | PieceSelectionPhase
   | PlayingPhase
   | HandoffPhase
   | VictoryPhase;
@@ -47,7 +52,42 @@ export interface SetupPhase {
 }
 
 /**
- * Phase 3: Playing phase.
+ * Phase 3: Color selection phase.
+ * Player 1 chooses which color to play (light or dark).
+ * Light player goes first, dark player goes second.
+ */
+export interface ColorSelectionPhase {
+  phase: 'color-selection';
+  /** Selected game mode */
+  mode: 'hotseat' | 'url';
+  /** Player 1 name */
+  player1Name: string;
+}
+
+/**
+ * Phase 4: Piece selection phase.
+ * Players choose their starting pieces before gameplay begins.
+ */
+export interface PieceSelectionPhase {
+  phase: 'piece-selection';
+  /** Selected game mode */
+  mode: 'hotseat' | 'url';
+  /** Player 1 name */
+  player1Name: string;
+  /** Player 2 name (empty string until set) */
+  player2Name: string;
+  /** Selection mode (null until chosen) */
+  selectionMode: SelectionMode | null;
+  /** Player 1's selected pieces (null until complete) */
+  player1Pieces: SelectedPieces | null;
+  /** Player 2's selected pieces (null until complete) */
+  player2Pieces: SelectedPieces | null;
+  /** Player 1's color choice (determines who goes first) */
+  player1Color: 'light' | 'dark' | null;
+}
+
+/**
+ * Phase 5: Playing phase.
  * Active gameplay with move selection and confirmation.
  */
 export interface PlayingPhase {
@@ -69,11 +109,13 @@ export interface PlayingPhase {
 }
 
 /**
- * Phase 4: Handoff phase.
+ * Phase 6: Handoff phase.
  * After move confirmation, transition between players.
  * Mode-specific UI:
  * - Hot-seat: Privacy screen with "I'm Ready" button
  * - URL: URLSharer with copy button
+ *
+ * Can also be used after piece-selection to collect Player 2's name in hot-seat mode.
  */
 export interface HandoffPhase {
   phase: 'handoff';
@@ -83,18 +125,26 @@ export interface HandoffPhase {
   player1Name: string;
   /** Player 2 name (empty string triggers name prompt in hot-seat) */
   player2Name: string;
-  /** Current game state after move */
-  gameState: GameState;
-  /** The move that was just made (can be off-board) */
-  lastMove: { from: Position; to: Position | 'off_board' };
-  /** Countdown timer (hot-seat only, 3 seconds) */
-  countdown: number;
+  /** Current game state after move (null when collecting player2 name after piece-selection) */
+  gameState: GameState | null;
+  /** The move that was just made (can be off-board) - optional when coming from piece-selection */
+  lastMove?: { from: Position; to: Position | 'off_board' };
+  /** Countdown timer (hot-seat only, 3 seconds) - optional when coming from piece-selection */
+  countdown?: number;
   /** Generated URL (URL mode only, set after URL_GENERATED action) */
-  generatedUrl: string | null;
+  generatedUrl?: string | null;
+  /** Piece selection data - present when coming from piece-selection phase */
+  selectionMode?: 'mirrored' | 'independent' | 'random';
+  /** Player 1 selected pieces - present when coming from piece-selection phase */
+  player1Pieces?: SelectedPieces;
+  /** Player 2 selected pieces - present when coming from piece-selection phase */
+  player2Pieces?: SelectedPieces;
+  /** Player 1's color choice - present when coming from piece-selection phase */
+  player1Color?: 'light' | 'dark';
 }
 
 /**
- * Phase 5: Victory phase.
+ * Phase 7: Victory phase.
  * Game ended, show winner and statistics.
  */
 export interface VictoryPhase {
@@ -112,7 +162,7 @@ export interface VictoryPhase {
 }
 
 /**
- * Game flow actions - discriminated union with 11 action types.
+ * Game flow actions - discriminated union with 17 action types.
  *
  * Actions trigger state transitions in the game flow reducer.
  * Some actions are mode-specific (hot-seat only or URL only).
@@ -121,6 +171,12 @@ export type GameFlowAction =
   | SelectModeAction
   | SetPlayer1NameAction
   | StartGameAction
+  | StartColorSelectionAction
+  | SetPlayerColorAction
+  | StartPieceSelectionAction
+  | SetSelectionModeAction
+  | SetPlayerPiecesAction
+  | CompletePieceSelectionAction
   | SelectPieceAction
   | DeselectPieceAction
   | StageMoveAction
@@ -154,11 +210,66 @@ export interface SetPlayer1NameAction {
 
 /**
  * START_GAME action.
- * Transition from setup to playing phase.
+ * Transition from setup to piece-selection phase.
  * Requires player1Name to be set.
  */
 export interface StartGameAction {
   type: 'START_GAME';
+}
+
+/**
+ * START_COLOR_SELECTION action.
+ * Transition from setup to color-selection phase.
+ */
+export interface StartColorSelectionAction {
+  type: 'START_COLOR_SELECTION';
+}
+
+/**
+ * SET_PLAYER_COLOR action.
+ * Player 1 chooses which color to play (light or dark).
+ * Automatically transitions to piece-selection phase.
+ */
+export interface SetPlayerColorAction {
+  type: 'SET_PLAYER_COLOR';
+  /** Color choice: light (goes first) or dark (goes second) */
+  color: 'light' | 'dark';
+}
+
+/**
+ * START_PIECE_SELECTION action.
+ * Transition from color-selection to piece-selection phase.
+ */
+export interface StartPieceSelectionAction {
+  type: 'START_PIECE_SELECTION';
+}
+
+/**
+ * SET_SELECTION_MODE action.
+ * Player chooses piece selection mode (mirrored/independent/random).
+ */
+export interface SetSelectionModeAction {
+  type: 'SET_SELECTION_MODE';
+  mode: SelectionMode;
+}
+
+/**
+ * SET_PLAYER_PIECES action.
+ * Set pieces for a player (position-based array).
+ */
+export interface SetPlayerPiecesAction {
+  type: 'SET_PLAYER_PIECES';
+  player: 'player1' | 'player2';
+  pieces: SelectedPieces;
+}
+
+/**
+ * COMPLETE_PIECE_SELECTION action.
+ * Transition from piece-selection to playing phase.
+ * Creates initial game state with selected pieces.
+ */
+export interface CompletePieceSelectionAction {
+  type: 'COMPLETE_PIECE_SELECTION';
 }
 
 /**

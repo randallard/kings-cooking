@@ -5,6 +5,8 @@ import { storage, checkAndMigrateStorage } from './lib/storage/localStorage';
 import { useUrlState } from './hooks/useUrlState';
 import { ModeSelector } from './components/game/ModeSelector';
 import { NameForm } from './components/game/NameForm';
+import { ColorSelectionScreen } from './components/game/ColorSelectionScreen';
+import { PieceSelectionScreen } from './components/game/PieceSelectionScreen';
 import { GameBoard } from './components/game/GameBoard';
 import { MoveConfirmButton } from './components/game/MoveConfirmButton';
 import { HandoffScreen } from './components/game/HandoffScreen';
@@ -72,9 +74,10 @@ function Player2NameEntryScreen({ dispatch }: { dispatch: React.Dispatch<GameFlo
  * Phase flow:
  * 1. mode-selection: Choose game mode
  * 2. setup: Player 1 enters name
- * 3. playing: Active gameplay with move confirmation
- * 4. handoff: Transition between players (mode-specific UI)
- * 5. victory: Game end with statistics
+ * 3. piece-selection: Choose pieces and first mover (mirrored/independent/random)
+ * 4. playing: Active gameplay with move confirmation
+ * 5. handoff: Transition between players (mode-specific UI)
+ * 6. victory: Game end with statistics
  *
  * @returns App component
  */
@@ -250,13 +253,13 @@ export default function App(): ReactElement {
           <button
             onClick={() => {
               if (state.player1Name && state.player1Name.trim().length > 0) {
-                dispatch({ type: 'START_GAME' });
+                dispatch({ type: 'START_COLOR_SELECTION' });
               }
             }}
             disabled={!state.player1Name || state.player1Name.trim().length === 0}
             style={{ marginTop: 'var(--spacing-md)', width: '100%' }}
           >
-            Start Game
+            Continue
           </button>
         </div>
       </div>
@@ -264,7 +267,21 @@ export default function App(): ReactElement {
   }
 
   // ===========================
-  // Phase 3: Playing
+  // Phase 3: Color Selection
+  // ===========================
+  if (state.phase === 'color-selection') {
+    return <ColorSelectionScreen player1Name={state.player1Name} dispatch={dispatch} />;
+  }
+
+  // ===========================
+  // Phase 4: Piece Selection
+  // ===========================
+  if (state.phase === 'piece-selection') {
+    return <PieceSelectionScreen state={state} dispatch={dispatch} />;
+  }
+
+  // ===========================
+  // Phase 4: Playing
   // ===========================
   if (state.phase === 'playing') {
     const handleCloseStoryPanel = (): void => {
@@ -491,7 +508,7 @@ export default function App(): ReactElement {
   }
 
   // ===========================
-  // Phase 4: Handoff
+  // Phase 5: Handoff
   // ===========================
   if (state.phase === 'handoff') {
     // Hot-seat mode: Show privacy screen with "I'm Ready" button
@@ -502,7 +519,35 @@ export default function App(): ReactElement {
         return <Player2NameEntryScreen dispatch={dispatch} />;
       }
 
-      // Show HandoffScreen with countdown
+      // gameState might be null if coming from piece-selection
+      // In that case, the COMPLETE_HANDOFF will create it
+      if (!state.gameState) {
+        // Coming from piece-selection, just show a simple "Continue" button
+        return (
+          <div style={{
+            maxWidth: '600px',
+            margin: '0 auto',
+            padding: 'var(--spacing-xl)',
+          }}>
+            <h1 style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
+              Ready to Play!
+            </h1>
+            <div className="card">
+              <p style={{ marginBottom: 'var(--spacing-md)', textAlign: 'center' }}>
+                All players are set. Click Continue to start the game!
+              </p>
+              <button
+                onClick={() => dispatch({ type: 'COMPLETE_HANDOFF' })}
+                style={{ width: '100%' }}
+              >
+                Continue to Game
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      // Show HandoffScreen with countdown (normal turn-based handoff)
       const previousPlayer = state.gameState.currentPlayer === 'light' ? 'dark' : 'light';
       const previousPlayerName = previousPlayer === 'light'
         ? (state.player1Name || 'Light')
@@ -603,7 +648,7 @@ export default function App(): ReactElement {
   }
 
   // ===========================
-  // Phase 5: Victory
+  // Phase 6: Victory
   // ===========================
   if (state.phase === 'victory') {
     // Build VictoryScreen props conditionally to satisfy exactOptionalPropertyTypes

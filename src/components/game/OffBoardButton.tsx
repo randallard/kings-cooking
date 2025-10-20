@@ -4,6 +4,7 @@
  */
 
 import { type ReactElement } from 'react';
+import type { PieceType } from '@/lib/validation/schemas';
 import styles from './OffBoardButton.module.css';
 
 interface OffBoardButtonProps {
@@ -12,7 +13,7 @@ interface OffBoardButtonProps {
   /** Is button disabled (no piece selected or cannot move off-board) */
   disabled: boolean;
   /** Type of piece that would move off-board */
-  pieceType: 'rook' | 'knight' | 'bishop' | null;
+  pieceType: PieceType | null;
   /** Owner of the court (light/dark) */
   courtOwner: 'light' | 'dark';
 }

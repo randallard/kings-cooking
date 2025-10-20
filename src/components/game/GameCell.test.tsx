@@ -301,4 +301,52 @@ describe('GameCell', () => {
       expect(cell.className).not.toMatch(/pendingDestination/);
     });
   });
+
+  describe('Queen and Pawn Unicode Rendering', () => {
+    it('should render queen unicode', () => {
+      const queenPiece = {
+        type: 'queen' as const,
+        owner: 'light' as const,
+        position: [1, 1] as [number, number],
+        moveCount: 0,
+        id: '00000000-0000-0000-0000-000000000001',
+      };
+
+      render(
+        <GameCell
+          position={[1, 1]}
+          piece={queenPiece}
+          isSelected={false}
+          isLegalMove={false}
+          isLastMove={false}
+          onClick={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText('♛')).toBeInTheDocument();
+    });
+
+    it('should render pawn unicode', () => {
+      const pawnPiece = {
+        type: 'pawn' as const,
+        owner: 'dark' as const,
+        position: [0, 0] as [number, number],
+        moveCount: 0,
+        id: '00000000-0000-0000-0000-000000000002',
+      };
+
+      render(
+        <GameCell
+          position={[0, 0]}
+          piece={pawnPiece}
+          isSelected={false}
+          isLegalMove={false}
+          isLastMove={false}
+          onClick={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText('♙')).toBeInTheDocument();
+    });
+  });
 });
