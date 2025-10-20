@@ -115,7 +115,6 @@
 
 .cell {
   aspect-ratio: 1;
-  background-color: var(--color-bg-secondary, #f3f4f6);
   border: 2px solid var(--color-border, #e5e7eb);
   border-radius: 0.5rem;
   cursor: pointer;
@@ -127,10 +126,22 @@
   padding: 1rem;
 }
 
+/* Chess board light square - beige/cream color */
+.cell.lightSquare,
+.cellDisplay.lightSquare {
+  background-color: #f0d9b5;
+}
+
+/* Chess board dark square - brown color */
+.cell.darkSquare,
+.cellDisplay.darkSquare {
+  background-color: #b58863;
+}
+
 .cell:hover {
-  background-color: var(--color-bg-hover, #e5e7eb);
   border-color: var(--color-primary, #3b82f6);
   transform: scale(1.05);
+  filter: brightness(1.1);
 }
 
 .cell:focus {
@@ -140,14 +151,14 @@
 
 .cellDisplay {
   aspect-ratio: 1;
-  background-color: var(--color-bg-tertiary, #fafafa);
-  border: 2px solid var(--color-border-light, #f3f4f6);
+  border: 2px solid var(--color-border-light, #d0d0d0);
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 3rem;
   padding: 1rem;
+  opacity: 0.7;
 }
 
 .emptyRow {

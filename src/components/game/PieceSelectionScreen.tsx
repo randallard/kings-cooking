@@ -188,6 +188,8 @@ export function PieceSelectionScreen({
                 // If player1 chose dark, show player1's pieces on top (clickable)
                 const isPlayer1Row = state.player1Color === 'dark';
                 const piece = isPlayer1Row ? state.player1Pieces?.[col] : state.player2Pieces?.[col];
+                // Chess board pattern: Row 0 is [dark, light, dark]
+                const squareColor = col % 2 === 0 ? 'darkSquare' : 'lightSquare';
 
                 if (isPlayer1Row) {
                   // Player 1 chose dark - top row is clickable for piece selection
@@ -196,7 +198,7 @@ export function PieceSelectionScreen({
                       key={col}
                       type="button"
                       onClick={() => handlePositionClick(col)}
-                      className={styles.cell}
+                      className={`${styles.cell} ${styles[squareColor]}`}
                       aria-label={`Position ${col + 1}${piece ? `: ${piece}` : ' (empty)'}`}
                     >
                       {piece ? (
@@ -211,7 +213,7 @@ export function PieceSelectionScreen({
                 } else {
                   // Player 1 chose light - top row shows opponent's dark pieces (display only)
                   return (
-                    <div key={col} className={styles.cellDisplay}>
+                    <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
                       {piece && (
                         <span className={styles.pieceIcon} aria-hidden="true">
                           {PIECE_POOL[piece].unicode.dark}
@@ -237,6 +239,8 @@ export function PieceSelectionScreen({
                 // If player1 chose dark, show player2's light pieces on bottom (display only)
                 const isPlayer1Row = state.player1Color === 'light';
                 const piece = isPlayer1Row ? state.player1Pieces?.[col] : state.player2Pieces?.[col];
+                // Chess board pattern: Row 2 is [dark, light, dark] (same as row 0)
+                const squareColor = col % 2 === 0 ? 'darkSquare' : 'lightSquare';
 
                 if (isPlayer1Row) {
                   // Player 1 chose light - bottom row is clickable for piece selection
@@ -245,7 +249,7 @@ export function PieceSelectionScreen({
                       key={col}
                       type="button"
                       onClick={() => handlePositionClick(col)}
-                      className={styles.cell}
+                      className={`${styles.cell} ${styles[squareColor]}`}
                       aria-label={`Position ${col + 1}${piece ? `: ${piece}` : ' (empty)'}`}
                     >
                       {piece ? (
@@ -260,7 +264,7 @@ export function PieceSelectionScreen({
                 } else {
                   // Player 1 chose dark - bottom row shows opponent's light pieces (display only)
                   return (
-                    <div key={col} className={styles.cellDisplay}>
+                    <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
                       {piece && (
                         <span className={styles.pieceIcon} aria-hidden="true">
                           {PIECE_POOL[piece].unicode.light}
