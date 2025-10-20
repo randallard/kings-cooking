@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, type ReactElement } from 'react';
-import type { Piece } from '@/lib/validation/schemas';
+import type { Piece, PieceType } from '@/lib/validation/schemas';
 import { URLSharer } from './URLSharer';
 import styles from './VictoryScreen.module.css';
 
@@ -164,15 +164,14 @@ export const VictoryScreen = ({
 
   // Get piece symbol for display
   const getPieceSymbol = (piece: Piece): string => {
-    const symbols: Record<string, string> = {
-      king: '♔',
-      queen: '♕',
-      rook: '♖',
-      bishop: '♗',
-      knight: '♘',
-      pawn: '♙',
+    const symbols: Record<PieceType, { light: string; dark: string }> = {
+      queen: { light: '♛', dark: '♕' },
+      rook: { light: '♜', dark: '♖' },
+      bishop: { light: '♝', dark: '♗' },
+      knight: { light: '♞', dark: '♘' },
+      pawn: { light: '♙', dark: '♟' },
     };
-    return symbols[piece.type] || '?';
+    return symbols[piece.type]?.[piece.owner] || '?';
   };
 
   return (

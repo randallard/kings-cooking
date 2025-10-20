@@ -346,7 +346,7 @@ describe('GameCell', () => {
         />
       );
 
-      expect(screen.getByText('♙')).toBeInTheDocument();
+      expect(screen.getByText('♟')).toBeInTheDocument(); // Dark pawn = ♟
     });
   });
 });

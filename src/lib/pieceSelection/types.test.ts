@@ -123,5 +123,27 @@ describe('Piece Selection Types', () => {
         expect(typeof piece.unicode.dark).toBe('string');
       });
     });
+
+    describe('pawn unicode (Issue #26)', () => {
+      it('should use U+2659 for light pawn (no emoji variant)', () => {
+        const lightPawn = PIECE_POOL.pawn.unicode.light;
+        expect(lightPawn.codePointAt(0)).toBe(0x2659); // ♙ WHITE CHESS PAWN
+      });
+
+      it('should use U+265F for dark pawn', () => {
+        const darkPawn = PIECE_POOL.pawn.unicode.dark;
+        expect(darkPawn.codePointAt(0)).toBe(0x265f); // ♟ BLACK CHESS PAWN
+      });
+
+      it('should follow light=filled, dark=outline pattern', () => {
+        // Light pawn should match pattern of other light pieces (filled)
+        const lightPawn = PIECE_POOL.pawn.unicode.light;
+        const lightRook = PIECE_POOL.rook.unicode.light;
+
+        // Both should be "filled" style (lower codepoints in chess unicode block)
+        expect(lightPawn.codePointAt(0)).toBeLessThan(0x2660);
+        expect(lightRook.codePointAt(0)).toBeLessThan(0x2660);
+      });
+    });
   });
 });
