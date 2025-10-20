@@ -452,6 +452,7 @@
   text-align: center;
   cursor: help;
   transition: transform 0.2s ease, background 0.2s ease;
+  font-variant-emoji: text;
 }
 
 .piece:hover {

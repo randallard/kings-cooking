@@ -110,15 +110,18 @@ export const GameCell = ({
     >
       {/* Ghost piece at source during pending move */}
       {ghostPiece && (
-        <span className={styles.ghostPiece} aria-hidden="true">
+        <span
+          className={styles.ghostPiece}
+          aria-hidden="true"
+        >
           {getPieceUnicode(ghostPiece)}
         </span>
       )}
 
       {/* Actual piece (or moved piece at destination) */}
-      {pieceChar && (
+      {pieceChar && piece && (
         <span
-          key={isPendingDestination ? `animated-${piece?.id || 'piece'}` : `static-${piece?.id || 'piece'}`}
+          key={isPendingDestination ? `animated-${piece.id || 'piece'}` : `static-${piece.id || 'piece'}`}
           className={`${styles.piece} ${isPendingDestination ? styles.animatedPiece : ''}`}
           aria-hidden="true"
         >
@@ -132,19 +135,28 @@ export const GameCell = ({
   );
 };
 
-// Helper: Unicode piece lookup
+/**
+ * Unicode chess piece symbols.
+ * Light pieces use OUTLINED symbols, dark pieces use FILLED symbols.
+ */
 const PIECE_UNICODE: Record<string, { light: string; dark: string }> = {
-  rook: { light: '♜', dark: '♖' },
-  knight: { light: '♞', dark: '♘' },
-  bishop: { light: '♝', dark: '♗' },
-  queen: { light: '♛', dark: '♕' },
+  rook: { light: '♖', dark: '♜' },
+  knight: { light: '♘', dark: '♞' },
+  bishop: { light: '♗', dark: '♝' },
+  queen: { light: '♕', dark: '♛' },
   pawn: { light: '♙', dark: '♟' },
+  king: { light: '♔', dark: '♚' },
 };
 
+/**
+ * Get Unicode character for piece.
+ * Returns different symbols for light (outlined) vs dark (filled) pieces.
+ *
+ * @param piece - Piece to get unicode for
+ * @returns Unicode chess piece character
+ */
 function getPieceUnicode(piece: Piece): string {
-  const pieceType = PIECE_UNICODE[piece.type];
-  if (!pieceType) {
-    return '?'; // Fallback for unknown piece types
-  }
-  return pieceType[piece.owner];
+  const symbols = PIECE_UNICODE[piece.type];
+  if (!symbols) return '?';
+  return piece.owner === 'light' ? symbols.light : symbols.dark;
 }

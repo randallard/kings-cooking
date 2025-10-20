@@ -73,8 +73,8 @@ describe('CourtArea', () => {
       />
     );
 
-    expect(screen.getByText('♜')).toBeInTheDocument(); // Light rook
-    expect(screen.getByText('♞')).toBeInTheDocument(); // Light knight
+    expect(screen.getByText('♖')).toBeInTheDocument(); // Light rook (outlined)
+    expect(screen.getByText('♘')).toBeInTheDocument(); // Light knight (outlined)
   });
 
   it('shows captured pieces with correct icons', () => {
@@ -95,7 +95,7 @@ describe('CourtArea', () => {
       />
     );
 
-    expect(screen.getByText('♗')).toBeInTheDocument(); // Dark bishop
+    expect(screen.getByText('♝')).toBeInTheDocument(); // Dark bishop (filled)
   });
 
   it('shows "None" when no scored pieces', () => {

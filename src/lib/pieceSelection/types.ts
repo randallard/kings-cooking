@@ -47,12 +47,14 @@ export type PieceSelectionData = z.infer<typeof PieceSelectionDataSchema>;
 /**
  * Available piece pool with max counts and unicode characters.
  * Based on standard chess set limits.
+ *
+ * Unicode convention: light pieces use OUTLINED symbols, dark pieces use FILLED symbols.
  */
 export const PIECE_POOL = {
-  rook: { max: 2, unicode: { light: '♜', dark: '♖' } },
-  knight: { max: 2, unicode: { light: '♞', dark: '♘' } },
-  bishop: { max: 2, unicode: { light: '♝', dark: '♗' } },
-  queen: { max: 1, unicode: { light: '♛', dark: '♕' } },
+  rook: { max: 2, unicode: { light: '♖', dark: '♜' } },
+  knight: { max: 2, unicode: { light: '♘', dark: '♞' } },
+  bishop: { max: 2, unicode: { light: '♗', dark: '♝' } },
+  queen: { max: 1, unicode: { light: '♕', dark: '♛' } },
   pawn: { max: 8, unicode: { light: '♙', dark: '♟' } },
 } as const;
 

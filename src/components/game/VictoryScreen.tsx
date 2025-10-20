@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, type ReactElement } from 'react';
-import type { Piece, PieceType } from '@/lib/validation/schemas';
+import type { Piece } from '@/lib/validation/schemas';
 import { URLSharer } from './URLSharer';
 import styles from './VictoryScreen.module.css';
 
@@ -163,15 +163,19 @@ export const VictoryScreen = ({
   };
 
   // Get piece symbol for display
+  // Light pieces use OUTLINED symbols, dark pieces use FILLED symbols
   const getPieceSymbol = (piece: Piece): string => {
-    const symbols: Record<PieceType, { light: string; dark: string }> = {
-      queen: { light: '♛', dark: '♕' },
-      rook: { light: '♜', dark: '♖' },
-      bishop: { light: '♝', dark: '♗' },
-      knight: { light: '♞', dark: '♘' },
+    const symbols: Record<string, { light: string; dark: string }> = {
+      rook: { light: '♖', dark: '♜' },
+      knight: { light: '♘', dark: '♞' },
+      bishop: { light: '♗', dark: '♝' },
+      queen: { light: '♕', dark: '♛' },
       pawn: { light: '♙', dark: '♟' },
+      king: { light: '♔', dark: '♚' },
     };
-    return symbols[piece.type]?.[piece.owner] || '?';
+    const pieceSymbols = symbols[piece.type];
+    if (!pieceSymbols) return '?';
+    return piece.owner === 'light' ? pieceSymbols.light : pieceSymbols.dark;
   };
 
   return (

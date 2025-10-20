@@ -124,6 +124,22 @@ describe('Piece Selection Types', () => {
       });
     });
 
+    it('should use outlined symbols for light pieces', () => {
+      expect(PIECE_POOL.rook.unicode.light).toBe('♖');
+      expect(PIECE_POOL.knight.unicode.light).toBe('♘');
+      expect(PIECE_POOL.bishop.unicode.light).toBe('♗');
+      expect(PIECE_POOL.queen.unicode.light).toBe('♕');
+      expect(PIECE_POOL.pawn.unicode.light).toBe('♙');
+    });
+
+    it('should use filled symbols for dark pieces', () => {
+      expect(PIECE_POOL.rook.unicode.dark).toBe('♜');
+      expect(PIECE_POOL.knight.unicode.dark).toBe('♞');
+      expect(PIECE_POOL.bishop.unicode.dark).toBe('♝');
+      expect(PIECE_POOL.queen.unicode.dark).toBe('♛');
+      expect(PIECE_POOL.pawn.unicode.dark).toBe('♟');
+    });
+
     describe('pawn unicode (Issue #26)', () => {
       it('should use U+2659 for light pawn (no emoji variant)', () => {
         const lightPawn = PIECE_POOL.pawn.unicode.light;

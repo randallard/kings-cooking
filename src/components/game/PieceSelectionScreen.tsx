@@ -286,7 +286,7 @@ export function PieceSelectionScreen({
           <div className={styles.randomDisplay}>
             {state.player1Pieces.map((piece, index) => (
               <div key={index} className={styles.randomPiece}>
-                <span className={styles.pieceIcon}>{PIECE_POOL[piece].unicode.light}</span>
+                <span className={styles.pieceIcon}>{PIECE_POOL[piece].unicode.dark}</span>
                 <span className={styles.pieceName}>{piece}</span>
               </div>
             ))}

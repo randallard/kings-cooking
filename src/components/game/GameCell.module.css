@@ -10,11 +10,11 @@
 }
 
 .lightSquare {
-  background-color: var(--bg-board-light, #f0d9b5);
+  background-color: #f0d9b5;
 }
 
 .darkSquare {
-  background-color: var(--bg-board-dark, #b58863);
+  background-color: #b58863;
 }
 
 .selected {
@@ -49,6 +49,8 @@
   font-size: 2rem;
   line-height: 1;
   user-select: none;
+  font-variant-emoji: text;
+  color:black;
 }
 
 /* Responsive sizing */
@@ -58,39 +60,22 @@
   }
 }
 
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .lightSquare {
+    background-color: #769656;
+  }
+
+  .darkSquare {
+    background-color: #eeeed2;
+  }
+}
+
 /* Focus indicator */
 .gameCell:focus {
   outline: 2px solid var(--border-focus, #4a9eff);
   outline-offset: -2px;
   z-index: 1;
-}
-
-/* Dark mode overrides - system preference */
-@media (prefers-color-scheme: dark) {
-  :global(:root:not([data-theme='light'])) .lightSquare {
-    background-color: var(--bg-board-light-dark, #4a4a4a);
-  }
-
-  :global(:root:not([data-theme='light'])) .darkSquare {
-    background-color: var(--bg-board-dark-dark, #2a2a2a);
-  }
-
-  :global(:root:not([data-theme='light'])) .selected {
-    background-color: var(--bg-selected-dark, #66b3ff);
-  }
-}
-
-/* Dark mode overrides - manual toggle */
-:global([data-theme='dark']) .lightSquare {
-  background-color: var(--bg-board-light-dark, #4a4a4a);
-}
-
-:global([data-theme='dark']) .darkSquare {
-  background-color: var(--bg-board-dark-dark, #2a2a2a);
-}
-
-:global([data-theme='dark']) .selected {
-  background-color: var(--bg-selected-dark, #66b3ff);
 }
 
 /* Pending move states */

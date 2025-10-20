@@ -106,16 +106,21 @@ describe('localStorage utilities', () => {
       expect(storage.getGameMode()).toBe(null);
     });
 
-    it('should clear all game storage', () => {
+    it('should clear all game storage except player names', () => {
       storage.setMyName('Alice');
       storage.setGameMode('hotseat');
       storage.setPlayer1Name('Bob');
+      storage.setPlayer2Name('Charlie');
 
       storage.clearAll();
 
-      expect(storage.getMyName()).toBeNull();
+      // Player names should be preserved
+      expect(storage.getMyName()).toBe('Alice');
+      expect(storage.getPlayer1Name()).toBe('Bob');
+      expect(storage.getPlayer2Name()).toBe('Charlie');
+
+      // Game data should be cleared
       expect(storage.getGameMode()).toBeNull();
-      expect(storage.getPlayer1Name()).toBeNull();
     });
   });
 

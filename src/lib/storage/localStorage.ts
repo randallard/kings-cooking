@@ -177,10 +177,21 @@ export function removeItem(key: string): void {
 /**
  * Clears all King's Cooking data from localStorage.
  * Useful for testing or "reset game" functionality.
+ *
+ * Preserves player names for convenience.
  */
 export function clearGameStorage(): void {
+  // Keys to preserve across game resets
+  const preserveKeys: string[] = [
+    STORAGE_KEYS.PLAYER1_NAME,
+    STORAGE_KEYS.PLAYER2_NAME,
+    STORAGE_KEYS.MY_NAME,
+  ];
+
   Object.values(STORAGE_KEYS).forEach((key) => {
-    localStorage.removeItem(key);
+    if (!preserveKeys.includes(key as string)) {
+      localStorage.removeItem(key);
+    }
   });
 }
 
@@ -211,12 +222,12 @@ export function checkAndMigrateStorage(): boolean {
       // Clear game data that may have old format (white/black)
       localStorage.removeItem(STORAGE_KEYS.GAME_STATE);
       localStorage.removeItem(STORAGE_KEYS.GAME_MODE);
-      localStorage.removeItem(STORAGE_KEYS.PLAYER1_NAME);
-      localStorage.removeItem(STORAGE_KEYS.PLAYER2_NAME);
-      localStorage.removeItem(STORAGE_KEYS.MY_NAME);
       localStorage.removeItem(STORAGE_KEYS.MY_PLAYER_ID);
 
-      // Keep story flags and other non-game data
+      // Keep player names and story flags across migrations
+      // STORAGE_KEYS.PLAYER1_NAME - keep
+      // STORAGE_KEYS.PLAYER2_NAME - keep
+      // STORAGE_KEYS.MY_NAME - keep
       // STORAGE_KEYS.PLAYER1_SEEN_STORY - keep
       // STORAGE_KEYS.PLAYER2_SEEN_STORY - keep
 
