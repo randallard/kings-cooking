@@ -345,7 +345,6 @@ describe('GameCell', () => {
           onClick={vi.fn()}
         />
       );
-
       expect(screen.getByText('♟')).toBeInTheDocument();
     });
   });
