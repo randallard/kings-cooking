@@ -174,19 +174,32 @@ describe('getRookMoves', () => {
    - Dark pawns move FORWARD (increasing row: row + 1) toward light's side
    - **Solution**: Use `owner === 'light' ? -1 : 1` for direction multiplier
 
-3. **Pawn Capture Rules**:
+3. **Pawn Two-Square First Move**:
+   - On 3x3 board, pawns can move 2 squares on first move (moveCount === 0)
+   - Light pawn at row 2 can move to row 0 (skipping row 1)
+   - Dark pawn at row 0 can move to row 2 (skipping row 1)
+   - Only if both intermediate and destination squares are empty
+   - **Solution**: Check `piece.moveCount === 0` and validate 2-square path
+
+4. **Pawn Capture Rules**:
    - Move forward 1 square ONLY if empty
    - Capture diagonally forward 1 square ONLY if enemy piece present
    - Cannot capture straight ahead
    - Cannot move forward if blocked
    - **Solution**: Check forward square separately from diagonal captures
 
-4. **No En Passant on 3x3 Board**:
-   - Standard chess has en passant (special pawn capture)
-   - 3x3 board is too small for en passant to be relevant
-   - **Solution**: Don't implement en passant
+5. **En Passant Implementation**:
+   - En passant is REQUIRED on 3x3 board (user confirmed)
+   - Occurs when enemy pawn moves 2 squares and lands beside your pawn
+   - You can capture it "in passing" as if it moved only 1 square
+   - Only valid on the very next turn (check last move from moveHistory)
+   - **Solution**:
+     - Accept `lastMove` parameter in getPawnMoves()
+     - Check if lastMove was a pawn 2-square move
+     - Check if it landed beside current pawn (same row, adjacent column)
+     - Add en passant capture position (diagonal behind the enemy pawn)
 
-5. **Pawn Promotion Not Needed Yet**:
+6. **Pawn Promotion Not Needed Yet**:
    - Standard chess promotes pawns reaching opposite edge
    - King's Cooking: pawns reaching edge go "off-board" to court (handled by off-board logic)
    - **Solution**: No promotion logic needed in this task
@@ -210,12 +223,17 @@ describe('getRookMoves', () => {
 - Can capture enemy pieces
 - Most powerful piece
 
-**Pawn Movement** (Standard Chess, simplified for 3x3):
+**Pawn Movement** (Standard Chess, adapted for 3x3):
 - Moves forward 1 square (cannot move backward)
-- First move can be 2 squares (NOT applicable on 3x3 board - no room)
+- First move can be 2 squares (moveCount === 0)
+  - Light pawn: row 2 → row 0 (skipping row 1)
+  - Dark pawn: row 0 → row 2 (skipping row 1)
 - Captures diagonally forward 1 square only
 - Cannot capture straight ahead
-- En passant (NOT applicable on 3x3 board)
+- **En passant** (IMPLEMENTED):
+  - If enemy pawn moves 2 squares and lands beside your pawn
+  - You can capture it "in passing" on the very next turn
+  - Capture position is diagonal behind the enemy pawn
 - Promotion (handled by off-board logic in King's Cooking)
 
 ---
@@ -387,19 +405,22 @@ git checkout src/lib/chess/pieceMovement.ts
 
 ---
 
-### Task 4: Implement getPawnMoves() Function
+### Task 4: Implement getPawnMoves() Function with En Passant
 
 **File**: `src/lib/chess/pieceMovement.ts`
 
 **Changes**:
 ```typescript
 // ADD after getQueenMoves function
+// IMPORTANT: Import Move type at top of file
+import type { Piece, Position, Move } from '../validation/schemas';
 
 /**
  * Get all pawn moves from position.
  *
- * Pawns move forward 1 square (direction depends on owner).
+ * Pawns move forward 1 or 2 squares (2 only on first move).
  * Can capture diagonally forward 1 square.
+ * Can capture en passant if conditions met.
  * Cannot move backward or sideways.
  * Cannot capture straight ahead.
  *
@@ -407,14 +428,18 @@ git checkout src/lib/chess/pieceMovement.ts
  * Dark pawns move toward row 2 (light's side).
  *
  * @param from - Starting position
+ * @param piece - The pawn piece being moved (need moveCount for first move)
  * @param getPiece - Function to get piece at position
  * @param currentPlayer - Current player color
+ * @param lastMove - Last move from move history (for en passant detection)
  * @returns Array of valid destination positions
  */
 export function getPawnMoves(
   from: Position,
+  piece: Piece,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'light' | 'dark'
+  currentPlayer: 'light' | 'dark',
+  lastMove?: Move | null
 ): Position[] {
   if (!from) return [];
 
@@ -430,6 +455,17 @@ export function getPawnMoves(
     const forwardPiece = getPiece([forwardRow, col]);
     if (!forwardPiece) {
       moves.push([forwardRow, col]); // Can only move forward if empty
+
+      // Two-square first move (only if moveCount === 0 and path is clear)
+      if (piece.moveCount === 0) {
+        const twoSquareRow = row + (direction * 2);
+        if (isInBounds(twoSquareRow, col)) {
+          const twoSquarePiece = getPiece([twoSquareRow, col]);
+          if (!twoSquarePiece) {
+            moves.push([twoSquareRow, col]); // Can move 2 squares on first move
+          }
+        }
+      }
     }
   }
 
@@ -445,11 +481,36 @@ export function getPawnMoves(
     }
   }
 
+  // En Passant detection
+  if (lastMove && lastMove.piece.type === 'pawn') {
+    // Check if last move was a 2-square pawn move
+    if (lastMove.to !== 'off_board') {
+      const [fromRow, fromCol] = lastMove.from;
+      const [toRow, toCol] = lastMove.to;
+      const moveDistance = Math.abs(toRow - fromRow);
+
+      // If enemy pawn moved 2 squares and landed beside our pawn
+      if (moveDistance === 2 && toRow === row && Math.abs(toCol - col) === 1) {
+        // En passant capture position is diagonal behind the enemy pawn
+        const enPassantRow = row + direction;
+        const enPassantCol = toCol;
+
+        if (isInBounds(enPassantRow, enPassantCol)) {
+          moves.push([enPassantRow, enPassantCol]); // En passant capture
+        }
+      }
+    }
+  }
+
   return moves;
 }
 ```
 
-**Why**: Implements pawn movement with direction-based forward movement and diagonal captures.
+**Why**: Implements pawn movement with:
+- Direction-based forward movement (1 or 2 squares)
+- Two-square first move when moveCount === 0
+- Diagonal captures
+- En passant detection using lastMove from moveHistory
 
 **Validation**:
 ```bash
@@ -458,7 +519,9 @@ pnpm run check
 
 **If Fail**:
 - Check direction calculation is correct (light = -1, dark = +1)
-- Verify diagonal capture logic doesn't allow capturing own pieces
+- Verify two-square move only when moveCount === 0
+- Ensure en passant conditions are correct (2-square move, beside pawn, same row)
+- Check diagonal capture logic doesn't allow capturing own pieces
 - Ensure forward move doesn't allow capturing
 
 **Rollback**:
@@ -565,30 +628,69 @@ git checkout src/lib/chess/pieceMovement.test.ts
 
 describe('getPawnMoves', () => {
   test('light pawn should move forward (up) one square', () => {
-    const moves = getPawnMoves([1, 1], emptyBoard(), 'light');
+    const pawn = createMockPiece('pawn', 'light', [1, 1]);
+    pawn.moveCount = 1; // Not first move
+    const moves = getPawnMoves([1, 1], pawn, emptyBoard(), 'light');
 
     expect(moves).toContainEqual([0, 1]); // Forward (up)
     expect(moves).toHaveLength(1); // No captures available
   });
 
   test('dark pawn should move forward (down) one square', () => {
-    const moves = getPawnMoves([1, 1], emptyBoard(), 'dark');
+    const pawn = createMockPiece('pawn', 'dark', [1, 1]);
+    pawn.moveCount = 1;
+    const moves = getPawnMoves([1, 1], pawn, emptyBoard(), 'dark');
 
     expect(moves).toContainEqual([2, 1]); // Forward (down)
     expect(moves).toHaveLength(1);
   });
 
+  test('should move two squares on first move (light pawn)', () => {
+    const pawn = createMockPiece('pawn', 'light', [2, 1]);
+    pawn.moveCount = 0; // First move
+    const moves = getPawnMoves([2, 1], pawn, emptyBoard(), 'light');
+
+    expect(moves).toContainEqual([1, 1]); // One square forward
+    expect(moves).toContainEqual([0, 1]); // Two squares forward
+    expect(moves).toHaveLength(2);
+  });
+
+  test('should move two squares on first move (dark pawn)', () => {
+    const pawn = createMockPiece('pawn', 'dark', [0, 1]);
+    pawn.moveCount = 0;
+    const moves = getPawnMoves([0, 1], pawn, emptyBoard(), 'dark');
+
+    expect(moves).toContainEqual([1, 1]); // One square forward
+    expect(moves).toContainEqual([2, 1]); // Two squares forward
+    expect(moves).toHaveLength(2);
+  });
+
+  test('should not move two squares if intermediate square is blocked', () => {
+    const pawn = createMockPiece('pawn', 'light', [2, 1]);
+    pawn.moveCount = 0;
+    const blockingPiece = createMockPiece('rook', 'dark', [1, 1]);
+    const getPiece = boardWithPieces([{ pos: [1, 1], piece: blockingPiece }]);
+
+    const moves = getPawnMoves([2, 1], pawn, getPiece, 'light');
+
+    expect(moves).not.toContainEqual([1, 1]); // Blocked
+    expect(moves).not.toContainEqual([0, 1]); // Can't jump
+    expect(moves).toHaveLength(0);
+  });
+
   test('should not move forward if blocked', () => {
+    const pawn = createMockPiece('pawn', 'light', [1, 1]);
     const blockingPiece = createMockPiece('rook', 'dark', [0, 1]);
     const getPiece = boardWithPieces([{ pos: [0, 1], piece: blockingPiece }]);
 
-    const moves = getPawnMoves([1, 1], getPiece, 'light');
+    const moves = getPawnMoves([1, 1], pawn, getPiece, 'light');
 
     expect(moves).not.toContainEqual([0, 1]); // Blocked
     expect(moves).toHaveLength(0); // No moves if forward is blocked and no captures
   });
 
   test('should capture diagonally forward', () => {
+    const pawn = createMockPiece('pawn', 'light', [1, 1]);
     const enemy1 = createMockPiece('knight', 'dark', [0, 0]);
     const enemy2 = createMockPiece('bishop', 'dark', [0, 2]);
     const getPiece = boardWithPieces([
@@ -596,7 +698,7 @@ describe('getPawnMoves', () => {
       { pos: [0, 2], piece: enemy2 },
     ]);
 
-    const moves = getPawnMoves([1, 1], getPiece, 'light');
+    const moves = getPawnMoves([1, 1], pawn, getPiece, 'light');
 
     expect(moves).toContainEqual([0, 0]); // Capture left
     expect(moves).toContainEqual([0, 2]); // Capture right
@@ -605,36 +707,120 @@ describe('getPawnMoves', () => {
   });
 
   test('should not capture own pieces', () => {
+    const pawn = createMockPiece('pawn', 'light', [1, 1]);
     const ownPiece = createMockPiece('knight', 'light', [0, 0]);
     const getPiece = boardWithPieces([{ pos: [0, 0], piece: ownPiece }]);
 
-    const moves = getPawnMoves([1, 1], getPiece, 'light');
+    const moves = getPawnMoves([1, 1], pawn, getPiece, 'light');
 
     expect(moves).not.toContainEqual([0, 0]); // Cannot capture own piece
   });
 
   test('should not move diagonally if no enemy piece', () => {
-    const moves = getPawnMoves([1, 1], emptyBoard(), 'light');
+    const pawn = createMockPiece('pawn', 'light', [1, 1]);
+    const moves = getPawnMoves([1, 1], pawn, emptyBoard(), 'light');
 
     expect(moves).not.toContainEqual([0, 0]); // No diagonal move without capture
     expect(moves).not.toContainEqual([0, 2]);
   });
 
+  test('should capture en passant (light captures dark pawn)', () => {
+    const lightPawn = createMockPiece('pawn', 'light', [1, 1]);
+    const darkPawn = createMockPiece('pawn', 'dark', [1, 2]);
+
+    // Last move: dark pawn moved from [0, 2] to [1, 2] (2-square move)
+    const lastMove: Move = {
+      from: [0, 2],
+      to: [1, 2],
+      piece: darkPawn,
+      captured: null,
+      timestamp: Date.now(),
+    };
+
+    const getPiece = boardWithPieces([{ pos: [1, 2], piece: darkPawn }]);
+    const moves = getPawnMoves([1, 1], lightPawn, getPiece, 'light', lastMove);
+
+    expect(moves).toContainEqual([0, 2]); // En passant capture
+  });
+
+  test('should capture en passant (dark captures light pawn)', () => {
+    const darkPawn = createMockPiece('pawn', 'dark', [1, 1]);
+    const lightPawn = createMockPiece('pawn', 'light', [1, 0]);
+
+    // Last move: light pawn moved from [2, 0] to [1, 0] (2-square move)
+    const lastMove: Move = {
+      from: [2, 0],
+      to: [1, 0],
+      piece: lightPawn,
+      captured: null,
+      timestamp: Date.now(),
+    };
+
+    const getPiece = boardWithPieces([{ pos: [1, 0], piece: lightPawn }]);
+    const moves = getPawnMoves([1, 1], darkPawn, getPiece, 'dark', lastMove);
+
+    expect(moves).toContainEqual([2, 0]); // En passant capture
+  });
+
+  test('should not allow en passant if last move was not 2-square pawn move', () => {
+    const lightPawn = createMockPiece('pawn', 'light', [1, 1]);
+    const darkPawn = createMockPiece('pawn', 'dark', [1, 2]);
+
+    // Last move: dark pawn moved 1 square (not eligible for en passant)
+    const lastMove: Move = {
+      from: [0, 2],
+      to: [1, 2],
+      piece: darkPawn,
+      captured: null,
+      timestamp: Date.now(),
+    };
+
+    const getPiece = boardWithPieces([{ pos: [1, 2], piece: darkPawn }]);
+    const moves = getPawnMoves([1, 1], lightPawn, getPiece, 'light', lastMove);
+
+    // Should include diagonal capture but NOT en passant
+    expect(moves).toContainEqual([0, 2]);
+    expect(moves).toContainEqual([0, 1]);
+  });
+
+  test('should not allow en passant if pawns not on same row', () => {
+    const lightPawn = createMockPiece('pawn', 'light', [2, 1]);
+    const darkPawn = createMockPiece('pawn', 'dark', [1, 2]);
+
+    // Last move: dark pawn moved 2 squares but not beside light pawn
+    const lastMove: Move = {
+      from: [0, 2],
+      to: [1, 2],
+      piece: createMockPiece('pawn', 'dark', [1, 2]),
+      captured: null,
+      timestamp: Date.now(),
+    };
+
+    const getPiece = boardWithPieces([{ pos: [1, 2], piece: darkPawn }]);
+    const moves = getPawnMoves([2, 1], lightPawn, getPiece, 'light', lastMove);
+
+    expect(moves).not.toContainEqual([1, 2]); // Not en passant (wrong row)
+  });
+
   test('should not move beyond board edges', () => {
+    const lightPawn = createMockPiece('pawn', 'light', [0, 1]);
+    const darkPawn = createMockPiece('pawn', 'dark', [2, 1]);
+
     // Light pawn at top edge
-    const moves = getPawnMoves([0, 1], emptyBoard(), 'light');
+    const moves = getPawnMoves([0, 1], lightPawn, emptyBoard(), 'light');
     expect(moves).toEqual([]); // Cannot move forward off-board
 
     // Dark pawn at bottom edge
-    const moves2 = getPawnMoves([2, 1], emptyBoard(), 'dark');
+    const moves2 = getPawnMoves([2, 1], darkPawn, emptyBoard(), 'dark');
     expect(moves2).toEqual([]); // Cannot move forward off-board
   });
 
   test('should handle corner positions', () => {
+    const pawn = createMockPiece('pawn', 'light', [1, 0]);
     const enemy = createMockPiece('rook', 'dark', [0, 1]);
     const getPiece = boardWithPieces([{ pos: [0, 1], piece: enemy }]);
 
-    const moves = getPawnMoves([1, 0], getPiece, 'light');
+    const moves = getPawnMoves([1, 0], pawn, getPiece, 'light');
 
     // Can capture diagonally right, cannot go diagonally left (off board)
     expect(moves).toContainEqual([0, 1]);
@@ -643,7 +829,8 @@ describe('getPawnMoves', () => {
   });
 
   test('should return empty array for null position', () => {
-    const moves = getPawnMoves(null, emptyBoard(), 'light');
+    const pawn = createMockPiece('pawn', 'light', [1, 1]);
+    const moves = getPawnMoves(null, pawn, emptyBoard(), 'light');
     expect(moves).toEqual([]);
   });
 });
@@ -703,7 +890,9 @@ pnpm test -- pieceMovement.test
 
 **Changes**:
 ```typescript
-// MODIFY lines 151-166 - add imports first
+// MODIFY imports at top of file - add Move type and getPawnMoves
+import type { Piece, Position, Move } from '../validation/schemas';
+import type { ValidationResult } from './types';
 import {
   getRookMoves,
   getKnightMoves,
@@ -715,13 +904,29 @@ import {
   canBishopMoveOffBoard,
 } from './pieceMovement';
 
-// Then modify the switch statement in validateStandardMove function
+// MODIFY validateMove function signature to accept gameState (for lastMove)
+export function validateMove(
+  from: Position,
+  to: Position | 'off_board',
+  piece: Piece,
+  getPiece: (pos: Position) => Piece | null,
+  currentPlayer: 'light' | 'dark',
+  lastMove?: Move | null  // ADD - for en passant
+): ValidationResult {
+  // ... existing code unchanged ...
+
+  // When calling validateStandardMove, pass lastMove
+  return validateStandardMove(from, to, piece, getPiece, currentPlayer, lastMove);
+}
+
+// MODIFY validateStandardMove function signature
 function validateStandardMove(
   from: Position,
   to: Position,
   piece: Piece,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'light' | 'dark'
+  currentPlayer: 'light' | 'dark',
+  lastMove?: Move | null  // ADD - for en passant
 ): ValidationResult {
   if (!to) {
     return {
@@ -746,8 +951,8 @@ function validateStandardMove(
     case 'queen':  // ADD
       validMoves = getQueenMoves(from, getPiece, currentPlayer);
       break;
-    case 'pawn':   // ADD
-      validMoves = getPawnMoves(from, getPiece, currentPlayer);
+    case 'pawn':   // ADD - pass piece and lastMove for en passant
+      validMoves = getPawnMoves(from, piece, getPiece, currentPlayer, lastMove);
       break;
     default:
       return {
@@ -760,7 +965,7 @@ function validateStandardMove(
 }
 ```
 
-**Why**: Adds queen and pawn handling to standard move validation.
+**Why**: Adds queen and pawn handling to standard move validation, with en passant support for pawns.
 
 **Validation**:
 ```bash
@@ -769,7 +974,9 @@ pnpm test -- moveValidation.test
 ```
 
 **If Fail**:
-- Verify imports are correct
+- Verify imports include Move type
+- Check validateMove signature has lastMove parameter
+- Ensure getPawnMoves receives piece and lastMove
 - Check switch statement syntax (colons, breaks)
 - Ensure case labels match PieceType enum values
 
@@ -786,12 +993,13 @@ git checkout src/lib/chess/moveValidation.ts
 
 **Changes**:
 ```typescript
-// MODIFY lines 234-243
+// MODIFY getValidMovesForPiece function signature and implementation
 function getValidMovesForPiece(
   from: Position,
   piece: Piece,
   getPiece: (pos: Position) => Piece | null,
-  currentPlayer: 'light' | 'dark'
+  currentPlayer: 'light' | 'dark',
+  lastMove?: Move | null  // ADD - for en passant
 ): Position[] {
   switch (piece.type) {
     case 'rook':
@@ -802,15 +1010,39 @@ function getValidMovesForPiece(
       return getBishopMoves(from, getPiece, currentPlayer);
     case 'queen':  // ADD
       return getQueenMoves(from, getPiece, currentPlayer);
-    case 'pawn':   // ADD
-      return getPawnMoves(from, getPiece, currentPlayer);
+    case 'pawn':   // ADD - pass piece and lastMove for en passant
+      return getPawnMoves(from, piece, getPiece, currentPlayer, lastMove);
     default:
       return [];
   }
 }
+
+// ALSO MODIFY isStalemate function to pass lastMove
+export function isStalemate(
+  pieces: Piece[],
+  getPiece: (pos: Position) => Piece | null,
+  currentPlayer: 'light' | 'dark',
+  lastMove?: Move | null  // ADD - for en passant
+): boolean {
+  for (const piece of pieces) {
+    if (piece.position === null) continue; // Off-board
+
+    const validMoves = getValidMovesForPiece(
+      piece.position,
+      piece,
+      getPiece,
+      currentPlayer,
+      lastMove  // ADD - pass through for pawn en passant
+    );
+
+    if (validMoves.length > 0) return false; // Has moves
+  }
+
+  return true; // No legal moves
+}
 ```
 
-**Why**: Enables stalemate detection and move highlighting for queen and pawn.
+**Why**: Enables stalemate detection and move highlighting for queen and pawn, with en passant support.
 
 **Validation**:
 ```bash
@@ -820,6 +1052,8 @@ pnpm test -- moveValidation.test
 
 **If Fail**:
 - Verify function names match imports
+- Check lastMove is passed through correctly
+- Ensure getPawnMoves receives piece and lastMove
 - Check return statements
 - Ensure all cases handled
 
@@ -1153,13 +1387,15 @@ git reset --hard HEAD  # Nuclear option
 ## Assumptions
 
 1. Queen moves = rook + bishop (standard chess rules)
-2. Pawn cannot move 2 squares on first move (3x3 board too small)
-3. No en passant (3x3 board too small)
-4. Pawn promotion handled by off-board logic (out of scope)
-5. Queen can move off-board using rook OR bishop rules
-6. Pawn can move off-board only from opponent's starting row
-7. Direction convention: Light toward row 0, Dark toward row 2
-8. No special "pawn push" or "pawn storm" mechanics needed
+2. Pawn CAN move 2 squares on first move (moveCount === 0) on 3x3 board
+3. **En passant IS implemented** (user confirmed - 3x3 is sufficient)
+4. En passant requires tracking lastMove from moveHistory
+5. Pawn promotion handled by off-board logic (out of scope)
+6. Queen can move off-board using rook OR bishop rules
+7. Pawn can move off-board only from opponent's starting row
+8. Direction convention: Light toward row 0, Dark toward row 2
+9. En passant capture removes the enemy pawn that was passed (handled by game engine)
+10. No special "pawn push" or "pawn storm" mechanics needed
 
 ---
 
