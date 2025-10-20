@@ -163,3 +163,31 @@
     transform: none;
   }
 }
+
+/* Dark mode - system preference */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .pieceButton {
+    color: antiquewhite;
+  }
+
+  :root:not([data-theme='light']) .pieceButton:hover {
+    color: black;
+  }
+
+  :root:not([data-theme='light']) .pieceIcon:hover {
+    color: #1a1a1a;
+  }
+}
+
+/* Dark mode - manual toggle */
+:root[data-theme='dark'] .pieceButton {
+  color: antiquewhite;
+}
+
+:root[data-theme='dark'] .pieceButton:hover {
+  color: black;
+}
+
+:root[data-theme='dark'] .pieceIcon:hover {
+  color: #1a1a1a;
+}
