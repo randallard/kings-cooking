@@ -322,6 +322,10 @@ export function gameFlowReducer(
 
     case 'SET_PLAYER_COLOR':
       if (state.phase !== 'color-selection') return state;
+
+      // Persist color choice to localStorage
+      storage.setPlayer1Color(action.color);
+
       return {
         phase: 'piece-selection',
         mode: state.mode,
