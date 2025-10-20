@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, type ReactElement } from 'react';
-import type { Piece, PieceType } from '@/lib/validation/schemas';
+import type { Piece } from '@/lib/validation/schemas';
 import { URLSharer } from './URLSharer';
 import styles from './VictoryScreen.module.css';
 

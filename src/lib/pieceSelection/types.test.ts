@@ -138,6 +138,8 @@ describe('Piece Selection Types', () => {
       expect(PIECE_POOL.bishop.unicode.dark).toBe('♝');
       expect(PIECE_POOL.queen.unicode.dark).toBe('♛');
       expect(PIECE_POOL.pawn.unicode.dark).toBe('♟');
+    });
+
     describe('pawn unicode (Issue #26)', () => {
       it('should use U+2659 for light pawn (no emoji variant)', () => {
         const lightPawn = PIECE_POOL.pawn.unicode.light;
