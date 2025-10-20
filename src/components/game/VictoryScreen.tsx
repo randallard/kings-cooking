@@ -165,11 +165,11 @@ export const VictoryScreen = ({
   // Get piece symbol for display
   const getPieceSymbol = (piece: Piece): string => {
     const symbols: Record<PieceType, { light: string; dark: string }> = {
-      queen: { light: '♕', dark: '♛' },
-      rook: { light: '♖', dark: '♜' },
-      bishop: { light: '♗', dark: '♝' },
-      knight: { light: '♘', dark: '♞' },
-      pawn: { light: '♙', dark: '♟' },
+      queen: { light: '♛', dark: '♕' },
+      rook: { light: '♜', dark: '♖' },
+      bishop: { light: '♝', dark: '♗' },
+      knight: { light: '♞', dark: '♘' },
+      pawn: { light: '♟', dark: '♙' },
     };
     return symbols[piece.type]?.[piece.owner] || '?';
   };
