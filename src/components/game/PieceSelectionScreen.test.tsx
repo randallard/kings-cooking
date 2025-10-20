@@ -53,6 +53,7 @@ describe('PieceSelectionScreen', () => {
       const stateWithMode: PieceSelectionPhase = {
         ...baseState,
         selectionMode: 'mirrored',
+      player1Color: 'light',
       };
       render(<PieceSelectionScreen state={stateWithMode} dispatch={mockDispatch} />);
 
@@ -64,6 +65,7 @@ describe('PieceSelectionScreen', () => {
     const stateWithMode: PieceSelectionPhase = {
       ...baseState,
       selectionMode: 'mirrored',
+      player1Color: 'light',
     };
 
     it('should display 3x3 grid', () => {
@@ -98,6 +100,7 @@ describe('PieceSelectionScreen', () => {
     const stateWithMode: PieceSelectionPhase = {
       ...baseState,
       selectionMode: 'independent',
+      player1Color: 'light',
     };
 
     it('should open PiecePickerModal when position clicked', async () => {
@@ -166,6 +169,7 @@ describe('PieceSelectionScreen', () => {
     const stateWithMirrored: PieceSelectionPhase = {
       ...baseState,
       selectionMode: 'mirrored',
+      player1Color: 'light',
     };
 
     it('should auto-select player2 pieces when player1 selects in mirrored mode', async () => {
@@ -193,6 +197,7 @@ describe('PieceSelectionScreen', () => {
     const stateWithRandom: PieceSelectionPhase = {
       ...baseState,
       selectionMode: 'random',
+      player1Color: 'light',
     };
 
     it('should auto-generate pieces when random mode is selected', () => {
@@ -218,9 +223,9 @@ describe('PieceSelectionScreen', () => {
     const completeState: PieceSelectionPhase = {
       ...baseState,
       selectionMode: 'independent',
+      player1Color: 'light',
       player1Pieces: ['rook', 'knight', 'bishop'],
       player2Pieces: ['queen', 'pawn', 'pawn'],
-      player1Color: 'light',
     };
 
     it('should show start game button when selection complete', () => {
@@ -255,6 +260,7 @@ describe('PieceSelectionScreen', () => {
     const stateWithMode: PieceSelectionPhase = {
       ...baseState,
       selectionMode: 'mirrored',
+      player1Color: 'light',
     };
 
     it('should have proper ARIA labels', () => {
@@ -291,6 +297,7 @@ describe('PieceSelectionScreen', () => {
       const partialState: PieceSelectionPhase = {
         ...baseState,
         selectionMode: 'independent',
+      player1Color: 'light',
         player1Pieces: ['rook', null, 'bishop'] as unknown as SelectedPieces,
       };
       render(<PieceSelectionScreen state={partialState} dispatch={mockDispatch} />);

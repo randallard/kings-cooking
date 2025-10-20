@@ -181,27 +181,45 @@ export function PieceSelectionScreen({
           <p className={styles.instruction}>Click any position to choose or change a piece</p>
 
           <div className={styles.board}>
-            {/* Row 0: Player pieces (clickable) */}
+            {/* Row 0: Top row - shows dark pieces (player2 if p1=light, player1 if p1=dark) */}
             <div className={styles.row}>
               {[0, 1, 2].map((col) => {
-                const piece = state.player1Pieces?.[col];
-                return (
-                  <button
-                    key={col}
-                    type="button"
-                    onClick={() => handlePositionClick(col)}
-                    className={styles.cell}
-                    aria-label={`Position ${col + 1}${piece ? `: ${piece}` : ' (empty)'}`}
-                  >
-                    {piece ? (
-                      <span className={styles.pieceIcon} aria-hidden="true">
-                        {PIECE_POOL[piece].unicode.light}
-                      </span>
-                    ) : (
-                      <span className={styles.emptyCell}>{col + 1}</span>
-                    )}
-                  </button>
-                );
+                // If player1 chose light, show player2's dark pieces on top (display only)
+                // If player1 chose dark, show player1's pieces on top (clickable)
+                const isPlayer1Row = state.player1Color === 'dark';
+                const piece = isPlayer1Row ? state.player1Pieces?.[col] : state.player2Pieces?.[col];
+
+                if (isPlayer1Row) {
+                  // Player 1 chose dark - top row is clickable for piece selection
+                  return (
+                    <button
+                      key={col}
+                      type="button"
+                      onClick={() => handlePositionClick(col)}
+                      className={styles.cell}
+                      aria-label={`Position ${col + 1}${piece ? `: ${piece}` : ' (empty)'}`}
+                    >
+                      {piece ? (
+                        <span className={styles.pieceIcon} aria-hidden="true">
+                          {PIECE_POOL[piece].unicode.dark}
+                        </span>
+                      ) : (
+                        <span className={styles.emptyCell}>{col + 1}</span>
+                      )}
+                    </button>
+                  );
+                } else {
+                  // Player 1 chose light - top row shows opponent's dark pieces (display only)
+                  return (
+                    <div key={col} className={styles.cellDisplay}>
+                      {piece && (
+                        <span className={styles.pieceIcon} aria-hidden="true">
+                          {PIECE_POOL[piece].unicode.dark}
+                        </span>
+                      )}
+                    </div>
+                  );
+                }
               })}
             </div>
 
@@ -212,19 +230,45 @@ export function PieceSelectionScreen({
               ))}
             </div>
 
-            {/* Row 2: Opponent pieces (display only) */}
+            {/* Row 2: Bottom row - shows light pieces (player1 if p1=light, player2 if p1=dark) */}
             <div className={styles.row}>
               {[0, 1, 2].map((col) => {
-                const piece = state.player2Pieces?.[col];
-                return (
-                  <div key={col} className={styles.cellDisplay}>
-                    {piece && (
-                      <span className={styles.pieceIcon} aria-hidden="true">
-                        {PIECE_POOL[piece].unicode.dark}
-                      </span>
-                    )}
-                  </div>
-                );
+                // If player1 chose light, show player1's pieces on bottom (clickable)
+                // If player1 chose dark, show player2's light pieces on bottom (display only)
+                const isPlayer1Row = state.player1Color === 'light';
+                const piece = isPlayer1Row ? state.player1Pieces?.[col] : state.player2Pieces?.[col];
+
+                if (isPlayer1Row) {
+                  // Player 1 chose light - bottom row is clickable for piece selection
+                  return (
+                    <button
+                      key={col}
+                      type="button"
+                      onClick={() => handlePositionClick(col)}
+                      className={styles.cell}
+                      aria-label={`Position ${col + 1}${piece ? `: ${piece}` : ' (empty)'}`}
+                    >
+                      {piece ? (
+                        <span className={styles.pieceIcon} aria-hidden="true">
+                          {PIECE_POOL[piece].unicode.light}
+                        </span>
+                      ) : (
+                        <span className={styles.emptyCell}>{col + 1}</span>
+                      )}
+                    </button>
+                  );
+                } else {
+                  // Player 1 chose dark - bottom row shows opponent's light pieces (display only)
+                  return (
+                    <div key={col} className={styles.cellDisplay}>
+                      {piece && (
+                        <span className={styles.pieceIcon} aria-hidden="true">
+                          {PIECE_POOL[piece].unicode.light}
+                        </span>
+                      )}
+                    </div>
+                  );
+                }
               })}
             </div>
           </div>
