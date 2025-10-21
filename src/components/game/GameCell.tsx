@@ -22,8 +22,6 @@ interface GameCellProps {
   isPendingSource?: boolean;
   /** Is this the destination of a pending move? */
   isPendingDestination?: boolean;
-  /** Ghost piece to show at source during pending move */
-  ghostPiece?: Piece | null;
   /** Click handler */
   onClick: (position: Position) => void;
   /** Is it this player's turn? */
@@ -58,7 +56,6 @@ export const GameCell = ({
   isLastMove,
   isPendingSource = false,
   isPendingDestination = false,
-  ghostPiece = null,
   onClick,
   disabled = false,
 }: GameCellProps): ReactElement => {
@@ -108,16 +105,6 @@ export const GameCell = ({
       onClick={handleClick}
       tabIndex={isSelected ? 0 : -1}
     >
-      {/* Ghost piece at source during pending move */}
-      {ghostPiece && (
-        <span
-          className={styles.ghostPiece}
-          aria-hidden="true"
-        >
-          {getPieceUnicode(ghostPiece)}
-        </span>
-      )}
-
       {/* Actual piece (or moved piece at destination) */}
       {pieceChar && piece && (
         <span
