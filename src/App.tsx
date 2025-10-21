@@ -476,6 +476,16 @@ export default function App(): ReactElement {
             </div>
           </div>
 
+          {state.pendingMove && (
+            <div style={{ marginBottom: 'var(--spacing-md)' }}>
+              <MoveConfirmButton
+                onConfirm={handleConfirmMove}
+                disabled={false}
+                isProcessing={false}
+              />
+            </div>
+          )}
+
           <GameBoard
             gameState={state.gameState}
             onMove={(from, to) => {
@@ -487,16 +497,6 @@ export default function App(): ReactElement {
             isPlayerTurn={true}
             pendingMove={state.pendingMove}
           />
-
-          {state.pendingMove && (
-            <div style={{ marginTop: 'var(--spacing-md)' }}>
-              <MoveConfirmButton
-                onConfirm={handleConfirmMove}
-                disabled={false}
-                isProcessing={false}
-              />
-            </div>
-          )}
 
           <div style={{
             marginTop: 'var(--spacing-md)',
