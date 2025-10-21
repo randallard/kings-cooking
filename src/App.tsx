@@ -384,7 +384,13 @@ export default function App(): ReactElement {
     const currentIndex = historyIndex ?? state.gameState.moveHistory.length;
     const maxIndex = state.gameState.moveHistory.length;
     if (currentIndex < maxIndex) {
-      setHistoryIndex(currentIndex + 1);
+      const nextIndex = currentIndex + 1;
+      // If stepping forward to the latest move, set to null to activate board
+      if (nextIndex >= maxIndex) {
+        setHistoryIndex(null);
+      } else {
+        setHistoryIndex(nextIndex);
+      }
     }
   }, [historyIndex, state]);
 
