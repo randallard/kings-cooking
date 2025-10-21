@@ -208,34 +208,7 @@ describe('GameCell', () => {
   });
 
   describe('Pending Move Visualization', () => {
-    it('should show ghost piece at source', () => {
-      const piece = {
-        type: 'rook' as const,
-        owner: 'light' as const,
-        position: [2, 1] as [number, number],
-        moveCount: 0,
-        id: 'light-rook-1',
-      };
-
-      render(
-        <GameCell
-          position={[2, 1]}
-          piece={null}
-          isSelected={false}
-          isLegalMove={false}
-          isLastMove={false}
-          isPendingSource={true}
-          ghostPiece={piece}
-          onClick={vi.fn()}
-        />
-      );
-
-      const cell = screen.getByRole('gridcell');
-      // CSS Modules hash class names, so check className includes 'pendingSource'
-      expect(cell.className).toMatch(/pendingSource/);
-      // Ghost piece should be rendered
-      expect(cell.textContent).toBeTruthy();
-    });
+    // Removed 'ghost piece at source' test (Issue #41) - feature removed for cleaner UX
 
     it('should show animated piece at destination', () => {
       const piece = {

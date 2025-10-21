@@ -476,15 +476,13 @@ export default function App(): ReactElement {
             </div>
           </div>
 
-          {state.pendingMove && (
-            <div style={{ marginBottom: 'var(--spacing-md)' }}>
-              <MoveConfirmButton
-                onConfirm={handleConfirmMove}
-                disabled={false}
-                isProcessing={false}
-              />
-            </div>
-          )}
+          <div style={{ marginBottom: 'var(--spacing-md)' }}>
+            <MoveConfirmButton
+              onConfirm={handleConfirmMove}
+              disabled={!state.pendingMove}
+              isProcessing={false}
+            />
+          </div>
 
           <GameBoard
             gameState={state.gameState}

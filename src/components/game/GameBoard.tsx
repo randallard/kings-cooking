@@ -312,7 +312,6 @@ export const GameBoard = ({
 
               // Determine which piece to display
               let displayedPiece = piece;
-              let ghostPiece: Piece | null = null;
 
               if (isPendingDest && pendingMove && pendingMove.to !== 'off_board' && pendingMove.from) {
                 // Show moving piece at destination
@@ -320,10 +319,9 @@ export const GameBoard = ({
                 displayedPiece = gameState.board[fromRow]?.[fromCol] ?? null;
               }
 
-              if (isPendingSource && piece) {
-                // Show ghost piece at source
-                ghostPiece = piece;
-                displayedPiece = null; // Clear actual piece at source
+              if (isPendingSource) {
+                // Clear piece at source during pending move (Issue #41)
+                displayedPiece = null;
               }
 
               return (
@@ -336,7 +334,6 @@ export const GameBoard = ({
                   isLastMove={isLastMovePosition(position)}
                   isPendingSource={isPendingSource}
                   isPendingDestination={isPendingDest}
-                  ghostPiece={ghostPiece}
                   onClick={handleCellClick}
                   disabled={!isPlayerTurn}
                 />
