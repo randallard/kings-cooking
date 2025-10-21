@@ -1,4 +1,4 @@
-import { ReactElement, useReducer, useEffect, useState } from 'react';
+import { ReactElement, useReducer, useEffect, useState, useCallback, useMemo } from 'react';
 import { gameFlowReducer } from './lib/gameFlow/reducer';
 import type { GameFlowAction } from './types/gameFlow';
 import { storage, checkAndMigrateStorage } from './lib/storage/localStorage';
@@ -13,8 +13,10 @@ import { HandoffScreen } from './components/game/HandoffScreen';
 import { VictoryScreen } from './components/game/VictoryScreen';
 import { URLSharer } from './components/game/URLSharer';
 import { StoryPanel } from './components/game/StoryPanel';
+import { PlaybackControls } from './components/game/PlaybackControls';
 import { KingsChessEngine } from './lib/chess/KingsChessEngine';
 import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
+import type { GameState } from './lib/validation/schemas';
 
 /**
  * Player 2 Name Entry Screen Component
@@ -89,6 +91,12 @@ export default function App(): ReactElement {
 
   // Handoff step tracking for Player 2 name collection
   const [handoffStepCompleted, setHandoffStepCompleted] = useState(false);
+
+  // History navigation state (null = at latest move)
+  const [historyIndex, setHistoryIndex] = useState<number | null>(null);
+
+  // Derived state: are we viewing history?
+  const isViewingHistory = historyIndex !== null;
 
   // URL state hook (Task 7) - enabled only in URL mode
   const {
@@ -219,6 +227,62 @@ export default function App(): ReactElement {
       }
     }
   }, [state.phase, state]);
+
+  // ===========================
+  // History Navigation Handlers
+  // ===========================
+
+  // Helper: reconstruct game state at specific move index
+  const reconstructGameStateAtMove = useCallback((
+    finalState: GameState,
+    targetIndex: number
+  ): GameState => {
+    const engine = new KingsChessEngine(
+      finalState.lightPlayer,
+      finalState.darkPlayer
+    );
+
+    // Replay moves up to targetIndex
+    for (let i = 0; i <= targetIndex && i < finalState.moveHistory.length; i++) {
+      const move = finalState.moveHistory[i];
+      if (move) {
+        engine.makeMove(move.from, move.to);
+      }
+    }
+
+    return engine.getGameState();
+  }, []);
+
+  // Handler: step back one move
+  const handleStepBack = useCallback(() => {
+    if (state.phase !== 'playing') return;
+    const currentIndex = historyIndex ?? state.gameState.moveHistory.length;
+    if (currentIndex > 0) {
+      setHistoryIndex(currentIndex - 1);
+    }
+  }, [historyIndex, state]);
+
+  // Handler: step forward one move
+  const handleStepForward = useCallback(() => {
+    if (state.phase !== 'playing') return;
+    const currentIndex = historyIndex ?? state.gameState.moveHistory.length;
+    const maxIndex = state.gameState.moveHistory.length;
+    if (currentIndex < maxIndex) {
+      setHistoryIndex(currentIndex + 1);
+    }
+  }, [historyIndex, state]);
+
+  // Handler: return to current (latest) move
+  const handleReturnToCurrent = useCallback(() => {
+    setHistoryIndex(null);
+  }, []);
+
+  // Compute displayed game state (current or historical)
+  const displayedGameState = useMemo(() => {
+    if (state.phase !== 'playing') return null;
+    if (!isViewingHistory) return state.gameState;
+    return reconstructGameStateAtMove(state.gameState, historyIndex ?? 0);
+  }, [state, isViewingHistory, historyIndex, reconstructGameStateAtMove]);
 
   // ===========================
   // Phase 1: Mode Selection
@@ -477,22 +541,36 @@ export default function App(): ReactElement {
           </div>
 
           <div style={{ marginBottom: 'var(--spacing-md)' }}>
-            <MoveConfirmButton
-              onConfirm={handleConfirmMove}
-              disabled={!state.pendingMove}
-              isProcessing={false}
+            <PlaybackControls
+              onStepBack={handleStepBack}
+              onStepForward={handleStepForward}
+              onReturnToCurrent={handleReturnToCurrent}
+              canStepBack={(historyIndex ?? state.gameState.moveHistory.length) > 0}
+              canStepForward={(historyIndex ?? state.gameState.moveHistory.length) < state.gameState.moveHistory.length}
+              isAtLatest={historyIndex === null}
+              currentMoveIndex={historyIndex ?? state.gameState.moveHistory.length}
+              totalMoves={state.gameState.moveHistory.length}
             />
+            <div style={{ marginTop: 'var(--spacing-sm)' }}>
+              <MoveConfirmButton
+                onConfirm={handleConfirmMove}
+                disabled={!state.pendingMove || isViewingHistory}
+                isProcessing={false}
+              />
+            </div>
           </div>
 
           <GameBoard
-            gameState={state.gameState}
+            gameState={displayedGameState ?? state.gameState}
             onMove={(from, to) => {
-              dispatch({ type: 'STAGE_MOVE', from, to });
+              if (!isViewingHistory) {
+                dispatch({ type: 'STAGE_MOVE', from, to });
+              }
             }}
             onCancelMove={() => {
               dispatch({ type: 'DESELECT_PIECE' });
             }}
-            isPlayerTurn={true}
+            isPlayerTurn={!isViewingHistory}
             pendingMove={state.pendingMove}
           />
 

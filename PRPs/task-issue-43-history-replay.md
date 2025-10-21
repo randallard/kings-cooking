@@ -21,7 +21,7 @@ Players can review all moves that have been made by stepping backward and forwar
 2. Continue clicking "Back" → step through history to start
 3. Click "Forward" → step forward through history
 4. Click "Return" (refresh icon) → jump back to latest/current move
-5. Indicator shows "Viewing move 5 of 12" when not at latest
+5. Indicator shows "Viewing move 5 of 12" 
 
 **Interaction States**:
 - **At Latest Move**: Back enabled, Forward disabled, can make moves
@@ -36,7 +36,7 @@ Players can review all moves that have been made by stepping backward and forwar
    - Forward: disabled at latest move
    - Return: hidden when at latest move
    - Confirm: disabled when viewing history (already implemented)
-3. ✅ **Indicator**: Show "Viewing move X of Y" when not at latest
+3. ✅ **Indicator**: Show "Viewing move X of Y" 
 4. ✅ **Board Interaction**: View-only when not at latest (disable piece selection/movement)
 5. ✅ **Mode Support**: Works independently in both hot-seat and URL modes
 6. ✅ **No Handoff**: Don't show handoff screen when returning to current in hot-seat
@@ -227,7 +227,7 @@ describe('PlaybackControls', () => {
     expect(screen.getByRole('button', { name: /return to current/i })).toBeInTheDocument();
   });
 
-  it('should show history indicator when not at latest', () => {
+  it('should show history indicator', () => {
     render(
       <PlaybackControls
         onStepBack={vi.fn()}
