@@ -87,6 +87,9 @@ export default function App(): ReactElement {
   // Story panel visibility state
   const [showStoryPanel, setShowStoryPanel] = useState(false);
 
+  // Handoff step tracking for Player 2 name collection
+  const [handoffStepCompleted, setHandoffStepCompleted] = useState(false);
+
   // URL state hook (Task 7) - enabled only in URL mode
   const {
     updateUrlImmediate,
@@ -185,6 +188,13 @@ export default function App(): ReactElement {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
+  }, [state.phase]);
+
+  // Reset handoff step when phase changes
+  useEffect(() => {
+    if (state.phase === 'handoff') {
+      setHandoffStepCompleted(false);
+    }
   }, [state.phase]);
 
   // Check story panel flags and show if needed
@@ -513,16 +523,45 @@ export default function App(): ReactElement {
   if (state.phase === 'handoff') {
     // Hot-seat mode: Show privacy screen with "I'm Ready" button
     if (state.mode === 'hotseat') {
-      // If player2Name is empty on first handoff, prompt for name
-      if (!state.player2Name || state.player2Name.trim().length === 0) {
-        // Separate component to properly use hooks
+      // Check if player2Name is missing
+      const needsPlayer2Name = !state.player2Name || state.player2Name.trim().length === 0;
+
+      // Check if we're coming from a move (gameState exists) vs. piece-selection (gameState null)
+      const comingFromMove = state.gameState !== null;
+
+      if (needsPlayer2Name && comingFromMove && state.gameState) {
+        // Two-step flow: Handoff screen → Name entry
+        if (!handoffStepCompleted) {
+          // Step 1: Show handoff screen
+          const previousPlayer = state.gameState.currentPlayer === 'light' ? 'dark' : 'light';
+          const previousPlayerName = state.player1Name || 'Light';
+
+          return (
+            <HandoffScreen
+              nextPlayer={state.gameState.currentPlayer}
+              nextPlayerName="Player 2"
+              previousPlayer={previousPlayer}
+              previousPlayerName={previousPlayerName}
+              onContinue={() => {
+                setHandoffStepCompleted(true);
+              }}
+              countdownSeconds={3}
+            />
+          );
+        } else {
+          // Step 2: Show name entry
+          return <Player2NameEntryScreen dispatch={dispatch} />;
+        }
+      }
+
+      if (needsPlayer2Name && !comingFromMove) {
+        // Legacy fallback: Coming from piece-selection (should not happen after fix)
+        console.warn('Unexpected flow: piece-selection → handoff for name entry');
         return <Player2NameEntryScreen dispatch={dispatch} />;
       }
 
-      // gameState might be null if coming from piece-selection
-      // In that case, the COMPLETE_HANDOFF will create it
+      // gameState might be null if coming from piece-selection (legacy fallback)
       if (!state.gameState) {
-        // Coming from piece-selection, just show a simple "Continue" button
         return (
           <div style={{
             maxWidth: '600px',
@@ -547,7 +586,7 @@ export default function App(): ReactElement {
         );
       }
 
-      // Show HandoffScreen with countdown (normal turn-based handoff)
+      // Show HandoffScreen with countdown (normal turn-based handoff with both names known)
       const previousPlayer = state.gameState.currentPlayer === 'light' ? 'dark' : 'light';
       const previousPlayerName = previousPlayer === 'light'
         ? (state.player1Name || 'Light')
