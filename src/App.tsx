@@ -303,6 +303,8 @@ export default function App(): ReactElement {
       darkCourt: [],
       capturedLight: [],
       capturedDark: [],
+      status: 'playing',
+      winner: null,
       moveHistory: [],
       checksum: '', // Will be set by engine
     };
