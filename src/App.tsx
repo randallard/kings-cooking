@@ -320,8 +320,11 @@ export default function App(): ReactElement {
       initialState
     );
 
-    // Replay moves up to targetIndex
-    for (let i = 0; i <= targetIndex && i < finalState.moveHistory.length; i++) {
+    // Replay moves to reconstruct position at targetIndex
+    // targetIndex 0 = starting position (no moves)
+    // targetIndex 1 = after first move (replay move[0])
+    // targetIndex n = after nth move (replay moves[0..n-1])
+    for (let i = 0; i < targetIndex && i < finalState.moveHistory.length; i++) {
       const move = finalState.moveHistory[i];
       if (move) {
         engine.makeMove(move.from, move.to);
