@@ -684,4 +684,111 @@ describe('KingsChessEngine', () => {
       expect(state.capturedLight[0]?.type).toBe('pawn');
     });
   });
+
+  describe('Stalemate Detection', () => {
+    test('should not detect stalemate when player has legal moves', () => {
+      // Setup: Normal position with legal moves available
+      const engine = new KingsChessEngine(lightPlayer, darkPlayer);
+
+      // Starting position has legal moves
+      expect(engine.hasAnyLegalMoves()).toBe(true);
+
+      // Game should not be over
+      const result = engine.checkGameEnd();
+      expect(result.gameOver).toBe(false);
+    });
+
+    test('should detect stalemate with multiple pieces but no legal moves', () => {
+      // Setup: Both players have pieces but current player has no legal moves
+      const tempEngine = new KingsChessEngine(lightPlayer, darkPlayer);
+      const initialState: GameState = tempEngine.getGameState();
+
+      // Clear the board
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          initialState.board[i]![j] = null;
+        }
+      }
+
+      // Place light knight surrounded by dark pieces
+      const lightKnight: Piece = {
+        id: uuid(),
+        type: 'knight',
+        owner: 'light',
+        position: [1, 1],
+        moveCount: 1,
+      };
+      initialState.board[1]![1] = lightKnight;
+
+      // Block all knight moves with dark pieces
+      const positions: Array<[number, number]> = [[0, 0], [0, 2], [2, 0], [2, 2]];
+      positions.forEach((pos) => {
+        const [row, col] = pos;
+        const darkPiece: Piece = {
+          id: uuid(),
+          type: 'rook',
+          owner: 'dark',
+          position: [row, col],
+          moveCount: 1,
+        };
+        const boardRow = initialState.board[row];
+        if (boardRow) {
+          boardRow[col] = darkPiece;
+        }
+      });
+
+      initialState.currentPlayer = 'light';
+
+      const engine = new KingsChessEngine(lightPlayer, darkPlayer, initialState);
+
+      // Knight should have no legal moves (all blocked)
+      expect(engine.hasAnyLegalMoves()).toBe(false);
+
+      // Should detect stalemate
+      const result = engine.checkGameEnd();
+      expect(result.gameOver).toBe(true);
+      expect(result.winner).toBeNull();
+      expect(result.reason).toContain('stalemate');
+    });
+
+    test('should prioritize standard victory over stalemate check', () => {
+      // Setup: All pieces off board (standard victory condition)
+      const tempEngine = new KingsChessEngine(lightPlayer, darkPlayer);
+      const initialState: GameState = tempEngine.getGameState();
+
+      // Clear the board
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          initialState.board[i]![j] = null;
+        }
+      }
+
+      // Place some pieces in courts
+      const lightRook: Piece = {
+        id: uuid(),
+        type: 'rook',
+        owner: 'light',
+        position: null,
+        moveCount: 3,
+      };
+      const darkRook: Piece = {
+        id: uuid(),
+        type: 'rook',
+        owner: 'dark',
+        position: null,
+        moveCount: 3,
+      };
+
+      initialState.lightCourt = [lightRook];
+      initialState.darkCourt = [darkRook, darkRook]; // Dark has more
+
+      const engine = new KingsChessEngine(lightPlayer, darkPlayer, initialState);
+
+      // Should detect dark victory, not stalemate
+      const result = engine.checkGameEnd();
+      expect(result.gameOver).toBe(true);
+      expect(result.winner).toBe('dark');
+      expect(result.reason).not.toContain('stalemate');
+    });
+  });
 });
