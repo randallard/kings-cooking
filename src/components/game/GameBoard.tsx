@@ -26,6 +26,8 @@ interface GameBoardProps {
   isPlayerTurn?: boolean;
   /** Staged move awaiting confirmation */
   pendingMove?: { from: Position; to: Position | 'off_board' } | null;
+  /** Real current player from latest game state (for party button display during history view) */
+  realCurrentPlayer?: 'light' | 'dark';
 }
 
 /**
@@ -54,6 +56,7 @@ export const GameBoard = ({
   onCancelMove,
   isPlayerTurn = true,
   pendingMove,
+  realCurrentPlayer,
 }: GameBoardProps): ReactElement => {
   // State: Currently selected position
   const [selectedPosition, setSelectedPosition] = useState<Position>(null);
@@ -275,7 +278,7 @@ export const GameBoard = ({
           gameState.currentPlayer === 'light' && canSelectedPieceMoveOffBoard && isPlayerTurn
         }
         onOffBoardMove={handleOffBoardMove}
-        currentPlayer={gameState.currentPlayer}
+        currentPlayer={realCurrentPlayer ?? gameState.currentPlayer}
         selectedPieceType={selectedPieceType}
       />
 
@@ -352,7 +355,7 @@ export const GameBoard = ({
           gameState.currentPlayer === 'dark' && canSelectedPieceMoveOffBoard && isPlayerTurn
         }
         onOffBoardMove={handleOffBoardMove}
-        currentPlayer={gameState.currentPlayer}
+        currentPlayer={realCurrentPlayer ?? gameState.currentPlayer}
         selectedPieceType={selectedPieceType}
       />
 

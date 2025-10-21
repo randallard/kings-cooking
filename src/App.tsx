@@ -572,6 +572,7 @@ export default function App(): ReactElement {
             }}
             isPlayerTurn={!isViewingHistory}
             pendingMove={state.pendingMove}
+            realCurrentPlayer={state.gameState.currentPlayer}
           />
 
           <div style={{
