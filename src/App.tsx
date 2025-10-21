@@ -247,16 +247,16 @@ export default function App(): ReactElement {
     targetIndex: number
   ): GameState => {
     // Reconstruct original piece positions from move history
-    // Map each piece type to its original position by tracking first appearance
+    // Map each piece ID to its original position by tracking first appearance
     const pieceOriginalPositions = new Map<string, Position>();
 
     // Scan move history to find each piece's first "from" position
     for (const move of finalState.moveHistory) {
-      const pieceKey = `${move.piece.owner}-${move.piece.type}`;
+      const pieceId = move.piece.id;
 
       // If we haven't seen this piece yet, record its original position
-      if (!pieceOriginalPositions.has(pieceKey)) {
-        pieceOriginalPositions.set(pieceKey, move.from);
+      if (!pieceOriginalPositions.has(pieceId)) {
+        pieceOriginalPositions.set(pieceId, move.from);
       }
     }
 
@@ -286,8 +286,8 @@ export default function App(): ReactElement {
 
     // Place board pieces: use move history position if available, otherwise use current position
     for (const { piece, currentPos } of boardPieces) {
-      const pieceKey = `${piece.owner}-${piece.type}`;
-      const originalPos = pieceOriginalPositions.get(pieceKey);
+      const pieceId = piece.id;
+      const originalPos = pieceOriginalPositions.get(pieceId);
 
       // Use tracked original position from move history, or current position if piece hasn't moved
       const positionToUse = originalPos ?? currentPos;
@@ -304,8 +304,8 @@ export default function App(): ReactElement {
 
     // Place off-board pieces: these must have a move history entry
     for (const piece of offBoardPieces) {
-      const pieceKey = `${piece.owner}-${piece.type}`;
-      const originalPos = pieceOriginalPositions.get(pieceKey);
+      const pieceId = piece.id;
+      const originalPos = pieceOriginalPositions.get(pieceId);
 
       if (originalPos) {
         const [row, col] = originalPos;
