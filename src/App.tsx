@@ -237,58 +237,53 @@ export default function App(): ReactElement {
     finalState: GameState,
     targetIndex: number
   ): GameState => {
-    // Collect all pieces that exist in the game (on board, in courts, captured)
-    const allPieces: Piece[] = [];
+    // Reconstruct original piece positions from move history
+    // Map each piece type to its original position by tracking first appearance
+    const pieceOriginalPositions = new Map<string, Position>();
 
-    // From board
+    // Scan move history to find each piece's first "from" position
+    for (const move of finalState.moveHistory) {
+      const pieceKey = `${move.piece.owner}-${move.piece.type}`;
+
+      // If we haven't seen this piece yet, record its original position
+      if (!pieceOriginalPositions.has(pieceKey)) {
+        pieceOriginalPositions.set(pieceKey, move.from);
+      }
+    }
+
+    // Collect all pieces that exist in the game
+    const allPieces: Piece[] = [];
     finalState.board.forEach(row => {
       row.forEach(piece => {
         if (piece) allPieces.push(piece);
       });
     });
-
-    // From courts and captured
     allPieces.push(...finalState.lightCourt);
     allPieces.push(...finalState.darkCourt);
     allPieces.push(...finalState.capturedLight);
     allPieces.push(...finalState.capturedDark);
 
-    // Sort pieces by type to get consistent initial placement
-    const lightPieces = allPieces.filter(p => p.owner === 'light').sort((a, b) =>
-      a.type.localeCompare(b.type)
-    );
-    const darkPieces = allPieces.filter(p => p.owner === 'dark').sort((a, b) =>
-      a.type.localeCompare(b.type)
-    );
-
-    // Create initial board with pieces in starting positions
+    // Create initial board
     const initialBoard: (Piece | null)[][] = [
       [null, null, null],
       [null, null, null],
       [null, null, null],
     ];
 
-    // Place dark pieces in row 0
-    darkPieces.forEach((piece, idx) => {
-      if (idx < 3) {
-        initialBoard[0][idx] = {
-          ...piece,
-          position: [0, idx],
-          moveCount: 0,
-        };
-      }
-    });
+    // Place each piece at its original position
+    for (const piece of allPieces) {
+      const pieceKey = `${piece.owner}-${piece.type}`;
+      const originalPos = pieceOriginalPositions.get(pieceKey);
 
-    // Place light pieces in row 2
-    lightPieces.forEach((piece, idx) => {
-      if (idx < 3) {
-        initialBoard[2][idx] = {
+      if (originalPos) {
+        const [row, col] = originalPos;
+        initialBoard[row][col] = {
           ...piece,
-          position: [2, idx],
+          position: originalPos,
           moveCount: 0,
         };
       }
-    });
+    }
 
     // Create initial game state
     const initialState: GameState = {
