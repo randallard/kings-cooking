@@ -169,10 +169,10 @@ describe('CourtArea', () => {
     expect(screen.getByText('Party!')).toBeInTheDocument();
   });
 
-  it('hides button when canMoveOffBoard is false, shows when true', () => {
+  it('button is always visible for target court but disabled based on canMoveOffBoard', () => {
     const onOffBoardMove = vi.fn();
 
-    // Hidden when canMoveOffBoard is false
+    // Button visible but disabled when canMoveOffBoard is false
     const { rerender } = render(
       <CourtArea
         courtOwner="dark"
@@ -185,9 +185,10 @@ describe('CourtArea', () => {
       />
     );
 
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByRole('button')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toBeDisabled();
 
-    // Visible when canMoveOffBoard is true
+    // Button visible and enabled when canMoveOffBoard is true
     rerender(
       <CourtArea
         courtOwner="dark"
