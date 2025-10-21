@@ -93,10 +93,19 @@ export default function App(): ReactElement {
   const [handoffStepCompleted, setHandoffStepCompleted] = useState(false);
 
   // History navigation state (null = at latest move)
+  // Always initialize to null on mount to show current game state
   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
 
   // Derived state: are we viewing history?
   const isViewingHistory = historyIndex !== null;
+
+  // Reset history view when phase changes or game loads
+  useEffect(() => {
+    // Reset to current view when entering playing phase (page refresh or new game)
+    if (state.phase === 'playing') {
+      setHistoryIndex(null);
+    }
+  }, [state.phase]);
 
   // URL state hook (Task 7) - enabled only in URL mode
   const {
