@@ -277,8 +277,9 @@ export class KingsChessEngine {
     }
 
     const targetPiece = this.getPieceAt(to);
+    let capturedPiece: Piece | null = targetPiece;
 
-    // Handle capture
+    // Handle normal capture
     if (targetPiece) {
       // CRITICAL: Captured piece goes to THEIR OWN king's court (not captor's)
       targetPiece.position = null;
@@ -287,6 +288,55 @@ export class KingsChessEngine {
         this.gameState.capturedLight.push(targetPiece);
       } else {
         this.gameState.capturedDark.push(targetPiece);
+      }
+    }
+
+    // Handle EN PASSANT capture (pawn only)
+    // En passant is special: capturing pawn moves diagonally to empty square,
+    // but captured pawn is at a different position (beside the capturing pawn)
+    if (piece.type === 'pawn' && !targetPiece) {
+      // Get last move for en passant detection
+      const lastMove =
+        this.gameState.moveHistory.length > 0
+          ? this.gameState.moveHistory[this.gameState.moveHistory.length - 1]
+          : null;
+
+      if (
+        lastMove &&
+        lastMove.piece.type === 'pawn' &&
+        lastMove.to !== 'off_board'
+      ) {
+        const [lastFromRow] = lastMove.from;
+        const [lastToRow, lastToCol] = lastMove.to;
+        const moveDistance = Math.abs(lastToRow - lastFromRow);
+
+        // Check if last move was 2-square pawn move and landed beside our pawn
+        const [fromRow, fromCol] = from;
+
+        if (
+          moveDistance === 2 &&
+          lastToRow === fromRow &&
+          Math.abs(lastToCol - fromCol) === 1
+        ) {
+          // This is an en passant capture!
+          // The captured pawn is at the lastMove.to position (beside us, not diagonal)
+          const enPassantTarget = this.getPieceAt(lastMove.to);
+
+          if (enPassantTarget && enPassantTarget.owner !== piece.owner) {
+            // Remove captured pawn from board
+            this.gameState.board[lastToRow]![lastToCol] = null;
+            enPassantTarget.position = null;
+
+            // Add to captured pieces
+            if (enPassantTarget.owner === 'light') {
+              this.gameState.capturedLight.push(enPassantTarget);
+            } else {
+              this.gameState.capturedDark.push(enPassantTarget);
+            }
+
+            capturedPiece = enPassantTarget;
+          }
+        }
       }
     }
 
@@ -301,7 +351,7 @@ export class KingsChessEngine {
       from,
       to,
       piece: PieceSchema.parse(piece),
-      captured: targetPiece ? PieceSchema.parse(targetPiece) : null,
+      captured: capturedPiece ? PieceSchema.parse(capturedPiece) : null,
       timestamp: Date.now(),
     });
 
@@ -315,8 +365,8 @@ export class KingsChessEngine {
       gameState: this.gameState,
     };
 
-    if (targetPiece) {
-      result.captured = targetPiece;
+    if (capturedPiece) {
+      result.captured = capturedPiece;
     }
 
     return result;

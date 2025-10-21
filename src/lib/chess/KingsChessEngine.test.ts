@@ -6,7 +6,13 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { KingsChessEngine } from './KingsChessEngine';
 import { PlayerIdSchema } from '../validation/schemas';
-import type { PlayerInfo, Position } from '../validation/schemas';
+import type {
+  PlayerInfo,
+  Position,
+  Piece,
+  Move,
+  GameState,
+} from '../validation/schemas';
 import { v4 as uuid } from 'uuid';
 
 describe('KingsChessEngine', () => {
@@ -525,6 +531,157 @@ describe('KingsChessEngine', () => {
       expect(moves).toContainEqual([0, 0]); // Diagonal capture dark rook
       expect(moves).toContainEqual([0, 2]); // Diagonal capture dark bishop
       // Should NOT contain [0,1] because forward is blocked and pawns can't capture straight ahead
+    });
+  });
+
+  describe('En Passant Capture Execution', () => {
+    test('should remove captured pawn from board (light captures dark)', () => {
+      // Setup: Create game with pawns positioned for en passant
+      const tempEngine = new KingsChessEngine(lightPlayer, darkPlayer);
+      const initialState: GameState = tempEngine.getGameState();
+
+      // Clear the board
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          initialState.board[i]![j] = null;
+        }
+      }
+
+      // Setup en passant scenario:
+      // - Light pawn at [2, 1]
+      // - Dark pawn just moved [0, 2] → [2, 2] (2-square move, landing beside light pawn)
+      // - Light can capture en passant by moving [2, 1] → [1, 2]
+      initialState.board[2]![1] = {
+        id: uuid(),
+        type: 'pawn',
+        owner: 'light',
+        position: [2, 1],
+        moveCount: 1,
+      };
+
+      const darkPawnCaptured: Piece = {
+        id: uuid(),
+        type: 'pawn',
+        owner: 'dark',
+        position: [2, 2],
+        moveCount: 1,
+      };
+      initialState.board[2]![2] = darkPawnCaptured;
+
+      // Simulate dark pawn's last move: [0, 2] → [2, 2] (2-square move)
+      const darkPawnMove: Move = {
+        from: [0, 2],
+        to: [2, 2],
+        piece: darkPawnCaptured,
+        captured: null,
+        timestamp: Date.now(),
+      };
+      initialState.moveHistory.push(darkPawnMove);
+      initialState.currentPlayer = 'light';
+      initialState.currentTurn = 1;
+
+      // Create engine with custom initial state
+      const engine = new KingsChessEngine(
+        lightPlayer,
+        darkPlayer,
+        initialState
+      );
+
+      // Execute en passant capture: [2, 1] → [1, 2] (diagonal toward dark's side)
+      const result = engine.makeMove([2, 1], [1, 2]);
+
+      // Assertions
+      expect(result.success).toBe(true);
+      expect(result.captured).toBeTruthy();
+      expect(result.captured?.type).toBe('pawn');
+      expect(result.captured?.owner).toBe('dark');
+
+      const state = engine.getGameState();
+
+      // Captured pawn should be removed from original position [2, 2]
+      expect(state.board[2]![2]).toBeNull();
+
+      // Capturing pawn should be at destination [1, 2]
+      expect(state.board[1]![2]?.owner).toBe('light');
+      expect(state.board[1]![2]?.type).toBe('pawn');
+
+      // Captured pawn should be in capturedDark array
+      expect(state.capturedDark).toHaveLength(1);
+      expect(state.capturedDark[0]?.type).toBe('pawn');
+    });
+
+    test('should remove captured pawn from board (dark captures light)', () => {
+      // Setup: Create game with pawns positioned for en passant
+      const tempEngine = new KingsChessEngine(lightPlayer, darkPlayer);
+      const initialState: GameState = tempEngine.getGameState();
+
+      // Clear the board
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          initialState.board[i]![j] = null;
+        }
+      }
+
+      // Place dark pawn at [0, 1]
+      const darkPawnCapturing: Piece = {
+        id: uuid(),
+        type: 'pawn',
+        owner: 'dark',
+        position: [0, 1],
+        moveCount: 1,
+      };
+      initialState.board[0]![1] = darkPawnCapturing;
+
+      // Place light pawn at [0, 0] (beside dark pawn, after double-move)
+      const lightPawnCaptured: Piece = {
+        id: uuid(),
+        type: 'pawn',
+        owner: 'light',
+        position: [0, 0],
+        moveCount: 1,
+      };
+      initialState.board[0]![0] = lightPawnCaptured;
+
+      // Simulate light pawn's last move: [2, 0] → [0, 0] (2-square move)
+      const lightPawnMove: Move = {
+        from: [2, 0],
+        to: [0, 0],
+        piece: lightPawnCaptured,
+        captured: null,
+        timestamp: Date.now(),
+      };
+      initialState.moveHistory.push(lightPawnMove);
+      initialState.currentPlayer = 'dark';
+      initialState.currentTurn = 2;
+
+      // Create engine with custom initial state
+      const engine = new KingsChessEngine(
+        lightPlayer,
+        darkPlayer,
+        initialState
+      );
+
+      // Execute en passant capture: [0, 1] → [1, 0] (diagonal toward light's side)
+      const result = engine.makeMove([0, 1], [1, 0]);
+
+      // Assertions
+      expect(result.success).toBe(true);
+      expect(result.captured).toBeTruthy();
+      expect(result.captured?.type).toBe('pawn');
+      expect(result.captured?.owner).toBe('light');
+
+      const state = engine.getGameState();
+
+      // Captured pawn should be removed from original position [0, 0]
+      expect(state.board[0]![0]).toBeNull();
+
+      // Capturing pawn should be at destination [1, 0]
+      expect(state.board[1]![0]?.owner).toBe('dark');
+      expect(state.board[1]![0]?.type).toBe('pawn');
+
+      // Captured pawn should be in capturedLight array
+      expect(state.capturedLight).toHaveLength(1);
+      expect(state.capturedLight[0]?.type).toBe('pawn');
     });
   });
 });
