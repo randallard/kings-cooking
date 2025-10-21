@@ -260,17 +260,22 @@ export default function App(): ReactElement {
       }
     }
 
-    // Collect all pieces that exist in the game
-    const allPieces: Piece[] = [];
-    finalState.board.forEach(row => {
-      row.forEach(piece => {
-        if (piece) allPieces.push(piece);
+    // Collect all pieces from the board (with their current positions for unmoved pieces)
+    const boardPieces: Array<{ piece: Piece; currentPos: [number, number] }> = [];
+    finalState.board.forEach((row, rowIndex) => {
+      row.forEach((piece, colIndex) => {
+        if (piece) {
+          boardPieces.push({ piece, currentPos: [rowIndex, colIndex] });
+        }
       });
     });
-    allPieces.push(...finalState.lightCourt);
-    allPieces.push(...finalState.darkCourt);
-    allPieces.push(...finalState.capturedLight);
-    allPieces.push(...finalState.capturedDark);
+
+    // Collect pieces from courts and captured (these must have moved)
+    const offBoardPieces: Piece[] = [];
+    offBoardPieces.push(...finalState.lightCourt);
+    offBoardPieces.push(...finalState.darkCourt);
+    offBoardPieces.push(...finalState.capturedLight);
+    offBoardPieces.push(...finalState.capturedDark);
 
     // Create initial board
     const initialBoard: (Piece | null)[][] = [
@@ -279,8 +284,26 @@ export default function App(): ReactElement {
       [null, null, null],
     ];
 
-    // Place each piece at its original position
-    for (const piece of allPieces) {
+    // Place board pieces: use move history position if available, otherwise use current position
+    for (const { piece, currentPos } of boardPieces) {
+      const pieceKey = `${piece.owner}-${piece.type}`;
+      const originalPos = pieceOriginalPositions.get(pieceKey);
+
+      // Use tracked original position from move history, or current position if piece hasn't moved
+      const positionToUse = originalPos ?? currentPos;
+      const [row, col] = positionToUse;
+      const boardRow = initialBoard[row];
+      if (boardRow) {
+        boardRow[col] = {
+          ...piece,
+          position: positionToUse,
+          moveCount: 0,
+        };
+      }
+    }
+
+    // Place off-board pieces: these must have a move history entry
+    for (const piece of offBoardPieces) {
       const pieceKey = `${piece.owner}-${piece.type}`;
       const originalPos = pieceOriginalPositions.get(pieceKey);
 
