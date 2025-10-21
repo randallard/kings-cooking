@@ -96,7 +96,7 @@ describe('PlaybackControls', () => {
     expect(screen.getByRole('button', { name: /forward/i })).toBeDisabled();
   });
 
-  it('should hide return button when at latest', () => {
+  it('should disable reset button when at latest', () => {
     render(
       <PlaybackControls
         onStepBack={vi.fn()}
@@ -110,7 +110,10 @@ describe('PlaybackControls', () => {
       />
     );
 
-    expect(screen.queryByRole('button', { name: /return to current/i })).not.toBeInTheDocument();
+    // Reset button should be visible but disabled
+    const resetButton = screen.getByRole('button', { name: /return to current/i });
+    expect(resetButton).toBeInTheDocument();
+    expect(resetButton).toBeDisabled();
   });
 
   it('should call onStepBack when back button clicked', async () => {

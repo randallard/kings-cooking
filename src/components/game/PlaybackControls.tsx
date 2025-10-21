@@ -67,6 +67,8 @@ export const PlaybackControls = ({
 
       {/* Playback controls */}
       <div className={styles.controls}>
+        <span className={styles.label}>View history:</span>
+
         {/* Back button */}
         <button
           onClick={onStepBack}
@@ -87,17 +89,16 @@ export const PlaybackControls = ({
           Forward →
         </button>
 
-        {/* Return to current button */}
-        {!isAtLatest && (
-          <button
-            onClick={onReturnToCurrent}
-            className={styles.button}
-            aria-label="Return to current move"
-            title="Return to current move"
-          >
-            ↻
-          </button>
-        )}
+        {/* Reset button - always visible, disabled when at latest */}
+        <button
+          onClick={onReturnToCurrent}
+          disabled={isAtLatest}
+          className={styles.button}
+          aria-label="Return to current move"
+          title="Return to current move"
+        >
+          Reset
+        </button>
       </div>
     </div>
   );
