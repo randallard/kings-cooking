@@ -379,25 +379,6 @@ export function gameFlowReducer(
         return state;
       }
 
-      // In hot-seat mode, check if player2Name is missing (only for mirrored/random modes)
-      if (state.selectionMode !== 'independent' &&
-          state.mode === 'hotseat' &&
-          (!state.player2Name || state.player2Name.trim().length === 0)) {
-        // Transition to handoff to collect player 2's name
-        return {
-          phase: 'handoff',
-          mode: state.mode,
-          player1Name: state.player1Name,
-          player2Name: '',
-          // Store piece selection data to use after name collection
-          selectionMode: state.selectionMode,
-          player1Pieces: state.player1Pieces,
-          player2Pieces: state.player2Pieces,
-          player1Color: state.player1Color,
-          gameState: null as never, // Will be created after name collection
-        };
-      }
-
       // Create board with selected pieces
       const board = createBoardWithPieces(
         state.player1Pieces,
@@ -507,12 +488,20 @@ export function gameFlowReducer(
         };
       }
 
+      // Check if this is first move in hot-seat mode with missing player2Name
+      const isFirstMove = action.result.newState.currentTurn === 1;
+      const needsPlayer2Name = state.mode === 'hotseat' &&
+                              (!state.player2Name ||
+                               state.player2Name.trim().length === 0 ||
+                               state.player2Name === 'Player 2');
+
       // Transition to handoff
       return {
         phase: 'handoff',
         mode: state.mode,
         player1Name: state.player1Name,
-        player2Name: state.player2Name || '', // Prompt if empty
+        // Force empty string to trigger name entry in App.tsx
+        player2Name: (isFirstMove && needsPlayer2Name) ? '' : (state.player2Name || ''),
         gameState: action.result.newState,
         lastMove: state.pendingMove,
         countdown: 3, // Hot-seat countdown
