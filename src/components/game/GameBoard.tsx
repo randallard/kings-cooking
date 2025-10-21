@@ -319,7 +319,10 @@ export const GameBoard = ({
                 displayedPiece = gameState.board[fromRow]?.[fromCol] ?? null;
               }
 
-              // Note: Removed ghost piece logic (Issue #41) - piece stays visible at source
+              if (isPendingSource) {
+                // Clear piece at source during pending move (Issue #41)
+                displayedPiece = null;
+              }
 
               return (
                 <GameCell
