@@ -1,4 +1,4 @@
-import { ReactElement, useReducer, useEffect, useState } from 'react';
+import { ReactElement, useReducer, useEffect, useState, useCallback, useMemo } from 'react';
 import { gameFlowReducer } from './lib/gameFlow/reducer';
 import type { GameFlowAction } from './types/gameFlow';
 import { storage, checkAndMigrateStorage } from './lib/storage/localStorage';
@@ -13,8 +13,10 @@ import { HandoffScreen } from './components/game/HandoffScreen';
 import { VictoryScreen } from './components/game/VictoryScreen';
 import { URLSharer } from './components/game/URLSharer';
 import { StoryPanel } from './components/game/StoryPanel';
+import { PlaybackControls } from './components/game/PlaybackControls';
 import { KingsChessEngine } from './lib/chess/KingsChessEngine';
 import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
+import type { GameState, Piece, Position } from './lib/validation/schemas';
 
 /**
  * Player 2 Name Entry Screen Component
@@ -89,6 +91,21 @@ export default function App(): ReactElement {
 
   // Handoff step tracking for Player 2 name collection
   const [handoffStepCompleted, setHandoffStepCompleted] = useState(false);
+
+  // History navigation state (null = at latest move)
+  // Always initialize to null on mount to show current game state
+  const [historyIndex, setHistoryIndex] = useState<number | null>(null);
+
+  // Derived state: are we viewing history?
+  const isViewingHistory = historyIndex !== null;
+
+  // Reset history view when phase changes or game loads
+  useEffect(() => {
+    // Reset to current view when entering playing phase (page refresh or new game)
+    if (state.phase === 'playing') {
+      setHistoryIndex(null);
+    }
+  }, [state.phase]);
 
   // URL state hook (Task 7) - enabled only in URL mode
   const {
@@ -219,6 +236,175 @@ export default function App(): ReactElement {
       }
     }
   }, [state.phase, state]);
+
+  // ===========================
+  // History Navigation Handlers
+  // ===========================
+
+  // Helper: reconstruct game state at specific move index
+  const reconstructGameStateAtMove = useCallback((
+    finalState: GameState,
+    targetIndex: number
+  ): GameState => {
+    // Reconstruct original piece positions from move history
+    // Map each piece ID to its original position by tracking first appearance
+    const pieceOriginalPositions = new Map<string, Position>();
+
+    // Scan move history to find each piece's first "from" position
+    for (const move of finalState.moveHistory) {
+      const pieceId = move.piece.id;
+
+      // If we haven't seen this piece yet, record its original position
+      if (!pieceOriginalPositions.has(pieceId)) {
+        pieceOriginalPositions.set(pieceId, move.from);
+      }
+
+      // Also track captured pieces: if a piece was captured but never moved,
+      // its original position is where it was captured
+      if (move.captured && !pieceOriginalPositions.has(move.captured.id)) {
+        // The captured piece was at move.to when it was captured
+        if (move.to !== 'off_board') {
+          pieceOriginalPositions.set(move.captured.id, move.to);
+        }
+      }
+    }
+
+    // Collect all pieces from the board (with their current positions for unmoved pieces)
+    const boardPieces: Array<{ piece: Piece; currentPos: [number, number] }> = [];
+    finalState.board.forEach((row, rowIndex) => {
+      row.forEach((piece, colIndex) => {
+        if (piece) {
+          boardPieces.push({ piece, currentPos: [rowIndex, colIndex] });
+        }
+      });
+    });
+
+    // Collect pieces from courts and captured (these must have moved)
+    const offBoardPieces: Piece[] = [];
+    offBoardPieces.push(...finalState.lightCourt);
+    offBoardPieces.push(...finalState.darkCourt);
+    offBoardPieces.push(...finalState.capturedLight);
+    offBoardPieces.push(...finalState.capturedDark);
+
+    // Create initial board
+    const initialBoard: (Piece | null)[][] = [
+      [null, null, null],
+      [null, null, null],
+      [null, null, null],
+    ];
+
+    // Place board pieces: use move history position if available, otherwise use current position
+    for (const { piece, currentPos } of boardPieces) {
+      const pieceId = piece.id;
+      const originalPos = pieceOriginalPositions.get(pieceId);
+
+      // Use tracked original position from move history, or current position if piece hasn't moved
+      const positionToUse = originalPos ?? currentPos;
+      const [row, col] = positionToUse;
+      const boardRow = initialBoard[row];
+      if (boardRow) {
+        boardRow[col] = {
+          ...piece,
+          position: positionToUse,
+          moveCount: 0,
+        };
+      }
+    }
+
+    // Place off-board pieces: these must have a move history entry
+    for (const piece of offBoardPieces) {
+      const pieceId = piece.id;
+      const originalPos = pieceOriginalPositions.get(pieceId);
+
+      if (originalPos) {
+        const [row, col] = originalPos;
+        const boardRow = initialBoard[row];
+        if (boardRow) {
+          boardRow[col] = {
+            ...piece,
+            position: originalPos,
+            moveCount: 0,
+          };
+        }
+      }
+    }
+
+    // Create initial game state
+    const initialState: GameState = {
+      version: finalState.version,
+      gameId: finalState.gameId,
+      board: initialBoard,
+      currentPlayer: 'light',
+      currentTurn: 0,
+      lightPlayer: finalState.lightPlayer,
+      darkPlayer: finalState.darkPlayer,
+      lightCourt: [],
+      darkCourt: [],
+      capturedLight: [],
+      capturedDark: [],
+      status: 'playing',
+      winner: null,
+      moveHistory: [],
+      checksum: '', // Will be set by engine
+    };
+
+    // Create engine with initial state
+    const engine = new KingsChessEngine(
+      finalState.lightPlayer,
+      finalState.darkPlayer,
+      initialState
+    );
+
+    // Replay moves to reconstruct position at targetIndex
+    // targetIndex 0 = starting position (no moves)
+    // targetIndex 1 = after first move (replay move[0])
+    // targetIndex n = after nth move (replay moves[0..n-1])
+    for (let i = 0; i < targetIndex && i < finalState.moveHistory.length; i++) {
+      const move = finalState.moveHistory[i];
+      if (move) {
+        engine.makeMove(move.from, move.to);
+      }
+    }
+
+    return engine.getGameState();
+  }, []);
+
+  // Handler: step back one move
+  const handleStepBack = useCallback(() => {
+    if (state.phase !== 'playing') return;
+    const currentIndex = historyIndex ?? state.gameState.moveHistory.length;
+    if (currentIndex > 0) {
+      setHistoryIndex(currentIndex - 1);
+    }
+  }, [historyIndex, state]);
+
+  // Handler: step forward one move
+  const handleStepForward = useCallback(() => {
+    if (state.phase !== 'playing') return;
+    const currentIndex = historyIndex ?? state.gameState.moveHistory.length;
+    const maxIndex = state.gameState.moveHistory.length;
+    if (currentIndex < maxIndex) {
+      const nextIndex = currentIndex + 1;
+      // If stepping forward to the latest move, set to null to activate board
+      if (nextIndex >= maxIndex) {
+        setHistoryIndex(null);
+      } else {
+        setHistoryIndex(nextIndex);
+      }
+    }
+  }, [historyIndex, state]);
+
+  // Handler: return to current (latest) move
+  const handleReturnToCurrent = useCallback(() => {
+    setHistoryIndex(null);
+  }, []);
+
+  // Compute displayed game state (current or historical)
+  const displayedGameState = useMemo(() => {
+    if (state.phase !== 'playing') return null;
+    if (!isViewingHistory) return state.gameState;
+    return reconstructGameStateAtMove(state.gameState, historyIndex ?? 0);
+  }, [state, isViewingHistory, historyIndex, reconstructGameStateAtMove]);
 
   // ===========================
   // Phase 1: Mode Selection
@@ -477,23 +663,38 @@ export default function App(): ReactElement {
           </div>
 
           <div style={{ marginBottom: 'var(--spacing-md)' }}>
-            <MoveConfirmButton
-              onConfirm={handleConfirmMove}
-              disabled={!state.pendingMove}
-              isProcessing={false}
+            <PlaybackControls
+              onStepBack={handleStepBack}
+              onStepForward={handleStepForward}
+              onReturnToCurrent={handleReturnToCurrent}
+              canStepBack={(historyIndex ?? state.gameState.moveHistory.length) > 0}
+              canStepForward={(historyIndex ?? state.gameState.moveHistory.length) < state.gameState.moveHistory.length}
+              isAtLatest={historyIndex === null}
+              currentMoveIndex={historyIndex ?? state.gameState.moveHistory.length}
+              totalMoves={state.gameState.moveHistory.length}
             />
+            <div style={{ marginTop: 'var(--spacing-sm)' }}>
+              <MoveConfirmButton
+                onConfirm={handleConfirmMove}
+                disabled={!state.pendingMove || isViewingHistory}
+                isProcessing={false}
+              />
+            </div>
           </div>
 
           <GameBoard
-            gameState={state.gameState}
+            gameState={displayedGameState ?? state.gameState}
             onMove={(from, to) => {
-              dispatch({ type: 'STAGE_MOVE', from, to });
+              if (!isViewingHistory) {
+                dispatch({ type: 'STAGE_MOVE', from, to });
+              }
             }}
             onCancelMove={() => {
               dispatch({ type: 'DESELECT_PIECE' });
             }}
-            isPlayerTurn={true}
+            isPlayerTurn={!isViewingHistory}
             pendingMove={state.pendingMove}
+            realCurrentPlayer={state.gameState.currentPlayer}
           />
 
           <div style={{

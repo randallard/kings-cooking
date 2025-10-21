@@ -441,12 +441,61 @@ export class KingsChessEngine {
   }
 
   /**
+   * Check if the current player has any legal moves.
+   *
+   * @returns True if current player has at least one legal move
+   */
+  public hasAnyLegalMoves(): boolean {
+    const currentPlayer = this.gameState.currentPlayer;
+
+    // Check all squares on the board
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        const position: Position = [row, col];
+        const piece = this.getPieceAt(position);
+
+        // Skip if no piece or piece belongs to opponent
+        if (!piece || piece.owner !== currentPlayer) continue;
+
+        // Check if this piece has any valid moves
+        const validMoves = this.getValidMoves(position);
+        if (validMoves.length > 0) {
+          return true; // Found at least one legal move
+        }
+      }
+    }
+
+    return false; // No legal moves available
+  }
+
+  /**
    * Check if game has ended.
    *
    * @returns Victory result with winner
    */
   public checkGameEnd(): VictoryResult {
-    return checkGameEnd(this.gameState);
+    // First check standard victory conditions (all pieces off board, elimination)
+    const standardResult = checkGameEnd(this.gameState);
+    if (standardResult.gameOver) {
+      return standardResult;
+    }
+
+    // Check for stalemate: current player has no legal moves
+    if (!this.hasAnyLegalMoves()) {
+      const currentScore = {
+        light: this.gameState.lightCourt.length,
+        dark: this.gameState.darkCourt.length,
+      };
+
+      return {
+        gameOver: true,
+        winner: null,
+        score: currentScore,
+        reason: 'Draw! No legal moves available (stalemate).',
+      };
+    }
+
+    return { gameOver: false };
   }
 
   /**

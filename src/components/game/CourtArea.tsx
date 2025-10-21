@@ -139,7 +139,7 @@ export const CourtArea = ({
         </div>
       </div>
 
-      {/* Off-board button - only show for target court */}
+      {/* Off-board button - always visible for target court */}
       {isTargetCourt && (
         <div className={styles.buttonContainer}>
           <OffBoardButton
