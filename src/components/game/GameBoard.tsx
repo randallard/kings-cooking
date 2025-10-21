@@ -272,7 +272,7 @@ export const GameBoard = ({
         scoredPieces={gameState.lightCourt}
         capturedPieces={gameState.capturedDark}
         canMoveOffBoard={
-          gameState.currentPlayer === 'light' && canSelectedPieceMoveOffBoard
+          gameState.currentPlayer === 'light' && canSelectedPieceMoveOffBoard && isPlayerTurn
         }
         onOffBoardMove={handleOffBoardMove}
         currentPlayer={gameState.currentPlayer}
@@ -349,7 +349,7 @@ export const GameBoard = ({
         scoredPieces={gameState.darkCourt}
         capturedPieces={gameState.capturedLight}
         canMoveOffBoard={
-          gameState.currentPlayer === 'dark' && canSelectedPieceMoveOffBoard
+          gameState.currentPlayer === 'dark' && canSelectedPieceMoveOffBoard && isPlayerTurn
         }
         onOffBoardMove={handleOffBoardMove}
         currentPlayer={gameState.currentPlayer}
