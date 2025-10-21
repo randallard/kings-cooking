@@ -139,12 +139,12 @@ export const CourtArea = ({
         </div>
       </div>
 
-      {/* Off-board button - only show for target court */}
-      {isTargetCourt && (
+      {/* Off-board button - only show when available */}
+      {isTargetCourt && canMoveOffBoard && (
         <div className={styles.buttonContainer}>
           <OffBoardButton
             onOffBoardMove={onOffBoardMove}
-            disabled={!canMoveOffBoard}
+            disabled={false}
             pieceType={selectedPieceType}
             courtOwner={courtOwner}
           />
