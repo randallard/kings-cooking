@@ -16,7 +16,7 @@ import { StoryPanel } from './components/game/StoryPanel';
 import { PlaybackControls } from './components/game/PlaybackControls';
 import { KingsChessEngine } from './lib/chess/KingsChessEngine';
 import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
-import type { GameState, Piece } from './lib/validation/schemas';
+import type { GameState, Piece, Position } from './lib/validation/schemas';
 
 /**
  * Player 2 Name Entry Screen Component
@@ -286,11 +286,14 @@ export default function App(): ReactElement {
 
       if (originalPos) {
         const [row, col] = originalPos;
-        initialBoard[row][col] = {
-          ...piece,
-          position: originalPos,
-          moveCount: 0,
-        };
+        const boardRow = initialBoard[row];
+        if (boardRow) {
+          boardRow[col] = {
+            ...piece,
+            position: originalPos,
+            moveCount: 0,
+          };
+        }
       }
     }
 
