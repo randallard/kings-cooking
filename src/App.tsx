@@ -16,7 +16,7 @@ import { StoryPanel } from './components/game/StoryPanel';
 import { PlaybackControls } from './components/game/PlaybackControls';
 import { KingsChessEngine } from './lib/chess/KingsChessEngine';
 import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
-import type { GameState } from './lib/validation/schemas';
+import type { GameState, Piece } from './lib/validation/schemas';
 
 /**
  * Player 2 Name Entry Screen Component
@@ -237,9 +237,81 @@ export default function App(): ReactElement {
     finalState: GameState,
     targetIndex: number
   ): GameState => {
+    // Collect all pieces that exist in the game (on board, in courts, captured)
+    const allPieces: Piece[] = [];
+
+    // From board
+    finalState.board.forEach(row => {
+      row.forEach(piece => {
+        if (piece) allPieces.push(piece);
+      });
+    });
+
+    // From courts and captured
+    allPieces.push(...finalState.lightCourt);
+    allPieces.push(...finalState.darkCourt);
+    allPieces.push(...finalState.capturedLight);
+    allPieces.push(...finalState.capturedDark);
+
+    // Sort pieces by type to get consistent initial placement
+    const lightPieces = allPieces.filter(p => p.owner === 'light').sort((a, b) =>
+      a.type.localeCompare(b.type)
+    );
+    const darkPieces = allPieces.filter(p => p.owner === 'dark').sort((a, b) =>
+      a.type.localeCompare(b.type)
+    );
+
+    // Create initial board with pieces in starting positions
+    const initialBoard: (Piece | null)[][] = [
+      [null, null, null],
+      [null, null, null],
+      [null, null, null],
+    ];
+
+    // Place dark pieces in row 0
+    darkPieces.forEach((piece, idx) => {
+      if (idx < 3) {
+        initialBoard[0][idx] = {
+          ...piece,
+          position: [0, idx],
+          moveCount: 0,
+        };
+      }
+    });
+
+    // Place light pieces in row 2
+    lightPieces.forEach((piece, idx) => {
+      if (idx < 3) {
+        initialBoard[2][idx] = {
+          ...piece,
+          position: [2, idx],
+          moveCount: 0,
+        };
+      }
+    });
+
+    // Create initial game state
+    const initialState: GameState = {
+      version: finalState.version,
+      gameId: finalState.gameId,
+      board: initialBoard,
+      currentPlayer: 'light',
+      currentTurn: 0,
+      lightPlayer: finalState.lightPlayer,
+      darkPlayer: finalState.darkPlayer,
+      lightCourt: [],
+      darkCourt: [],
+      capturedLight: [],
+      capturedDark: [],
+      moveHistory: [],
+      checksum: '', // Will be set by engine
+    };
+
+    // Create engine with initial state
     const engine = new KingsChessEngine(
       finalState.lightPlayer,
-      finalState.darkPlayer
+      finalState.darkPlayer,
+      initialState
     );
 
     // Replay moves up to targetIndex
