@@ -258,6 +258,15 @@ export default function App(): ReactElement {
       if (!pieceOriginalPositions.has(pieceId)) {
         pieceOriginalPositions.set(pieceId, move.from);
       }
+
+      // Also track captured pieces: if a piece was captured but never moved,
+      // its original position is where it was captured
+      if (move.captured && !pieceOriginalPositions.has(move.captured.id)) {
+        // The captured piece was at move.to when it was captured
+        if (move.to !== 'off_board') {
+          pieceOriginalPositions.set(move.captured.id, move.to);
+        }
+      }
     }
 
     // Collect all pieces from the board (with their current positions for unmoved pieces)
