@@ -58,16 +58,14 @@ export const PlaybackControls = ({
 }: PlaybackControlsProps): ReactElement => {
   return (
     <div className={styles.container}>
-      {/* History indicator */}
-      {!isAtLatest && (
-        <div className={styles.indicator} aria-live="polite">
-          Viewing move {currentMoveIndex} of {totalMoves}
-        </div>
-      )}
-
       {/* Playback controls */}
       <div className={styles.controls}>
         <span className={styles.label}>View history:</span>
+
+        {/* Move indicator - always visible */}
+        <span className={styles.indicator} aria-live="polite">
+          move {currentMoveIndex} of {totalMoves}
+        </span>
 
         {/* Back button */}
         <button

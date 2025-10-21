@@ -28,7 +28,7 @@ describe('PlaybackControls', () => {
     expect(screen.getByRole('button', { name: /return to current/i })).toBeInTheDocument();
   });
 
-  it('should show history indicator when not at latest', () => {
+  it('should show move indicator when viewing history', () => {
     render(
       <PlaybackControls
         onStepBack={vi.fn()}
@@ -42,10 +42,10 @@ describe('PlaybackControls', () => {
       />
     );
 
-    expect(screen.getByText(/viewing move 5 of 10/i)).toBeInTheDocument();
+    expect(screen.getByText(/move 5 of 10/i)).toBeInTheDocument();
   });
 
-  it('should not show history indicator when at latest', () => {
+  it('should show move indicator even when at latest', () => {
     render(
       <PlaybackControls
         onStepBack={vi.fn()}
@@ -59,7 +59,7 @@ describe('PlaybackControls', () => {
       />
     );
 
-    expect(screen.queryByText(/viewing move/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/move 10 of 10/i)).toBeInTheDocument();
   });
 
   it('should disable back button when cannot step back', () => {
