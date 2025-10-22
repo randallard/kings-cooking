@@ -238,10 +238,20 @@ export function PieceSelectionScreen({
 
                 if (isPlayer1Row) {
                   // Player 1 chose dark - top row is clickable for piece selection
-                  // Blind selection: hide Player 1's pieces during Player 2's turn in independent mode
+                  // Blind selection: hide Player 1's pieces during and after Player 2's turn in independent mode
                   const shouldHidePlayer1Pieces =
-                    currentSelector === 'player2' && state.selectionMode === 'independent';
+                    (currentSelector === 'player2' || currentSelector === 'complete') &&
+                    state.selectionMode === 'independent';
                   const displayPiece = shouldHidePlayer1Pieces ? null : piece;
+
+                  // During Player 2's turn or when complete, make this row non-clickable (Player 1's pieces)
+                  if (shouldHidePlayer1Pieces) {
+                    return (
+                      <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
+                        {/* Hidden - Player 1's pieces remain secret */}
+                      </div>
+                    );
+                  }
 
                   return (
                     <button
@@ -262,11 +272,13 @@ export function PieceSelectionScreen({
                   );
                 } else {
                   // Player 1 chose light - top row shows opponent's dark pieces
-                  // In independent mode during Player 2's turn, make this row clickable for Player 2
-                  const isPlayer2Selecting = currentSelector === 'player2' && state.selectionMode === 'independent';
+                  // In independent mode during/after Player 2's turn, make this row clickable for Player 2
+                  const isPlayer2Selecting =
+                    (currentSelector === 'player2' || currentSelector === 'complete') &&
+                    state.selectionMode === 'independent';
 
                   if (isPlayer2Selecting) {
-                    // Player 2 is selecting - make top row clickable
+                    // Player 2 is selecting or can change their pieces - make top row clickable
                     return (
                       <button
                         key={col}
@@ -319,12 +331,13 @@ export function PieceSelectionScreen({
 
                 if (isPlayer1Row) {
                   // Player 1 chose light - bottom row is clickable for piece selection
-                  // Blind selection: hide Player 1's pieces during Player 2's turn in independent mode
+                  // Blind selection: hide Player 1's pieces during and after Player 2's turn in independent mode
                   const shouldHidePlayer1Pieces =
-                    currentSelector === 'player2' && state.selectionMode === 'independent';
+                    (currentSelector === 'player2' || currentSelector === 'complete') &&
+                    state.selectionMode === 'independent';
                   const displayPiece = shouldHidePlayer1Pieces ? null : piece;
 
-                  // During Player 2's turn, make bottom row display-only (they select from top row)
+                  // During/after Player 2's turn, make bottom row display-only (they select from top row)
                   if (shouldHidePlayer1Pieces) {
                     return (
                       <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
