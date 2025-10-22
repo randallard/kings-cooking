@@ -9,6 +9,7 @@ import type { PieceType, SelectedPieces } from '@/lib/pieceSelection/types';
 import { getAvailablePieces, generateRandomPieces } from '@/lib/pieceSelection/logic';
 import { PIECE_POOL } from '@/lib/pieceSelection/types';
 import { PiecePickerModal } from './PiecePickerModal';
+import { HandoffScreen } from './HandoffScreen';
 import styles from './PieceSelectionScreen.module.css';
 
 interface PieceSelectionScreenProps {
@@ -37,6 +38,24 @@ export function PieceSelectionScreen({
 }: PieceSelectionScreenProps): ReactElement {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
+
+  // Track which player is currently selecting pieces in independent mode
+  const [currentSelector, setCurrentSelector] = useState<'player1' | 'player2' | 'complete'>('player1');
+
+  // Track handoff screen visibility (independent mode only)
+  const [showHandoff, setShowHandoff] = useState(false);
+
+  // Detect when both players have completed selection in independent mode
+  useEffect((): void => {
+    if (
+      state.selectionMode === 'independent' &&
+      state.player1Pieces?.every((p) => p !== null) &&
+      state.player2Pieces?.every((p) => p !== null) &&
+      currentSelector !== 'complete'
+    ) {
+      setCurrentSelector('complete');
+    }
+  }, [state.selectionMode, state.player1Pieces, state.player2Pieces, currentSelector]);
 
   // Handle random mode auto-generation
   useEffect((): void => {
@@ -72,22 +91,28 @@ export function PieceSelectionScreen({
   const handlePieceSelect = (piece: PieceType): void => {
     if (selectedPosition === null) return;
 
+    // Determine which player is selecting
+    const isPlayer1Selecting = currentSelector === 'player1';
+    const currentPieces = isPlayer1Selecting
+      ? (state.player1Pieces || [null, null, null])
+      : (state.player2Pieces || [null, null, null]);
+
     // Build new pieces array
-    const currentPieces = state.player1Pieces || [null, null, null];
     const newPieces: SelectedPieces = [
       selectedPosition === 0 ? piece : currentPieces[0] ?? null,
       selectedPosition === 1 ? piece : currentPieces[1] ?? null,
       selectedPosition === 2 ? piece : currentPieces[2] ?? null,
     ] as unknown as SelectedPieces;
 
+    // Dispatch to correct player
     dispatch({
       type: 'SET_PLAYER_PIECES',
-      player: 'player1',
+      player: isPlayer1Selecting ? 'player1' : 'player2',
       pieces: newPieces,
     });
 
-    // In mirrored mode, also set player2 pieces
-    if (state.selectionMode === 'mirrored') {
+    // In mirrored mode, also set player2 pieces (existing behavior)
+    if (state.selectionMode === 'mirrored' && isPlayer1Selecting) {
       dispatch({
         type: 'SET_PLAYER_PIECES',
         player: 'player2',
@@ -95,8 +120,26 @@ export function PieceSelectionScreen({
       });
     }
 
+    // Check if current player has completed selection (all 3 pieces chosen)
+    const allPiecesSelected = newPieces.every((p) => p !== null);
+
+    if (allPiecesSelected && state.selectionMode === 'independent') {
+      if (currentSelector === 'player1') {
+        // Player 1 done → Show handoff
+        setShowHandoff(true);
+      } else if (currentSelector === 'player2') {
+        // Player 2 done → Mark complete
+        setCurrentSelector('complete');
+      }
+    }
+
     setModalOpen(false);
     setSelectedPosition(null);
+  };
+
+  const handleHandoffContinue = (): void => {
+    setShowHandoff(false);
+    setCurrentSelector('player2');
   };
 
   const handleStartGame = (): void => {
@@ -123,7 +166,9 @@ export function PieceSelectionScreen({
     state.player1Pieces !== null &&
     state.player2Pieces !== null &&
     state.player1Pieces.every((p) => p !== null) &&
-    state.player2Pieces.every((p) => p !== null);
+    state.player2Pieces.every((p) => p !== null) &&
+    // In independent mode, also check that both players have finished (currentSelector === 'complete')
+    (state.selectionMode !== 'independent' || currentSelector === 'complete');
 
   return (
     <div className={styles.container}>
@@ -193,17 +238,32 @@ export function PieceSelectionScreen({
 
                 if (isPlayer1Row) {
                   // Player 1 chose dark - top row is clickable for piece selection
+                  // Blind selection: hide Player 1's pieces during and after Player 2's turn in independent mode
+                  const shouldHidePlayer1Pieces =
+                    (currentSelector === 'player2' || currentSelector === 'complete') &&
+                    state.selectionMode === 'independent';
+                  const displayPiece = shouldHidePlayer1Pieces ? null : piece;
+
+                  // During Player 2's turn or when complete, make this row non-clickable (Player 1's pieces)
+                  if (shouldHidePlayer1Pieces) {
+                    return (
+                      <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
+                        {/* Hidden - Player 1's pieces remain secret */}
+                      </div>
+                    );
+                  }
+
                   return (
                     <button
                       key={col}
                       type="button"
                       onClick={() => handlePositionClick(col)}
                       className={`${styles.cell} ${styles[squareColor]}`}
-                      aria-label={`Position ${col + 1}${piece ? `: ${piece}` : ' (empty)'}`}
+                      aria-label={`Position ${col + 1}${displayPiece ? `: ${displayPiece}` : ' (empty)'}`}
                     >
-                      {piece ? (
+                      {displayPiece ? (
                         <span className={styles.pieceIcon} aria-hidden="true">
-                          {PIECE_POOL[piece].unicode.dark}
+                          {PIECE_POOL[displayPiece].unicode.dark}
                         </span>
                       ) : (
                         <span className={styles.emptyCell}>{col + 1}</span>
@@ -211,16 +271,43 @@ export function PieceSelectionScreen({
                     </button>
                   );
                 } else {
-                  // Player 1 chose light - top row shows opponent's dark pieces (display only)
-                  return (
-                    <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
-                      {piece && (
-                        <span className={styles.pieceIcon} aria-hidden="true">
-                          {PIECE_POOL[piece].unicode.dark}
-                        </span>
-                      )}
-                    </div>
-                  );
+                  // Player 1 chose light - top row shows opponent's dark pieces
+                  // In independent mode during/after Player 2's turn, make this row clickable for Player 2
+                  const isPlayer2Selecting =
+                    (currentSelector === 'player2' || currentSelector === 'complete') &&
+                    state.selectionMode === 'independent';
+
+                  if (isPlayer2Selecting) {
+                    // Player 2 is selecting or can change their pieces - make top row clickable
+                    return (
+                      <button
+                        key={col}
+                        type="button"
+                        onClick={() => handlePositionClick(col)}
+                        className={`${styles.cell} ${styles[squareColor]}`}
+                        aria-label={`Position ${col + 1}${piece ? `: ${piece}` : ' (empty)'}`}
+                      >
+                        {piece ? (
+                          <span className={styles.pieceIcon} aria-hidden="true">
+                            {PIECE_POOL[piece].unicode.dark}
+                          </span>
+                        ) : (
+                          <span className={styles.emptyCell}>{col + 1}</span>
+                        )}
+                      </button>
+                    );
+                  } else {
+                    // Display only (Player 1 selecting or other modes)
+                    return (
+                      <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
+                        {piece && (
+                          <span className={styles.pieceIcon} aria-hidden="true">
+                            {PIECE_POOL[piece].unicode.dark}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  }
                 }
               })}
             </div>
@@ -244,17 +331,32 @@ export function PieceSelectionScreen({
 
                 if (isPlayer1Row) {
                   // Player 1 chose light - bottom row is clickable for piece selection
+                  // Blind selection: hide Player 1's pieces during and after Player 2's turn in independent mode
+                  const shouldHidePlayer1Pieces =
+                    (currentSelector === 'player2' || currentSelector === 'complete') &&
+                    state.selectionMode === 'independent';
+                  const displayPiece = shouldHidePlayer1Pieces ? null : piece;
+
+                  // During/after Player 2's turn, make bottom row display-only (they select from top row)
+                  if (shouldHidePlayer1Pieces) {
+                    return (
+                      <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
+                        {/* Empty - Player 2 can't see Player 1's pieces */}
+                      </div>
+                    );
+                  }
+
                   return (
                     <button
                       key={col}
                       type="button"
                       onClick={() => handlePositionClick(col)}
                       className={`${styles.cell} ${styles[squareColor]}`}
-                      aria-label={`Position ${col + 1}${piece ? `: ${piece}` : ' (empty)'}`}
+                      aria-label={`Position ${col + 1}${displayPiece ? `: ${displayPiece}` : ' (empty)'}`}
                     >
-                      {piece ? (
+                      {displayPiece ? (
                         <span className={styles.pieceIcon} aria-hidden="true">
-                          {PIECE_POOL[piece].unicode.light}
+                          {PIECE_POOL[displayPiece].unicode.light}
                         </span>
                       ) : (
                         <span className={styles.emptyCell}>{col + 1}</span>
@@ -318,6 +420,18 @@ export function PieceSelectionScreen({
         }}
         position={selectedPosition ?? 0}
       />
+
+      {/* Handoff Screen (Independent Mode Only) */}
+      {showHandoff && state.selectionMode === 'independent' && (
+        <HandoffScreen
+          nextPlayer="dark"  // Player 2 is always dark in piece selection
+          nextPlayerName={state.player2Name || 'Player 2'}
+          previousPlayer="light"  // Player 1 is always light
+          previousPlayerName={state.player1Name}
+          onContinue={handleHandoffContinue}
+          countdownSeconds={3}
+        />
+      )}
     </div>
   );
 }
