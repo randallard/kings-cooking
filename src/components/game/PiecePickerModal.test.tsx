@@ -182,4 +182,95 @@ describe('PiecePickerModal', () => {
       expect(screen.getByText(/position 3/i)).toBeInTheDocument();
     });
   });
+
+  describe('Promotion Mode', () => {
+    const promotionProps = {
+      isOpen: true,
+      availablePieces: ['queen', 'rook', 'bishop', 'knight'] as PieceType[],
+      onSelect: mockOnSelect,
+      onClose: mockOnClose,
+      mode: 'promotion' as const,
+    };
+
+    it('should show promotion title in promotion mode', () => {
+      render(<PiecePickerModal {...promotionProps} />);
+
+      expect(screen.getByText('Choose a piece to confirm and promote')).toBeInTheDocument();
+      expect(screen.queryByText(/position/i)).not.toBeInTheDocument();
+    });
+
+    it('should show Cancel button in promotion mode', async () => {
+      const user = userEvent.setup();
+      render(<PiecePickerModal {...promotionProps} />);
+
+      const cancelButton = screen.getByRole('button', { name: /cancel promotion/i });
+      expect(cancelButton).toBeInTheDocument();
+      expect(cancelButton).toHaveTextContent('Cancel');
+
+      // Should not have the × close button
+      expect(screen.queryByRole('button', { name: /close modal/i })).not.toBeInTheDocument();
+
+      await user.click(cancelButton);
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('should call onSelect with chosen promotion piece', async () => {
+      const user = userEvent.setup();
+      render(<PiecePickerModal {...promotionProps} />);
+
+      // Test selecting each promotion piece
+      const pieces = ['queen', 'rook', 'bishop', 'knight'];
+
+      for (const piece of pieces) {
+        vi.clearAllMocks();
+        await user.click(screen.getByRole('button', { name: new RegExp(piece, 'i') }));
+        expect(mockOnSelect).toHaveBeenCalledWith(piece);
+        expect(mockOnSelect).toHaveBeenCalledTimes(1);
+      }
+    });
+
+    it('should display all 4 promotion pieces', () => {
+      render(<PiecePickerModal {...promotionProps} />);
+
+      expect(screen.getByRole('button', { name: /queen/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /rook/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /bishop/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /knight/i })).toBeInTheDocument();
+    });
+
+    it('should not require position prop in promotion mode', () => {
+      // Position is optional for promotion mode
+      render(
+        <PiecePickerModal
+          isOpen={true}
+          availablePieces={['queen', 'rook', 'bishop', 'knight'] as PieceType[]}
+          onSelect={mockOnSelect}
+          onClose={mockOnClose}
+          mode="promotion"
+        />
+      );
+
+      expect(screen.getByText('Choose a piece to confirm and promote')).toBeInTheDocument();
+    });
+
+    it('should handle Escape key to cancel promotion', async () => {
+      const user = userEvent.setup();
+      render(<PiecePickerModal {...promotionProps} />);
+
+      await user.keyboard('{Escape}');
+
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('should show correct ARIA labels in promotion mode', () => {
+      render(<PiecePickerModal {...promotionProps} />);
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveAttribute('aria-modal', 'true');
+      expect(dialog).toHaveAttribute('aria-labelledby', 'piece-picker-title');
+
+      const cancelButton = screen.getByRole('button', { name: /cancel promotion/i });
+      expect(cancelButton).toHaveAttribute('aria-label', 'Cancel promotion');
+    });
+  });
 });
