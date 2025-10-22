@@ -14,9 +14,10 @@ import { VictoryScreen } from './components/game/VictoryScreen';
 import { URLSharer } from './components/game/URLSharer';
 import { StoryPanel } from './components/game/StoryPanel';
 import { PlaybackControls } from './components/game/PlaybackControls';
+import { PiecePickerModal } from './components/game/PiecePickerModal';
 import { KingsChessEngine } from './lib/chess/KingsChessEngine';
 import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
-import type { GameState, Piece, Position } from './lib/validation/schemas';
+import type { GameState, Piece, Position, PieceType } from './lib/validation/schemas';
 
 /**
  * Player 2 Name Entry Screen Component
@@ -98,6 +99,14 @@ export default function App(): ReactElement {
 
   // Derived state: are we viewing history?
   const isViewingHistory = historyIndex !== null;
+
+  // Promotion state for pawn promotion flow
+  const [pendingPromotion, setPendingPromotion] = useState<{
+    from: Position;
+    to: Position;
+    engine: KingsChessEngine;
+    checksumBeforeMove: string;
+  } | null>(null);
 
   // Reset history view when phase changes or game loads
   useEffect(() => {
@@ -516,6 +525,19 @@ export default function App(): ReactElement {
       // Execute the move
       const result = engine.makeMove(state.pendingMove.from, state.pendingMove.to);
 
+      // Check if promotion is required
+      if (!result.success && result.requiresPromotion && result.from && result.to !== 'off_board' && result.to) {
+        // Pawn reached promotion row - show modal for piece selection
+        setPendingPromotion({
+          from: result.from,
+          to: result.to,
+          engine,
+          checksumBeforeMove,
+        });
+        // Don't dispatch anything yet - wait for promotion piece selection
+        return;
+      }
+
       if (result.success) {
         const newState = engine.getGameState();
 
@@ -609,6 +631,77 @@ export default function App(): ReactElement {
           dispatch({ type: 'URL_GENERATED', url: shareUrl });
         }
       }
+    };
+
+    const handlePromotionSelect = (promotionPiece: PieceType): void => {
+      if (!pendingPromotion) return;
+
+      // Execute promotion using the saved engine state
+      const result = pendingPromotion.engine.promotePawn(
+        pendingPromotion.from,
+        pendingPromotion.to,
+        promotionPiece as 'queen' | 'rook' | 'bishop' | 'knight'
+      );
+
+      if (result.success) {
+        const newState = pendingPromotion.engine.getGameState();
+
+        // Save game state to localStorage
+        storage.setGameState(newState);
+
+        // Dispatch CONFIRM_MOVE with result
+        dispatch({
+          type: 'CONFIRM_MOVE',
+          result: {
+            newState,
+            engine: pendingPromotion.engine,
+          },
+        });
+
+        // Task 7: Generate URL if in URL mode
+        if (state.mode === 'url') {
+          const isFirstMove = newState.currentTurn === 1;
+          const checksumBeforeMove = pendingPromotion.checksumBeforeMove;
+
+          if (isFirstMove) {
+            // First move: Send full game state
+            const fullStatePayload = {
+              type: 'full_state' as const,
+              gameState: newState,
+              playerName: state.player1Name || undefined,
+            };
+            updateUrlImmediate(fullStatePayload);
+          } else {
+            // Subsequent moves: Send delta with checksum
+            // pendingPromotion.from and .to are guaranteed to be [number, number] (not null)
+            // because we validated them when setting pendingPromotion
+            const deltaPayload = {
+              type: 'delta' as const,
+              move: {
+                from: pendingPromotion.from as [number, number],
+                to: pendingPromotion.to as [number, number],
+              },
+              turn: newState.currentTurn,
+              checksum: checksumBeforeMove,
+              playerName: state.player2Name || undefined,
+            };
+            updateUrlImmediate(deltaPayload);
+          }
+
+          const shareUrl = getShareUrl();
+          dispatch({ type: 'URL_GENERATED', url: shareUrl });
+        }
+
+        // Clear promotion state
+        setPendingPromotion(null);
+      }
+    };
+
+    const handlePromotionCancel = (): void => {
+      // Cancel promotion - don't execute the move
+      setPendingPromotion(null);
+      // Also deselect the piece
+      dispatch({ type: 'DESELECT_PIECE' });
     };
 
     return (
@@ -711,6 +804,15 @@ export default function App(): ReactElement {
         <StoryPanel
           isOpen={showStoryPanel}
           onClose={handleCloseStoryPanel}
+        />
+
+        {/* Pawn Promotion Modal */}
+        <PiecePickerModal
+          isOpen={!!pendingPromotion}
+          availablePieces={['queen', 'rook', 'bishop', 'knight']}
+          onSelect={handlePromotionSelect}
+          onClose={handlePromotionCancel}
+          mode="promotion"
         />
       </div>
     );

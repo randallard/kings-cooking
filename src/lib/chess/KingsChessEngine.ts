@@ -208,12 +208,110 @@ export class KingsChessEngine {
       };
     }
 
+    // Check for pawn promotion BEFORE executing move
+    if (to !== 'off_board' && to && piece.type === 'pawn') {
+      const promotionRow = piece.owner === 'light' ? 0 : 2;
+      if (to[0] === promotionRow) {
+        // Pawn reached promotion row - require promotion piece selection
+        return {
+          success: false,
+          requiresPromotion: true,
+          from,
+          to,
+          piece,
+          error: 'Pawn promotion required',
+        };
+      }
+    }
+
     // Execute move
     if (to === 'off_board') {
       return this.executeOffBoardMove(from, piece);
     } else {
       return this.executeStandardMove(from, to, piece);
     }
+  }
+
+  /**
+   * Execute a pawn promotion.
+   *
+   * CRITICAL: This method completes a move that was started by makeMove().
+   * Call sequence:
+   * 1. makeMove(from, to) → returns requiresPromotion: true
+   * 2. User selects promotion piece via UI
+   * 3. promotePawn(from, to, promotionPiece) → executes move with promotion
+   *
+   * En Passant Edge Case:
+   * - If pawn makes 2-square jump to promotion row, Move.piece must preserve 'pawn' type
+   * - This allows adjacent enemy pawns to capture en passant on next turn
+   * - Board piece becomes promoted type, but Move.piece stays as 'pawn' for history
+   *
+   * @param from - Starting position (same as original makeMove call)
+   * @param to - Promotion row position (same as original makeMove call)
+   * @param promotionPiece - Type to promote to ('queen', 'rook', 'bishop', 'knight')
+   * @returns Move result with updated game state
+   */
+  public promotePawn(
+    from: Position,
+    to: Position,
+    promotionPiece: 'queen' | 'rook' | 'bishop' | 'knight'
+  ): MoveResult {
+    const piece = this.getPieceAt(from);
+
+    if (!piece || piece.type !== 'pawn') {
+      return {
+        success: false,
+        error: 'No pawn at starting position',
+      };
+    }
+
+    if (!to) {
+      return {
+        success: false,
+        error: 'Invalid promotion position',
+      };
+    }
+
+    // Verify promotion row
+    const promotionRow = piece.owner === 'light' ? 0 : 2;
+    if (to[0] !== promotionRow) {
+      return {
+        success: false,
+        error: 'Pawn is not on promotion row',
+      };
+    }
+
+    // Execute the move FIRST (handles captures, en passant detection)
+    const moveResult = this.executeStandardMove(from, to, piece);
+
+    if (!moveResult.success) {
+      return moveResult;
+    }
+
+    // THEN promote the piece on the board
+    // Get the piece from destination (it was moved by executeStandardMove)
+    const movedPiece = this.getPieceAt(to);
+
+    if (!movedPiece) {
+      return {
+        success: false,
+        error: 'Piece not found at destination after move',
+      };
+    }
+
+    // CRITICAL: Change piece type on board
+    movedPiece.type = promotionPiece;
+
+    // CRITICAL: Move.piece in history already recorded as 'pawn'
+    // This preserves en passant detection for 2-square jumps
+    // Do NOT update Move.piece - it's a historical snapshot
+
+    return {
+      success: true,
+      gameState: this.gameState,
+      promoted: true,
+      promotionPiece,
+    };
   }
 
   /**
