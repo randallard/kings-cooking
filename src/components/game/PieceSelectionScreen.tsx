@@ -261,16 +261,41 @@ export function PieceSelectionScreen({
                     </button>
                   );
                 } else {
-                  // Player 1 chose light - top row shows opponent's dark pieces (display only)
-                  return (
-                    <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
-                      {piece && (
-                        <span className={styles.pieceIcon} aria-hidden="true">
-                          {PIECE_POOL[piece].unicode.dark}
-                        </span>
-                      )}
-                    </div>
-                  );
+                  // Player 1 chose light - top row shows opponent's dark pieces
+                  // In independent mode during Player 2's turn, make this row clickable for Player 2
+                  const isPlayer2Selecting = currentSelector === 'player2' && state.selectionMode === 'independent';
+
+                  if (isPlayer2Selecting) {
+                    // Player 2 is selecting - make top row clickable
+                    return (
+                      <button
+                        key={col}
+                        type="button"
+                        onClick={() => handlePositionClick(col)}
+                        className={`${styles.cell} ${styles[squareColor]}`}
+                        aria-label={`Position ${col + 1}${piece ? `: ${piece}` : ' (empty)'}`}
+                      >
+                        {piece ? (
+                          <span className={styles.pieceIcon} aria-hidden="true">
+                            {PIECE_POOL[piece].unicode.dark}
+                          </span>
+                        ) : (
+                          <span className={styles.emptyCell}>{col + 1}</span>
+                        )}
+                      </button>
+                    );
+                  } else {
+                    // Display only (Player 1 selecting or other modes)
+                    return (
+                      <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
+                        {piece && (
+                          <span className={styles.pieceIcon} aria-hidden="true">
+                            {PIECE_POOL[piece].unicode.dark}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  }
                 }
               })}
             </div>
@@ -298,6 +323,15 @@ export function PieceSelectionScreen({
                   const shouldHidePlayer1Pieces =
                     currentSelector === 'player2' && state.selectionMode === 'independent';
                   const displayPiece = shouldHidePlayer1Pieces ? null : piece;
+
+                  // During Player 2's turn, make bottom row display-only (they select from top row)
+                  if (shouldHidePlayer1Pieces) {
+                    return (
+                      <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
+                        {/* Empty - Player 2 can't see Player 1's pieces */}
+                      </div>
+                    );
+                  }
 
                   return (
                     <button
