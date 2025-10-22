@@ -17,8 +17,10 @@ interface PiecePickerModalProps {
   onSelect: (piece: PieceType) => void;
   /** Callback when modal is closed */
   onClose: () => void;
-  /** Position index (0-2) for display */
-  position: number;
+  /** Position index (0-2) for display (optional for promotion mode) */
+  position?: number;
+  /** Mode: 'selection' for piece setup, 'promotion' for pawn promotion */
+  mode?: 'selection' | 'promotion';
 }
 
 /**
@@ -49,6 +51,7 @@ export function PiecePickerModal({
   onSelect,
   onClose,
   position,
+  mode = 'selection',
 }: PiecePickerModalProps): ReactElement | null {
   const dialogRef = useRef<HTMLDivElement>(null);
   const firstButtonRef = useRef<HTMLButtonElement>(null);
@@ -130,15 +133,17 @@ export function PiecePickerModal({
       >
         <div className={styles.header}>
           <h2 id="piece-picker-title" className={styles.title}>
-            Choose Piece for Position {position + 1}
+            {mode === 'promotion'
+              ? 'Choose a piece to confirm and promote'
+              : `Choose Piece for Position ${(position ?? 0) + 1}`}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className={styles.closeButton}
-            aria-label="Close modal"
+            className={mode === 'promotion' ? styles.cancelButton : styles.closeButton}
+            aria-label={mode === 'promotion' ? 'Cancel promotion' : 'Close modal'}
           >
-            ✕
+            {mode === 'promotion' ? 'Cancel' : '✕'}
           </button>
         </div>
 

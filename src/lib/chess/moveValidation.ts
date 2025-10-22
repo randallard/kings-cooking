@@ -208,13 +208,12 @@ function validateOffBoardMove(
   }
 
   if (piece.type === 'pawn') {
-    // TODO: Issue #25 - Implement pawn promotion instead of blocking off-board
-    // Current: Pawns cannot move off-board (King's Cooking variant rule)
-    // Future: Pawns should promote to queen/other piece when reaching opposite edge
-    // Edge case: En passant should still apply after 2-square jump to promotion row
+    // Pawns reaching opponent's starting row will trigger promotion (handled in KingsChessEngine.makeMove)
+    // Pawns cannot move completely off-board (beyond starting rows)
+    // Note: En passant eligibility is preserved after 2-square jump + promotion
     return {
       valid: false,
-      reason: 'Pawns cannot move off-board. They score by being captured.',
+      reason: 'Pawns promote when reaching opponent starting row, cannot move off-board',
     };
   }
 

@@ -3,7 +3,7 @@
  * @module lib/chess/types
  */
 
-import type { Piece, GameState } from '../validation/schemas';
+import type { Piece, GameState, Position } from '../validation/schemas';
 
 /**
  * Result of attempting a move.
@@ -17,6 +17,18 @@ export interface MoveResult {
   gameState?: GameState;
   /** Piece that was captured, if any */
   captured?: Piece;
+  /** True if pawn reached promotion row and requires promotion piece selection */
+  requiresPromotion?: boolean;
+  /** True if promotion was executed successfully */
+  promoted?: boolean;
+  /** Type of piece that was promoted to */
+  promotionPiece?: 'queen' | 'rook' | 'bishop' | 'knight';
+  /** Original position (for promotion flow continuation) */
+  from?: Position;
+  /** Destination position (for promotion flow continuation) */
+  to?: Position | 'off_board';
+  /** Piece being moved (for promotion flow continuation) */
+  piece?: Piece;
 }
 
 /**

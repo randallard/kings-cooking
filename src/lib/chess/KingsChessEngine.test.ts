@@ -305,8 +305,8 @@ describe('KingsChessEngine', () => {
       const result = testEngine.makeMove([0, 1], 'off_board');
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Pawns cannot move off-board');
-      expect(result.error).toContain('captured');
+      expect(result.error).toContain('Pawns promote when reaching opponent starting row');
+      expect(result.error).toContain('cannot move off-board');
     });
   });
 
@@ -789,6 +789,309 @@ describe('KingsChessEngine', () => {
       expect(result.gameOver).toBe(true);
       expect(result.winner).toBe('dark');
       expect(result.reason).not.toContain('stalemate');
+    });
+  });
+
+  describe('Pawn Promotion', () => {
+    test('should detect promotion when light pawn reaches row 0', () => {
+      // Setup: Place light pawn at row 1
+      const tempEngine = new KingsChessEngine(lightPlayer, darkPlayer);
+      const initialState: GameState = tempEngine.getGameState();
+
+      // Clear the board
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          initialState.board[i]![j] = null;
+        }
+      }
+
+      // Place light pawn at row 1
+      const lightPawn: Piece = {
+        id: uuid(),
+        type: 'pawn',
+        owner: 'light',
+        position: [1, 1],
+        moveCount: 1,
+      };
+      initialState.board[1]![1] = lightPawn;
+      initialState.currentPlayer = 'light';
+
+      const engine = new KingsChessEngine(lightPlayer, darkPlayer, initialState);
+
+      // Move: Pawn moves to row 0 (promotion row)
+      const result = engine.makeMove([1, 1], [0, 1]);
+
+      // Assert: makeMove returns requiresPromotion: true
+      expect(result.success).toBe(false);
+      expect(result.requiresPromotion).toBe(true);
+      expect(result.from).toEqual([1, 1]);
+      expect(result.to).toEqual([0, 1]);
+      expect(result.piece?.type).toBe('pawn');
+      expect(result.error).toBe('Pawn promotion required');
+    });
+
+    test('should detect promotion when dark pawn reaches row 2', () => {
+      // Setup: Place dark pawn at row 1
+      const tempEngine = new KingsChessEngine(lightPlayer, darkPlayer);
+      const initialState: GameState = tempEngine.getGameState();
+
+      // Clear the board
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          initialState.board[i]![j] = null;
+        }
+      }
+
+      // Place dark pawn at row 1
+      const darkPawn: Piece = {
+        id: uuid(),
+        type: 'pawn',
+        owner: 'dark',
+        position: [1, 1],
+        moveCount: 1,
+      };
+      initialState.board[1]![1] = darkPawn;
+      initialState.currentPlayer = 'dark';
+
+      const engine = new KingsChessEngine(lightPlayer, darkPlayer, initialState);
+
+      // Move: Pawn moves to row 2 (promotion row)
+      const result = engine.makeMove([1, 1], [2, 1]);
+
+      // Assert: makeMove returns requiresPromotion: true
+      expect(result.success).toBe(false);
+      expect(result.requiresPromotion).toBe(true);
+      expect(result.from).toEqual([1, 1]);
+      expect(result.to).toEqual([2, 1]);
+      expect(result.piece?.type).toBe('pawn');
+    });
+
+    test('should promote pawn to queen', () => {
+      // Setup: Light pawn at row 1
+      const tempEngine = new KingsChessEngine(lightPlayer, darkPlayer);
+      const initialState: GameState = tempEngine.getGameState();
+
+      // Clear the board
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          initialState.board[i]![j] = null;
+        }
+      }
+
+      // Place light pawn at row 1
+      const lightPawn: Piece = {
+        id: uuid(),
+        type: 'pawn',
+        owner: 'light',
+        position: [1, 1],
+        moveCount: 1,
+      };
+      initialState.board[1]![1] = lightPawn;
+      initialState.currentPlayer = 'light';
+
+      const engine = new KingsChessEngine(lightPlayer, darkPlayer, initialState);
+
+      // Execute: promotePawn to queen
+      const result = engine.promotePawn([1, 1], [0, 1], 'queen');
+
+      // Assert: Piece at row 0 has type 'queen'
+      expect(result.success).toBe(true);
+      expect(result.promoted).toBe(true);
+      expect(result.promotionPiece).toBe('queen');
+
+      const state = result.gameState!;
+      const promotedPiece = state.board[0]![1];
+      expect(promotedPiece?.type).toBe('queen');
+      expect(promotedPiece?.owner).toBe('light');
+
+      // Assert: Move history shows piece.type === 'pawn' (original)
+      const lastMove = state.moveHistory[state.moveHistory.length - 1];
+      expect(lastMove?.piece.type).toBe('pawn');
+    });
+
+    test('should promote to all piece types', () => {
+      const promotionTypes: Array<'queen' | 'rook' | 'bishop' | 'knight'> = [
+        'queen',
+        'rook',
+        'bishop',
+        'knight',
+      ];
+
+      for (const pieceType of promotionTypes) {
+        // Setup: Light pawn at row 1
+        const tempEngine = new KingsChessEngine(lightPlayer, darkPlayer);
+        const initialState: GameState = tempEngine.getGameState();
+
+        // Clear the board
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            initialState.board[i]![j] = null;
+          }
+        }
+
+        // Place light pawn at row 1
+        const lightPawn: Piece = {
+          id: uuid(),
+          type: 'pawn',
+          owner: 'light',
+          position: [1, 1],
+          moveCount: 1,
+        };
+        initialState.board[1]![1] = lightPawn;
+        initialState.currentPlayer = 'light';
+
+        const engine = new KingsChessEngine(lightPlayer, darkPlayer, initialState);
+
+        // Execute: promotePawn to each type
+        const result = engine.promotePawn([1, 1], [0, 1], pieceType);
+
+        // Assert: Success and correct promotion type
+        expect(result.success).toBe(true);
+        expect(result.promoted).toBe(true);
+        expect(result.promotionPiece).toBe(pieceType);
+
+        const state = result.gameState!;
+        const promotedPiece = state.board[0]![1];
+        expect(promotedPiece?.type).toBe(pieceType);
+      }
+    });
+
+    test('should preserve en passant after 2-square jump + promotion', () => {
+      // Setup: Light pawn at row 2 (starting position), Dark pawn at row 0
+      const tempEngine = new KingsChessEngine(lightPlayer, darkPlayer);
+      const initialState: GameState = tempEngine.getGameState();
+
+      // Clear the board
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          initialState.board[i]![j] = null;
+        }
+      }
+
+      // Place light pawn at row 2 (starting position)
+      const lightPawn: Piece = {
+        id: uuid(),
+        type: 'pawn',
+        owner: 'light',
+        position: [2, 1],
+        moveCount: 0,
+      };
+      initialState.board[2]![1] = lightPawn;
+
+      // Place dark pawn at row 0, col 2 (will attempt en passant)
+      const darkPawn: Piece = {
+        id: uuid(),
+        type: 'pawn',
+        owner: 'dark',
+        position: [0, 2],
+        moveCount: 1,
+      };
+      initialState.board[0]![2] = darkPawn;
+
+      initialState.currentPlayer = 'light';
+      initialState.currentTurn = 1;
+
+      const engine = new KingsChessEngine(lightPlayer, darkPlayer, initialState);
+
+      // Move 1: Light pawn jumps 2 squares to row 0 (promotion row)
+      const moveResult = engine.makeMove([2, 1], [0, 1]);
+
+      // Should trigger promotion
+      expect(moveResult.requiresPromotion).toBe(true);
+
+      // Execute: Promote to queen
+      const promotionResult = engine.promotePawn([2, 1], [0, 1], 'queen');
+      expect(promotionResult.success).toBe(true);
+
+      const stateAfterPromotion = promotionResult.gameState!;
+
+      // Critical: Check Move.piece.type === 'pawn' in move history
+      const lastMove = stateAfterPromotion.moveHistory[stateAfterPromotion.moveHistory.length - 1];
+      expect(lastMove?.piece.type).toBe('pawn');
+      expect(lastMove?.from).toEqual([2, 1]);
+      expect(lastMove?.to).toEqual([0, 1]);
+
+      // Verify pawn moved 2 squares
+      expect(lastMove!.to).not.toBe('off_board');
+      if (lastMove!.to !== 'off_board') {
+        const moveDistance = Math.abs(lastMove!.to[0] - lastMove!.from[0]);
+        expect(moveDistance).toBe(2);
+      }
+
+      // Board piece should be queen
+      const boardPiece = stateAfterPromotion.board[0]![1];
+      expect(boardPiece?.type).toBe('queen');
+
+      // Now dark pawn should be able to capture en passant
+      // Note: This would require implementing the en passant capture logic
+      // For now, we verify the move history has the correct piece type
+      expect(lastMove?.piece.type).toBe('pawn'); // En passant detection relies on this
+    });
+
+    test('should reject promotion from non-promotion row', () => {
+      // Setup: Pawn at row 1 (middle row, not promotion row)
+      const tempEngine = new KingsChessEngine(lightPlayer, darkPlayer);
+      const initialState: GameState = tempEngine.getGameState();
+
+      // Clear the board
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          initialState.board[i]![j] = null;
+        }
+      }
+
+      // Place light pawn at row 1
+      const lightPawn: Piece = {
+        id: uuid(),
+        type: 'pawn',
+        owner: 'light',
+        position: [1, 1],
+        moveCount: 1,
+      };
+      initialState.board[1]![1] = lightPawn;
+      initialState.currentPlayer = 'light';
+
+      const engine = new KingsChessEngine(lightPlayer, darkPlayer, initialState);
+
+      // Execute: Try to promote pawn on row 1 (not promotion row)
+      const result = engine.promotePawn([1, 1], [1, 1], 'queen');
+
+      // Assert: Returns success: false
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Pawn is not on promotion row');
+    });
+
+    test('should reject promotion of non-pawn piece', () => {
+      // Setup: Rook at promotion row
+      const tempEngine = new KingsChessEngine(lightPlayer, darkPlayer);
+      const initialState: GameState = tempEngine.getGameState();
+
+      // Clear the board
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          initialState.board[i]![j] = null;
+        }
+      }
+
+      // Place light rook at row 0 (would be promotion row for light)
+      const lightRook: Piece = {
+        id: uuid(),
+        type: 'rook',
+        owner: 'light',
+        position: [0, 1],
+        moveCount: 1,
+      };
+      initialState.board[0]![1] = lightRook;
+      initialState.currentPlayer = 'light';
+
+      const engine = new KingsChessEngine(lightPlayer, darkPlayer, initialState);
+
+      // Execute: Try to promote rook
+      const result = engine.promotePawn([0, 1], [0, 1], 'queen');
+
+      // Assert: Returns success: false
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('No pawn at starting position');
     });
   });
 });
