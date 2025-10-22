@@ -282,6 +282,31 @@ describe('PieceSelectionScreen', () => {
     });
   });
 
+  describe('Independent Mode - Complete Flow', () => {
+    it('should show handoff screen after Player 1 completes selection', async () => {
+      const user = userEvent.setup();
+      // Start with 2 pieces already selected
+      const stateWith2Pieces: PieceSelectionPhase = {
+        ...baseState,
+        selectionMode: 'independent',
+        player1Color: 'light',
+        player1Pieces: ['rook', 'knight', null] as unknown as SelectedPieces,
+      };
+
+      render(<PieceSelectionScreen state={stateWith2Pieces} dispatch={mockDispatch} />);
+
+      // Player 1 selects the 3rd piece
+      await user.click(screen.getByRole('button', { name: /position 3/i }));
+      await user.click(screen.getByRole('button', { name: /select bishop/i }));
+
+      // Assert: Handoff screen should appear
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toBeInTheDocument();
+      expect(screen.getByText(/dark's turn/i)).toBeInTheDocument();
+      expect(screen.getByText(/pass the device to/i)).toBeInTheDocument();
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle null player2Name gracefully', () => {
       const stateWithoutP2: PieceSelectionPhase = {
