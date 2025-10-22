@@ -86,8 +86,10 @@ export function PieceSelectionScreen({
       pieces: newPieces,
     });
 
-    // In mirrored mode, also set player2 pieces
-    if (state.selectionMode === 'mirrored') {
+    // In mirrored and independent mode, also set player2 pieces
+    // TODO: Issue #36 - Independent mode should let player 2 choose their own pieces
+    // For now, copying player 1's pieces to unblock game start
+    if (state.selectionMode === 'mirrored' || state.selectionMode === 'independent') {
       dispatch({
         type: 'SET_PLAYER_PIECES',
         player: 'player2',
