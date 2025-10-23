@@ -514,9 +514,25 @@ export function gameFlowReducer(
       // URL mode: called when Player 2 opens first URL
       if (state.phase === 'handoff') {
         // Update player2Name AND update the corresponding player in gameState
-        if (state.gameState && 'player1Color' in state && state.player1Color) {
-          // Determine which player in gameState is player2
-          const isPlayer2Light = state.player1Color === 'dark';
+        if (state.gameState) {
+          // Determine which player in gameState is player2 by checking existing names
+          // If lightPlayer.name matches player1Name, then player2 is dark
+          // If darkPlayer.name matches player1Name, then player2 is light
+          const player1IsLight = state.gameState.lightPlayer.name === state.player1Name ||
+                                 state.gameState.lightPlayer.name === 'Player 1';
+          const player1IsDark = state.gameState.darkPlayer.name === state.player1Name ||
+                                state.gameState.darkPlayer.name === 'Player 1';
+
+          let isPlayer2Light = false;
+          if (player1IsDark) {
+            isPlayer2Light = true;
+          } else if (player1IsLight) {
+            isPlayer2Light = false;
+          } else if ('player1Color' in state && state.player1Color) {
+            // Fallback to player1Color if available
+            isPlayer2Light = state.player1Color === 'dark';
+          }
+
           const updatedGameState = {
             ...state.gameState,
             lightPlayer: isPlayer2Light
@@ -532,20 +548,21 @@ export function gameFlowReducer(
       }
       if (state.phase === 'playing') {
         // Update player2Name AND update the corresponding player in gameState
-        if ('player1Color' in state && state.player1Color) {
-          const isPlayer2Light = state.player1Color === 'dark';
-          const updatedGameState = {
-            ...state.gameState,
-            lightPlayer: isPlayer2Light
-              ? { ...state.gameState.lightPlayer, name: action.name }
-              : state.gameState.lightPlayer,
-            darkPlayer: !isPlayer2Light
-              ? { ...state.gameState.darkPlayer, name: action.name }
-              : state.gameState.darkPlayer,
-          };
-          return { ...state, player2Name: action.name, gameState: updatedGameState };
-        }
-        return { ...state, player2Name: action.name };
+        // Determine which player is player2 by checking which name doesn't match player1Name
+        const player1IsDark = state.gameState.darkPlayer.name === state.player1Name ||
+                              state.gameState.darkPlayer.name === 'Player 1';
+
+        const isPlayer2Light = player1IsDark;
+        const updatedGameState = {
+          ...state.gameState,
+          lightPlayer: isPlayer2Light
+            ? { ...state.gameState.lightPlayer, name: action.name }
+            : state.gameState.lightPlayer,
+          darkPlayer: !isPlayer2Light
+            ? { ...state.gameState.darkPlayer, name: action.name }
+            : state.gameState.darkPlayer,
+        };
+        return { ...state, player2Name: action.name, gameState: updatedGameState };
       }
       return state;
 
