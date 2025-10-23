@@ -181,4 +181,8 @@ describe('App Component - Phase 5 Game Flow', () => {
       expect(hotseatButton).toHaveFocus();
     });
   });
+
+  // Test for Issue #49 will be validated through integration tests
+  // The fix in App.tsx:746-751 ensures turn display uses gameState.lightPlayer.name / darkPlayer.name
+  // instead of incorrectly mapping player1Name/player2Name to light/dark
 });

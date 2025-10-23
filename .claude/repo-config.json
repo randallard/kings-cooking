@@ -7,17 +7,18 @@
     "git_url": "git@github.com:randallard/kings-cooking.git"
   },
   "github_cli": {
-    "binary_path": "~/bin/gh",
+    "binary_path": "/usr/bin/gh",
     "authenticated": true,
-    "account": "ryankhetlyr"
+    "account": "ryankhetlyr",
+    "token_env_var": "GH_TOKEN"
   },
   "issue_workflow": {
     "branch_prefix": "issue-",
     "commands": {
-      "list_open_issues": "~/bin/gh issue list --repo randallard/kings-cooking --state open",
-      "view_issue": "~/bin/gh issue view {issue_number} --repo randallard/kings-cooking",
-      "comment_on_issue": "~/bin/gh issue comment {issue_number} --body \"{comment}\" --repo randallard/kings-cooking",
-      "create_pr": "~/bin/gh pr create --repo randallard/kings-cooking"
+      "list_open_issues": "gh issue list --repo randallard/kings-cooking --state open",
+      "view_issue": "gh issue view {issue_number} --repo randallard/kings-cooking",
+      "comment_on_issue": "gh issue comment {issue_number} --body \"{comment}\" --repo randallard/kings-cooking",
+      "create_pr": "gh pr create --repo randallard/kings-cooking"
     }
   },
   "current_open_issues": [

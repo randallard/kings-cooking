@@ -749,11 +749,9 @@ export default function App(): ReactElement {
           }}>
             <div>
               <strong>Current Turn:</strong>{' '}
-              {state.gameState.currentPlayer === 'light' ? (
-                state.player1Name || 'Light'
-              ) : (
-                state.player2Name || 'Dark'
-              )}
+              {state.gameState.currentPlayer === 'light'
+                ? state.gameState.lightPlayer.name
+                : state.gameState.darkPlayer.name}
             </div>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
               Move {state.gameState.currentTurn} | Mode: {state.mode}
@@ -840,14 +838,21 @@ export default function App(): ReactElement {
         if (!handoffStepCompleted) {
           // Step 1: Show handoff screen
           const previousPlayer = state.gameState.currentPlayer === 'light' ? 'dark' : 'light';
-          const previousPlayerName = state.player1Name || 'Light';
+          // Use player names from gameState (stored in localStorage)
+          const previousPlayerName = previousPlayer === 'light'
+            ? state.gameState.lightPlayer.name
+            : state.gameState.darkPlayer.name;
+          const nextPlayerName = state.gameState.currentPlayer === 'light'
+            ? state.gameState.lightPlayer.name
+            : state.gameState.darkPlayer.name;
 
           return (
             <HandoffScreen
               nextPlayer={state.gameState.currentPlayer}
-              nextPlayerName="Player 2"
+              nextPlayerName={nextPlayerName}
               previousPlayer={previousPlayer}
               previousPlayerName={previousPlayerName}
+              isGameStart={state.gameState.currentTurn === 0}
               onContinue={() => {
                 setHandoffStepCompleted(true);
               }}
@@ -894,12 +899,14 @@ export default function App(): ReactElement {
 
       // Show HandoffScreen with countdown (normal turn-based handoff with both names known)
       const previousPlayer = state.gameState.currentPlayer === 'light' ? 'dark' : 'light';
+      // Use player names from gameState (stored in localStorage)
       const previousPlayerName = previousPlayer === 'light'
-        ? (state.player1Name || 'Light')
-        : (state.player2Name || 'Dark');
+        ? state.gameState.lightPlayer.name
+        : state.gameState.darkPlayer.name;
       const nextPlayerName = state.gameState.currentPlayer === 'light'
-        ? (state.player1Name || 'Light')
-        : (state.player2Name || 'Dark');
+        ? state.gameState.lightPlayer.name
+        : state.gameState.darkPlayer.name;
+      const isGameStart = state.gameState.currentTurn === 0 && state.gameState.moveHistory.length === 0;
 
       return (
         <HandoffScreen
@@ -907,6 +914,7 @@ export default function App(): ReactElement {
           nextPlayerName={nextPlayerName}
           previousPlayer={previousPlayer}
           previousPlayerName={previousPlayerName}
+          isGameStart={isGameStart}
           onContinue={() => {
             dispatch({ type: 'COMPLETE_HANDOFF' });
           }}
@@ -1008,9 +1016,14 @@ export default function App(): ReactElement {
     };
 
     // Add optional props only if they have values
+    // Use player names from gameState (stored in localStorage)
     if (state.winner !== 'draw') {
-      const winnerName = state.winner === 'light' ? state.player1Name : state.player2Name;
-      const loserName = state.winner === 'light' ? state.player2Name : state.player1Name;
+      const winnerName = state.winner === 'light'
+        ? state.gameState.lightPlayer.name
+        : state.gameState.darkPlayer.name;
+      const loserName = state.winner === 'light'
+        ? state.gameState.darkPlayer.name
+        : state.gameState.lightPlayer.name;
 
       if (winnerName) {
         victoryProps.winnerName = winnerName;
@@ -1020,13 +1033,9 @@ export default function App(): ReactElement {
       }
     }
 
-    // Add player names for stats section
-    if (state.player1Name) {
-      victoryProps.player1Name = state.player1Name;
-    }
-    if (state.player2Name) {
-      victoryProps.player2Name = state.player2Name;
-    }
+    // Add player names for stats section (use gameState names)
+    victoryProps.player1Name = state.gameState.lightPlayer.name;
+    victoryProps.player2Name = state.gameState.darkPlayer.name;
 
     if (state.mode === 'url') {
       // Generate full state URL for victory sharing

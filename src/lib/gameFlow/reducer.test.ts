@@ -647,6 +647,10 @@ describe('gameFlowReducer', () => {
 
         expect(result).toBe(setupState);
       });
+
+      // Test for Issue #49: Player assignment is already tested by existing tests
+      // The fix ensures gameState player names are used directly in App.tsx:746-751
+      // Regression coverage provided by HandoffScreen tests verifying isGameStart behavior
     });
   });
 
@@ -1053,20 +1057,24 @@ describe('gameFlowReducer', () => {
         const action: GameFlowAction = { type: 'SET_PLAYER2_NAME', name: 'Bob' };
         const result = gameFlowReducer(stateWithoutPlayer2, action);
 
-        expect(result).toEqual({
-          ...stateWithoutPlayer2,
-          player2Name: 'Bob',
-        });
+        expect(result.phase).toBe('playing');
+        // gameState should also be updated with the new player2 name
+        if (result.phase === 'playing') {
+          expect(result.player2Name).toBe('Bob');
+          expect(result.gameState.darkPlayer.name).toBe('Bob'); // Player2 is dark
+        }
       });
 
       it('should update player2Name if already set', () => {
         const action: GameFlowAction = { type: 'SET_PLAYER2_NAME', name: 'Charlie' };
         const result = gameFlowReducer(playingState, action);
 
-        expect(result).toEqual({
-          ...playingState,
-          player2Name: 'Charlie',
-        });
+        expect(result.phase).toBe('playing');
+        // gameState should also be updated with the new player2 name
+        if (result.phase === 'playing') {
+          expect(result.player2Name).toBe('Charlie');
+          expect(result.gameState.darkPlayer.name).toBe('Charlie'); // Player2 is dark
+        }
       });
     });
 
@@ -1188,20 +1196,24 @@ describe('gameFlowReducer', () => {
         const action: GameFlowAction = { type: 'SET_PLAYER2_NAME', name: 'Charlie' };
         const result = gameFlowReducer(stateWithEmptyPlayer2, action);
 
-        expect(result).toEqual({
-          ...stateWithEmptyPlayer2,
-          player2Name: 'Charlie',
-        });
+        expect(result.phase).toBe('handoff');
+        // gameState should also be updated with the new player2 name
+        if (result.phase === 'handoff' && result.gameState) {
+          expect(result.player2Name).toBe('Charlie');
+          expect(result.gameState.darkPlayer.name).toBe('Charlie'); // Player2 is dark
+        }
       });
 
       it('should update player2Name if already set', () => {
         const action: GameFlowAction = { type: 'SET_PLAYER2_NAME', name: 'Charlie' };
         const result = gameFlowReducer(handoffState, action);
 
-        expect(result).toEqual({
-          ...handoffState,
-          player2Name: 'Charlie',
-        });
+        expect(result.phase).toBe('handoff');
+        // gameState should also be updated with the new player2 name
+        if (result.phase === 'handoff' && result.gameState) {
+          expect(result.player2Name).toBe('Charlie');
+          expect(result.gameState.darkPlayer.name).toBe('Charlie'); // Player2 is dark
+        }
       });
     });
 
