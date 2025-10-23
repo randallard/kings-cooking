@@ -10,7 +10,9 @@
 
 ## Goal
 
-Fix the handoff screen message when Player 1 chooses to play as dark color. Currently shows incorrect message "Dark(Player1) made their move" when it should show "Light(Player2) gets the first move" since this is the START of the game, not after a move.
+Fix the turn order display when Player 1 chooses to play as dark color. Two critical bugs:
+1. **Turn display bug**: Shows "Current turn: Ryan" when Player 1 (Ryan) chose dark, but Ted (Player 2/light) should go first
+2. **Handoff message bug**: Shows "Dark(Ryan) made their move" when it should show "Light(Ted) gets the first move"
 
 ---
 
@@ -31,18 +33,19 @@ Fix the handoff screen message when Player 1 chooses to play as dark color. Curr
 ## What (User-Visible Behavior)
 
 ### Current Broken Behavior
-When Player 1 selects dark color during setup:
-1. After piece selection completes → Handoff screen appears
-2. **BUG**: Shows "Dark's Turn" as title
-3. **BUG**: Shows "Dark (Ryan) made their move. Pass the device to Ted."
-4. This is wrong because NO move has been made yet - it's the game start!
+When Player 1 (Ryan) selects dark color during setup:
+1. After piece selection → Handoff screen passes device to Player 2 (Ted)
+2. **BUG #1**: Turn display shows "Current turn: Ryan" even though Ted (light) should go first
+3. **BUG #2**: Handoff screen shows "Dark's Turn" as title (should be Light)
+4. **BUG #3**: Handoff screen shows "Dark (Ryan) made their move" when NO move was made yet
 
 ### Expected Correct Behavior
-When Player 1 selects dark color during setup:
-1. After piece selection completes → Handoff screen appears
-2. **FIX**: Shows "Light's Turn" or "{LightPlayerName}'s Turn" as title
-3. **FIX**: Shows "Light(Ted) gets the first move." (not "made their move")
-4. This correctly indicates it's the START of the game, light player goes first
+When Player 1 (Ryan) selects dark color during setup:
+1. After piece selection → Handoff screen passes device to Player 2 (Ted)
+2. **FIX #1**: Turn display shows "Current turn: Ted" (light player goes first)
+3. **FIX #2**: Handoff screen shows "Light's Turn" or "Ted's Turn" as title
+4. **FIX #3**: Handoff screen shows "Light(Ted) gets the first move"
+5. Light player (Ted) makes the first move, game proceeds correctly
 
 ### Affects Both Modes
 - ✅ Hot-seat mode: Pass device from Player 1 (dark) to Player 2 (light)
@@ -196,7 +199,89 @@ it('should display correct message', () => {
 
 ### Detailed Task Breakdown
 
-#### TASK 1: CREATE failing test for HandoffScreen game-start message
+#### TASK 1: CREATE failing test for turn display with player1Color
+
+**File**: `src/App.test.tsx`
+
+**Action**: ADD new test case for turn display when Player 1 chooses dark
+
+```typescript
+describe('Turn display with player color selection', () => {
+  it('should display correct player name when Player 1 chose dark', () => {
+    // Setup: Player 1 (Alice) chose dark, Player 2 (Bob) is light
+    const mockGameState = createMockGameState({
+      currentPlayer: 'light',  // Light goes first
+      lightPlayer: { id: uuid(), name: 'Bob' },   // Player 2
+      darkPlayer: { id: uuid(), name: 'Alice' },  // Player 1
+    });
+
+    const playingState: PlayingPhase = {
+      phase: 'playing',
+      mode: 'hotseat',
+      player1Name: 'Alice',
+      player2Name: 'Bob',
+      gameState: mockGameState,
+      selectedPosition: null,
+      legalMoves: [],
+      pendingMove: null,
+    };
+
+    render(<App initialState={playingState} />);
+
+    // Should show Bob's turn (light player), NOT Alice
+    expect(screen.getByText(/current turn:/i)).toHaveTextContent('Bob');
+    expect(screen.getByText(/current turn:/i)).not.toHaveTextContent('Alice');
+  });
+});
+```
+
+**Validation**:
+```bash
+pnpm test App.test.tsx
+# Should see: ❌ Test fails - shows "Alice" instead of "Bob"
+```
+
+---
+
+#### TASK 2: UPDATE App.tsx turn display to use gameState player names
+
+**File**: `src/App.tsx`
+
+**Action**: UPDATE turn display logic (lines 746-751)
+
+**Current broken code**:
+```typescript
+<strong>Current Turn:</strong>{' '}
+{state.gameState.currentPlayer === 'light' ? (
+  state.player1Name || 'Light'
+) : (
+  state.player2Name || 'Dark'
+)}
+```
+
+**Fixed code**:
+```typescript
+<strong>Current Turn:</strong>{' '}
+{state.gameState.currentPlayer === 'light'
+  ? state.gameState.lightPlayer.name
+  : state.gameState.darkPlayer.name}
+```
+
+**Why this fixes it:**
+- Uses `gameState.lightPlayer.name` / `darkPlayer.name` directly
+- These names are ALREADY correctly assigned based on player1Color in the reducer
+- No need to map player numbers - the gameState knows who is light/dark
+
+**Validation**:
+```bash
+pnpm run check
+pnpm test App.test.tsx
+# Should see: ✅ TypeScript passes, test now passes
+```
+
+---
+
+#### TASK 3: CREATE failing test for HandoffScreen game-start message
 
 **File**: `src/components/game/HandoffScreen.test.tsx`
 
@@ -249,7 +334,7 @@ pnpm test HandoffScreen.test.tsx
 
 ---
 
-#### TASK 2: UPDATE HandoffScreen props interface to include isGameStart
+#### TASK 4: UPDATE HandoffScreen props interface to include isGameStart
 
 **File**: `src/components/game/HandoffScreen.tsx`
 
@@ -275,7 +360,7 @@ pnpm run check
 
 ---
 
-#### TASK 3: UPDATE HandoffScreen message generation logic
+#### TASK 5: UPDATE HandoffScreen message generation logic
 
 **File**: `src/components/game/HandoffScreen.tsx`
 
@@ -310,7 +395,7 @@ pnpm test HandoffScreen.test.tsx
 
 ---
 
-#### TASK 4: UPDATE App.tsx to pass isGameStart prop
+#### TASK 6: UPDATE App.tsx to pass isGameStart prop
 
 **File**: `src/App.tsx`
 
@@ -357,7 +442,7 @@ pnpm run check && pnpm run lint
 
 ---
 
-#### TASK 5: CREATE reducer test for handoff phase with player1Color='dark'
+#### TASK 7: CREATE reducer test for handoff phase with player1Color='dark'
 
 **File**: `src/lib/gameFlow/reducer.test.ts`
 
@@ -407,7 +492,7 @@ pnpm test reducer.test.ts
 
 ---
 
-#### TASK 6: RUN all validation gates
+#### TASK 8: RUN all validation gates
 
 **Validation Commands**:
 
@@ -437,7 +522,7 @@ pnpm build
 
 ---
 
-#### TASK 7: MANUAL verification with dev server
+#### TASK 9: MANUAL verification with dev server
 
 **Steps**:
 1. Start dev server: `pnpm dev`
