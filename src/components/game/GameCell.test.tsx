@@ -318,7 +318,7 @@ describe('GameCell', () => {
           onClick={vi.fn()}
         />
       );
-      expect(screen.getByText('♟')).toBeInTheDocument();
+      expect(screen.getByText('♟\uFE0E')).toBeInTheDocument(); // Dark pawn with text presentation selector
     });
   });
 });

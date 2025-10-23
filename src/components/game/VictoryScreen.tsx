@@ -170,7 +170,7 @@ export const VictoryScreen = ({
       knight: { light: '♘', dark: '♞' },
       bishop: { light: '♗', dark: '♝' },
       queen: { light: '♕', dark: '♛' },
-      pawn: { light: '♙', dark: '♟' },
+      pawn: { light: '♙', dark: '♟\uFE0E' }, // U+FE0E forces text presentation on iOS
       king: { light: '♔', dark: '♚' },
     };
     const pieceSymbols = symbols[piece.type];

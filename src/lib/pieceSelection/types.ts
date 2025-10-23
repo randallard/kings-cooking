@@ -55,7 +55,7 @@ export const PIECE_POOL = {
   knight: { max: 2, unicode: { light: '♘', dark: '♞' } },
   bishop: { max: 2, unicode: { light: '♗', dark: '♝' } },
   queen: { max: 1, unicode: { light: '♕', dark: '♛' } },
-  pawn: { max: 8, unicode: { light: '♙', dark: '♟' } },
+  pawn: { max: 8, unicode: { light: '♙', dark: '♟\uFE0E' } }, // U+FE0E forces text presentation on iOS
 } as const;
 
 export type PiecePoolType = typeof PIECE_POOL;

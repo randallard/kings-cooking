@@ -137,7 +137,7 @@ describe('Piece Selection Types', () => {
       expect(PIECE_POOL.knight.unicode.dark).toBe('♞');
       expect(PIECE_POOL.bishop.unicode.dark).toBe('♝');
       expect(PIECE_POOL.queen.unicode.dark).toBe('♛');
-      expect(PIECE_POOL.pawn.unicode.dark).toBe('♟');
+      expect(PIECE_POOL.pawn.unicode.dark).toBe('♟\uFE0E'); // Includes text presentation selector for iOS
     });
 
     describe('pawn unicode (Issue #26)', () => {
@@ -146,9 +146,11 @@ describe('Piece Selection Types', () => {
         expect(lightPawn.codePointAt(0)).toBe(0x2659); // ♙ WHITE CHESS PAWN
       });
 
-      it('should use U+265F for dark pawn', () => {
+      it('should use U+265F for dark pawn with text presentation selector', () => {
         const darkPawn = PIECE_POOL.pawn.unicode.dark;
         expect(darkPawn.codePointAt(0)).toBe(0x265f); // ♟ BLACK CHESS PAWN
+        expect(darkPawn.codePointAt(1)).toBe(0xfe0e); // U+FE0E TEXT PRESENTATION SELECTOR (for iOS)
+        expect(darkPawn.length).toBe(2); // Base character + variation selector
       });
 
       it('should follow light=filled, dark=outline pattern', () => {
