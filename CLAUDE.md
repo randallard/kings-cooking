@@ -655,3 +655,4 @@ export interface GameMessage {
   timestamp: number;
 }
 ```
+- always Use player names from local storage rather than player 1 and player 2

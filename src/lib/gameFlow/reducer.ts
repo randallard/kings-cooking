@@ -513,9 +513,38 @@ export function gameFlowReducer(
       // Hot-seat: called from handoff screen if player2Name is empty
       // URL mode: called when Player 2 opens first URL
       if (state.phase === 'handoff') {
+        // Update player2Name AND update the corresponding player in gameState
+        if (state.gameState && 'player1Color' in state && state.player1Color) {
+          // Determine which player in gameState is player2
+          const isPlayer2Light = state.player1Color === 'dark';
+          const updatedGameState = {
+            ...state.gameState,
+            lightPlayer: isPlayer2Light
+              ? { ...state.gameState.lightPlayer, name: action.name }
+              : state.gameState.lightPlayer,
+            darkPlayer: !isPlayer2Light
+              ? { ...state.gameState.darkPlayer, name: action.name }
+              : state.gameState.darkPlayer,
+          };
+          return { ...state, player2Name: action.name, gameState: updatedGameState };
+        }
         return { ...state, player2Name: action.name };
       }
       if (state.phase === 'playing') {
+        // Update player2Name AND update the corresponding player in gameState
+        if ('player1Color' in state && state.player1Color) {
+          const isPlayer2Light = state.player1Color === 'dark';
+          const updatedGameState = {
+            ...state.gameState,
+            lightPlayer: isPlayer2Light
+              ? { ...state.gameState.lightPlayer, name: action.name }
+              : state.gameState.lightPlayer,
+            darkPlayer: !isPlayer2Light
+              ? { ...state.gameState.darkPlayer, name: action.name }
+              : state.gameState.darkPlayer,
+          };
+          return { ...state, player2Name: action.name, gameState: updatedGameState };
+        }
         return { ...state, player2Name: action.name };
       }
       return state;

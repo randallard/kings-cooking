@@ -19,6 +19,8 @@ interface HandoffScreenProps {
   onContinue: () => void;
   /** Optional countdown duration in seconds (default: 3) */
   countdownSeconds?: number;
+  /** True when game just started (no moves yet) - changes message to "gets first move" */
+  isGameStart?: boolean;
 }
 
 /**
@@ -57,6 +59,7 @@ export const HandoffScreen = ({
   previousPlayerName,
   onContinue,
   countdownSeconds = 3,
+  isGameStart = false,
 }: HandoffScreenProps): ReactElement => {
   const [countdown, setCountdown] = useState(countdownSeconds);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -109,6 +112,15 @@ export const HandoffScreen = ({
   const nextPlayerColor = nextPlayer === 'light' ? 'Light' : 'Dark';
   const previousPlayerColor = previousPlayer === 'light' ? 'Light' : 'Dark';
 
+  // Determine message based on game state
+  const message = isGameStart
+    ? `${nextPlayerColor} (${nextPlayerName}) gets the first move.`
+    : `${previousPlayerColor} (${previousPlayerName}) made their move.`;
+
+  const secondLine = isGameStart
+    ? 'Ready to start!'
+    : `Pass the device to ${nextPlayerName}.`;
+
   return (
     <div
       className={styles.overlay}
@@ -125,9 +137,9 @@ export const HandoffScreen = ({
 
         {/* Description */}
         <p id="handoff-description" className={styles.description}>
-          {previousPlayerColor} ({previousPlayerName}) made their move.
+          {message}
           <br />
-          Pass the device to {nextPlayerName}.
+          {secondLine}
         </p>
 
         {/* Countdown */}

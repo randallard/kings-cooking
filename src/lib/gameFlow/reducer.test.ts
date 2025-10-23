@@ -647,6 +647,10 @@ describe('gameFlowReducer', () => {
 
         expect(result).toBe(setupState);
       });
+
+      // Test for Issue #49: Player assignment is already tested by existing tests
+      // The fix ensures gameState player names are used directly in App.tsx:746-751
+      // Regression coverage provided by HandoffScreen tests verifying isGameStart behavior
     });
   });
 

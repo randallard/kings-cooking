@@ -360,6 +360,58 @@ describe('HandoffScreen', () => {
     });
   });
 
+  describe('Handoff message display (Issue #49)', () => {
+    it('should display game-start message when no moves made yet', () => {
+      render(
+        <HandoffScreen
+          nextPlayer="light"
+          nextPlayerName="Ted"
+          previousPlayer="dark"
+          previousPlayerName="Ryan"
+          isGameStart={true}
+          onContinue={vi.fn()}
+        />
+      );
+
+      // Should NOT show "made their move"
+      expect(screen.queryByText(/made their move/i)).not.toBeInTheDocument();
+
+      // SHOULD show "gets the first move"
+      expect(screen.getByText(/light \(ted\) gets the first move/i)).toBeInTheDocument();
+    });
+
+    it('should display normal handoff message mid-game', () => {
+      render(
+        <HandoffScreen
+          nextPlayer="dark"
+          nextPlayerName="Ryan"
+          previousPlayer="light"
+          previousPlayerName="Ted"
+          isGameStart={false}
+          onContinue={vi.fn()}
+        />
+      );
+
+      // Should show normal "made their move" message
+      expect(screen.getByText(/light \(ted\) made their move/i)).toBeInTheDocument();
+    });
+
+    it('should display correct message when isGameStart is undefined (backward compatibility)', () => {
+      render(
+        <HandoffScreen
+          nextPlayer="dark"
+          nextPlayerName="Alice"
+          previousPlayer="light"
+          previousPlayerName="Bob"
+          onContinue={vi.fn()}
+        />
+      );
+
+      // When isGameStart is undefined, should default to mid-game behavior
+      expect(screen.getByText(/light \(bob\) made their move/i)).toBeInTheDocument();
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle countdown of 0 seconds', () => {
       const onContinue = vi.fn();
