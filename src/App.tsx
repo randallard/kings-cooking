@@ -147,6 +147,7 @@ export default function App(): ReactElement {
     const savedMode = storage.getGameMode();
     const savedGameState = storage.getGameState();
     const savedPlayer1 = storage.getPlayer1Name();
+    const savedPlayer2 = storage.getPlayer2Name();
 
     // Only restore if we're in mode-selection phase (initial mount)
     if (state.phase === 'mode-selection' && savedMode && savedGameState) {
@@ -170,6 +171,10 @@ export default function App(): ReactElement {
 
         if (savedPlayer1) {
           dispatch({ type: 'SET_PLAYER1_NAME', name: savedPlayer1 });
+        }
+
+        if (savedPlayer2) {
+          dispatch({ type: 'SET_PLAYER2_NAME', name: savedPlayer2 });
         }
 
         dispatch({ type: 'START_GAME' });
