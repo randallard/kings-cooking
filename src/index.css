@@ -214,6 +214,7 @@ select:focus {
 }
 
 /* Chess piece unicode rendering - force text mode instead of emoji on mobile */
+/* Using !important to override any CSS module specificity */
 span[aria-hidden="true"] {
-  font-variant-emoji: text;
+  font-variant-emoji: text !important;
 }
