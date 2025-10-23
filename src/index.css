@@ -212,3 +212,8 @@ select:focus {
   white-space: nowrap;
   border-width: 0;
 }
+
+/* Chess piece unicode rendering - force text mode instead of emoji on mobile */
+span[aria-hidden="true"] {
+  font-variant-emoji: text;
+}

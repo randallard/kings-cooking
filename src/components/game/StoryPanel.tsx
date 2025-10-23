@@ -128,7 +128,7 @@ export function StoryPanel({ isOpen, onClose }: StoryPanelProps): ReactElement |
             <span className={styles.scrollSignature}>- Light King</span>)
           </p>
           <p className={styles.dialogue}>
-            <strong>Dark King:</strong> HA! Not if we get there first!
+            <strong>Dark King:</strong> HA! Not if I can help it!
           </p>
           <p className={styles.stageDirection}>(shouting)</p>
           <p className={styles.dialogue}>
