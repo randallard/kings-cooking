@@ -31,7 +31,7 @@ describe('StoryPanel', () => {
     it('should render story content', () => {
       render(<StoryPanel isOpen={true} onClose={vi.fn()} />);
       expect(screen.getByText(/A pigeon\.\.\. what's up Glinda/i)).toBeInTheDocument();
-      expect(screen.getByText(/HA! Not if we get there first!/i)).toBeInTheDocument();
+      expect(screen.getByText(/HA! Not if I can help it!/i)).toBeInTheDocument();
     });
 
     it('should render instructions content', () => {
