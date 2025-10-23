@@ -9,7 +9,7 @@ import type { PieceType, SelectedPieces } from '@/lib/pieceSelection/types';
 import { getAvailablePieces, generateRandomPieces } from '@/lib/pieceSelection/logic';
 import { PIECE_POOL } from '@/lib/pieceSelection/types';
 import { PiecePickerModal } from './PiecePickerModal';
-import { HandoffScreen } from './HandoffScreen';
+import { NameForm } from './NameForm';
 import styles from './PieceSelectionScreen.module.css';
 
 interface PieceSelectionScreenProps {
@@ -44,6 +44,22 @@ export function PieceSelectionScreen({
 
   // Track handoff screen visibility (independent mode only)
   const [showHandoff, setShowHandoff] = useState(false);
+
+  // Track name form visibility (independent mode only - for Player 2)
+  const [showNameForm, setShowNameForm] = useState(false);
+
+  // Detect when Player 1 has completed selection and trigger handoff (independent mode)
+  useEffect((): void => {
+    if (
+      state.selectionMode === 'independent' &&
+      state.player1Pieces?.every((p) => p !== null) &&
+      currentSelector === 'player1' &&
+      !showHandoff &&
+      !showNameForm
+    ) {
+      setShowHandoff(true);
+    }
+  }, [state.selectionMode, state.player1Pieces, currentSelector, showHandoff, showNameForm]);
 
   // Detect when both players have completed selection in independent mode
   useEffect((): void => {
@@ -139,6 +155,15 @@ export function PieceSelectionScreen({
 
   const handleHandoffContinue = (): void => {
     setShowHandoff(false);
+    setShowNameForm(true); // Show name form instead of going straight to pieces
+  };
+
+  const handlePlayer2NameSubmit = (name: string): void => {
+    // Dispatch SET_PLAYER2_NAME action
+    dispatch({ type: 'SET_PLAYER2_NAME', name });
+
+    // Hide name form and proceed to piece selection
+    setShowNameForm(false);
     setCurrentSelector('player2');
   };
 
@@ -421,16 +446,30 @@ export function PieceSelectionScreen({
         position={selectedPosition ?? 0}
       />
 
-      {/* Handoff Screen (Independent Mode Only) */}
+      {/* Custom Handoff Screen (Independent Mode Only - Player 1 finished) */}
       {showHandoff && state.selectionMode === 'independent' && (
-        <HandoffScreen
-          nextPlayer="dark"  // Player 2 is always dark in piece selection
-          nextPlayerName={state.player2Name || 'Player 2'}
-          previousPlayer="light"  // Player 1 is always light
-          previousPlayerName={state.player1Name}
-          onContinue={handleHandoffContinue}
-          countdownSeconds={3}
-        />
+        <div className={styles.handoffOverlay}>
+          <div className={styles.handoffContainer}>
+            <h2>{state.player1Name} finished picking pieces</h2>
+            <p>Player two's turn to pick pieces</p>
+            <button onClick={handleHandoffContinue} className={styles.continueButton}>
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Name Form (Independent Mode - Player 2) */}
+      {showNameForm && state.selectionMode === 'independent' && (
+        <div className={styles.nameFormOverlay}>
+          <div className={styles.nameFormContainer}>
+            <h2>Player 2, enter your name</h2>
+            <NameForm
+              storageKey="player2"
+              onNameChange={handlePlayer2NameSubmit}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
