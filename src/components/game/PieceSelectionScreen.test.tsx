@@ -4,11 +4,23 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PieceSelectionScreen } from './PieceSelectionScreen';
 import type { PieceSelectionPhase } from '@/types/gameFlow';
 import type { SelectedPieces } from '@/lib/pieceSelection/types';
+
+// Mock localStorage utilities with stateful behavior
+let mockPlayer2Name = '';
+vi.mock('@/lib/storage/localStorage', () => ({
+  storage: {
+    getPlayer2Name: vi.fn(() => mockPlayer2Name),
+    setPlayer2Name: vi.fn((name: string) => {
+      mockPlayer2Name = name;
+      return true;
+    }),
+  },
+}));
 
 describe('PieceSelectionScreen', () => {
   const mockDispatch = vi.fn();
@@ -26,6 +38,7 @@ describe('PieceSelectionScreen', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPlayer2Name = ''; // Reset mock storage
   });
 
   describe('Mode Selection', () => {
@@ -304,6 +317,123 @@ describe('PieceSelectionScreen', () => {
       expect(dialog).toBeInTheDocument();
       expect(screen.getByText(/dark's turn/i)).toBeInTheDocument();
       expect(screen.getByText(/pass the device to/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Independent Mode - Name Entry Flow', () => {
+    it('should show name entry screen after handoff screen', async () => {
+      const user = userEvent.setup();
+      // Player 1 has completed selection
+      const stateWith2Pieces: PieceSelectionPhase = {
+        ...baseState,
+        selectionMode: 'independent',
+        player1Color: 'light',
+        player1Pieces: ['rook', 'knight', null] as unknown as SelectedPieces,
+      };
+
+      render(<PieceSelectionScreen state={stateWith2Pieces} dispatch={mockDispatch} />);
+
+      // Player 1 selects the 3rd piece
+      await user.click(screen.getByRole('button', { name: /position 3/i }));
+      await user.click(screen.getByRole('button', { name: /select bishop/i }));
+
+      // Handoff screen should appear
+      expect(screen.getByText(/dark's turn/i)).toBeInTheDocument();
+
+      // Click "Skip Countdown" to continue
+      await user.click(screen.getByRole('button', { name: /skip countdown/i }));
+
+      // Name entry screen should now appear
+      expect(screen.getByText(/player 2's turn/i)).toBeInTheDocument();
+      expect(screen.getByText(/enter your name/i)).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: /name/i })).toBeInTheDocument();
+    });
+
+    it('should enable continue button when valid name is entered', async () => {
+      const user = userEvent.setup();
+      const stateWith2Pieces: PieceSelectionPhase = {
+        ...baseState,
+        selectionMode: 'independent',
+        player1Color: 'light',
+        player1Pieces: ['rook', 'knight', null] as unknown as SelectedPieces,
+      };
+
+      render(<PieceSelectionScreen state={stateWith2Pieces} dispatch={mockDispatch} />);
+
+      // Complete Player 1's selection
+      await user.click(screen.getByRole('button', { name: /position 3/i }));
+      await user.click(screen.getByRole('button', { name: /select bishop/i }));
+
+      // Click through handoff screen
+      await user.click(screen.getByRole('button', { name: /skip countdown/i }));
+
+      // Continue button should be disabled initially
+      const continueButton = screen.getByRole('button', { name: /continue to piece selection/i });
+      expect(continueButton).toBeDisabled();
+
+      // Enter a valid name
+      const nameInput = screen.getByRole('textbox', { name: /name/i });
+      await user.type(nameInput, 'Charlie');
+
+      // Wait for debounce and validation
+      await waitFor(() => {
+        expect(continueButton).toBeEnabled();
+      }, { timeout: 500 });
+    });
+
+    it('should dispatch SET_PLAYER2_NAME when continue button clicked', async () => {
+      const user = userEvent.setup();
+      const stateWith2Pieces: PieceSelectionPhase = {
+        ...baseState,
+        selectionMode: 'independent',
+        player1Color: 'light',
+        player1Pieces: ['rook', 'knight', null] as unknown as SelectedPieces,
+      };
+
+      render(<PieceSelectionScreen state={stateWith2Pieces} dispatch={mockDispatch} />);
+
+      // Complete Player 1's selection
+      await user.click(screen.getByRole('button', { name: /position 3/i }));
+      await user.click(screen.getByRole('button', { name: /select bishop/i }));
+
+      // Click through handoff screen
+      await user.click(screen.getByRole('button', { name: /skip countdown/i }));
+
+      // Enter a valid name
+      const nameInput = screen.getByRole('textbox', { name: /name/i });
+      await user.type(nameInput, 'Charlie');
+
+      // Wait for button to be enabled
+      const continueButton = screen.getByRole('button', { name: /continue to piece selection/i });
+      await waitFor(() => {
+        expect(continueButton).toBeEnabled();
+      }, { timeout: 500 });
+
+      // Click continue
+      await user.click(continueButton);
+
+      // Should dispatch SET_PLAYER2_NAME
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'SET_PLAYER2_NAME',
+        })
+      );
+    });
+
+    it('should not show name entry in mirrored or random modes', () => {
+      const mirroredState: PieceSelectionPhase = {
+        ...baseState,
+        selectionMode: 'mirrored',
+        player1Color: 'light',
+        player1Pieces: ['rook', 'knight', 'bishop'],
+        player2Pieces: ['rook', 'knight', 'bishop'],
+      };
+
+      render(<PieceSelectionScreen state={mirroredState} dispatch={mockDispatch} />);
+
+      // Start game button should be visible (no handoff/name entry in mirrored mode)
+      expect(screen.getByRole('button', { name: /start game/i })).toBeInTheDocument();
+      expect(screen.queryByText(/enter your name/i)).not.toBeInTheDocument();
     });
   });
 
