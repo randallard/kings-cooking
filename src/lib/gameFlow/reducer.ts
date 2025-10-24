@@ -512,6 +512,11 @@ export function gameFlowReducer(
     case 'SET_PLAYER2_NAME':
       // Hot-seat: called from handoff screen if player2Name is empty
       // URL mode: called when Player 2 opens first URL
+      // Independent mode: called during piece selection before Player 2 picks pieces
+      if (state.phase === 'piece-selection') {
+        // Just update player2Name in state
+        return { ...state, player2Name: action.name };
+      }
       if (state.phase === 'handoff') {
         // Update player2Name AND update the corresponding player in gameState
         if (state.gameState) {
