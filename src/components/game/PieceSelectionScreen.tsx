@@ -378,16 +378,43 @@ export function PieceSelectionScreen({
                     </button>
                   );
                 } else {
-                  // Player 1 chose dark - bottom row shows opponent's light pieces (display only)
-                  return (
-                    <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
-                      {piece && (
-                        <span className={styles.pieceIcon} aria-hidden="true">
-                          {PIECE_POOL[piece].unicode.light}
-                        </span>
-                      )}
-                    </div>
-                  );
+                  // Player 1 chose dark - bottom row shows Player 2's light pieces
+                  // In independent mode during/after Player 2's turn, make this row clickable for Player 2
+                  const isPlayer2Selecting =
+                    (currentSelector === 'player2' || currentSelector === 'complete') &&
+                    state.selectionMode === 'independent';
+
+                  if (isPlayer2Selecting) {
+                    // Player 2 is selecting or can change their pieces - make bottom row clickable
+                    return (
+                      <button
+                        key={col}
+                        type="button"
+                        onClick={() => handlePositionClick(col)}
+                        className={`${styles.cell} ${styles[squareColor]}`}
+                        aria-label={`Position ${col + 1}${piece ? `: ${piece}` : ' (empty)'}`}
+                      >
+                        {piece ? (
+                          <span className={styles.pieceIcon} aria-hidden="true">
+                            {PIECE_POOL[piece].unicode.light}
+                          </span>
+                        ) : (
+                          <span className={styles.emptyCell}>{col + 1}</span>
+                        )}
+                      </button>
+                    );
+                  } else {
+                    // Display only (Player 1 selecting or other modes)
+                    return (
+                      <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
+                        {piece && (
+                          <span className={styles.pieceIcon} aria-hidden="true">
+                            {PIECE_POOL[piece].unicode.light}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  }
                 }
               })}
             </div>
