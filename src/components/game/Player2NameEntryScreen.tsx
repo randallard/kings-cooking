@@ -9,8 +9,14 @@ import { storage } from '@/lib/storage/localStorage';
 import type { GameFlowAction } from '@/types/gameFlow';
 
 interface Player2NameEntryScreenProps {
-  /** Dispatch function for game flow actions */
-  dispatch: React.Dispatch<GameFlowAction>;
+  /** Dispatch function for game flow actions (optional if using onContinue) */
+  dispatch?: React.Dispatch<GameFlowAction>;
+  /** Description text to show above the name form */
+  description?: string;
+  /** Button text (defaults to "Continue to Game") */
+  buttonText?: string;
+  /** Custom callback when continue is clicked with valid name (overrides default dispatch behavior) */
+  onContinue?: (name: string) => void;
 }
 
 /**
@@ -32,8 +38,26 @@ interface Player2NameEntryScreenProps {
  */
 export const Player2NameEntryScreen = ({
   dispatch,
+  description = 'Before we continue, Player 2 needs to enter their name.',
+  buttonText = 'Continue to Game',
+  onContinue,
 }: Player2NameEntryScreenProps): ReactElement => {
   const [isNameValid, setIsNameValid] = useState(false);
+
+  const handleContinue = (): void => {
+    // Get the saved name from localStorage
+    const player2Name = storage.getPlayer2Name();
+    if (player2Name && player2Name.trim().length > 0) {
+      if (onContinue) {
+        // Use custom callback if provided
+        onContinue(player2Name);
+      } else if (dispatch) {
+        // Use default dispatch behavior
+        dispatch({ type: 'SET_PLAYER2_NAME', name: player2Name });
+        dispatch({ type: 'COMPLETE_HANDOFF' });
+      }
+    }
+  };
 
   return (
     <div style={{
@@ -47,7 +71,7 @@ export const Player2NameEntryScreen = ({
       <div className="card">
         <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Enter Your Name</h2>
         <p style={{ marginBottom: 'var(--spacing-md)', color: 'var(--text-secondary)' }}>
-          Before we continue, Player 2 needs to enter their name.
+          {description}
         </p>
         <NameForm
           storageKey="player2"
@@ -58,18 +82,11 @@ export const Player2NameEntryScreen = ({
           }}
         />
         <button
-          onClick={() => {
-            // Get the saved name from localStorage
-            const player2Name = storage.getPlayer2Name();
-            if (player2Name && player2Name.trim().length > 0) {
-              dispatch({ type: 'SET_PLAYER2_NAME', name: player2Name });
-              dispatch({ type: 'COMPLETE_HANDOFF' });
-            }
-          }}
+          onClick={handleContinue}
           disabled={!isNameValid}
           style={{ marginTop: 'var(--spacing-md)', width: '100%' }}
         >
-          Continue to Game
+          {buttonText}
         </button>
       </div>
     </div>

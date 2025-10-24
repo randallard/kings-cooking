@@ -13,7 +13,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { gameFlowReducer } from './reducer';
-import type { GameFlowState, GameFlowAction, PlayingPhase, HandoffPhase } from '../../types/gameFlow';
+import type { GameFlowState, GameFlowAction, PlayingPhase, HandoffPhase, PieceSelectionPhase } from '../../types/gameFlow';
 import type { GameState, Position } from '../validation/schemas';
 import { KingsChessEngine } from '../chess/KingsChessEngine';
 import { storage } from '../storage/localStorage';
@@ -1179,6 +1179,32 @@ describe('gameFlowReducer', () => {
         countdown: 3,
         generatedUrl: null,
       };
+    });
+
+    describe('SET_PLAYER2_NAME action in piece-selection phase', () => {
+      it('should set player2Name during piece selection (independent mode)', () => {
+        const pieceSelectionState: PieceSelectionPhase = {
+          phase: 'piece-selection',
+          mode: 'hotseat',
+          player1Name: 'Alice',
+          player2Name: '',
+          selectionMode: 'independent',
+          player1Color: 'light',
+          player1Pieces: ['rook', 'knight', 'bishop'],
+          player2Pieces: null,
+        };
+        const action: GameFlowAction = { type: 'SET_PLAYER2_NAME', name: 'Ted' };
+        const result = gameFlowReducer(pieceSelectionState, action);
+
+        expect(result.phase).toBe('piece-selection');
+        if (result.phase === 'piece-selection') {
+          expect(result.player2Name).toBe('Ted');
+          // Other state should remain unchanged
+          expect(result.player1Name).toBe('Alice');
+          expect(result.selectionMode).toBe('independent');
+          expect(result.player1Pieces).toEqual(['rook', 'knight', 'bishop']);
+        }
+      });
     });
 
     describe('SET_PLAYER2_NAME action in handoff phase', () => {

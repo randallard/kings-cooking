@@ -10,6 +10,7 @@ import { getAvailablePieces, generateRandomPieces } from '@/lib/pieceSelection/l
 import { PIECE_POOL } from '@/lib/pieceSelection/types';
 import { PiecePickerModal } from './PiecePickerModal';
 import { HandoffScreen } from './HandoffScreen';
+import { Player2NameEntryScreen } from './Player2NameEntryScreen';
 import styles from './PieceSelectionScreen.module.css';
 
 interface PieceSelectionScreenProps {
@@ -44,6 +45,9 @@ export function PieceSelectionScreen({
 
   // Track handoff screen visibility (independent mode only)
   const [showHandoff, setShowHandoff] = useState(false);
+
+  // Track Player 2 name entry screen visibility (independent mode only)
+  const [showNameEntry, setShowNameEntry] = useState(false);
 
   // Detect when both players have completed selection in independent mode
   useEffect((): void => {
@@ -139,6 +143,16 @@ export function PieceSelectionScreen({
 
   const handleHandoffContinue = (): void => {
     setShowHandoff(false);
+    // Show name entry screen so Player 2 can enter/change their name
+    setShowNameEntry(true);
+  };
+
+  const handleNameEntryComplete = (name: string): void => {
+    // Dispatch action to update player2Name in state
+    dispatch({ type: 'SET_PLAYER2_NAME', name });
+
+    // Name entry complete, continue to piece selection for Player 2
+    setShowNameEntry(false);
     setCurrentSelector('player2');
   };
 
@@ -364,16 +378,43 @@ export function PieceSelectionScreen({
                     </button>
                   );
                 } else {
-                  // Player 1 chose dark - bottom row shows opponent's light pieces (display only)
-                  return (
-                    <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
-                      {piece && (
-                        <span className={styles.pieceIcon} aria-hidden="true">
-                          {PIECE_POOL[piece].unicode.light}
-                        </span>
-                      )}
-                    </div>
-                  );
+                  // Player 1 chose dark - bottom row shows Player 2's light pieces
+                  // In independent mode during/after Player 2's turn, make this row clickable for Player 2
+                  const isPlayer2Selecting =
+                    (currentSelector === 'player2' || currentSelector === 'complete') &&
+                    state.selectionMode === 'independent';
+
+                  if (isPlayer2Selecting) {
+                    // Player 2 is selecting or can change their pieces - make bottom row clickable
+                    return (
+                      <button
+                        key={col}
+                        type="button"
+                        onClick={() => handlePositionClick(col)}
+                        className={`${styles.cell} ${styles[squareColor]}`}
+                        aria-label={`Position ${col + 1}${piece ? `: ${piece}` : ' (empty)'}`}
+                      >
+                        {piece ? (
+                          <span className={styles.pieceIcon} aria-hidden="true">
+                            {PIECE_POOL[piece].unicode.light}
+                          </span>
+                        ) : (
+                          <span className={styles.emptyCell}>{col + 1}</span>
+                        )}
+                      </button>
+                    );
+                  } else {
+                    // Display only (Player 1 selecting or other modes)
+                    return (
+                      <div key={col} className={`${styles.cellDisplay} ${styles[squareColor]}`}>
+                        {piece && (
+                          <span className={styles.pieceIcon} aria-hidden="true">
+                            {PIECE_POOL[piece].unicode.light}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  }
                 }
               })}
             </div>
@@ -431,6 +472,30 @@ export function PieceSelectionScreen({
           onContinue={handleHandoffContinue}
           countdownSeconds={3}
         />
+      )}
+
+      {/* Player 2 Name Entry (Independent Mode Only) */}
+      {showNameEntry && state.selectionMode === 'independent' && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <Player2NameEntryScreen
+            description={`${state.player1Name} finished picking their pieces. Now it's your turn to pick!`}
+            buttonText="Continue to Piece Selection"
+            onContinue={handleNameEntryComplete}
+          />
+        </div>
       )}
     </div>
   );
