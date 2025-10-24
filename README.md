@@ -612,6 +612,33 @@ uv run PRPs/scripts/prp_runner.py --prp phase-2-chess-engine --interactive
 
 ---
 
+## 📐 Architecture Documentation
+
+Comprehensive architecture documentation for developers and AI assistants:
+
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - State machine, component structure, data flow
+- **[Modal Registry](docs/MODAL_REGISTRY.md)** - Complete guide to all modals and screens
+- **[Component Patterns](claude_md_files/CLAUDE-REACT.md)** - React 19 best practices
+
+### Quick Links for Common Tasks
+
+**Finding Components:**
+1. Check phase: `state.phase` value
+2. See [Modal Registry](docs/MODAL_REGISTRY.md#quick-reference-table)
+3. Look in `src/components/game/` directory
+
+**Understanding State Flow:**
+1. See [State Machine Diagram](docs/ARCHITECTURE.md#state-machine-diagram)
+2. Read [Phase Definitions](docs/ARCHITECTURE.md#phase-definitions)
+3. Check `src/types/gameFlow.ts` for types
+
+**Adding New Features:**
+1. Follow [Component Patterns](claude_md_files/CLAUDE-REACT.md)
+2. Write tests first (TDD)
+3. Update [Modal Registry](docs/MODAL_REGISTRY.md) if adding screens
+
+---
+
 ## 📁 Project Structure
 
 ```
