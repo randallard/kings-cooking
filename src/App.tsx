@@ -1,6 +1,5 @@
 import { ReactElement, useReducer, useEffect, useState, useCallback, useMemo } from 'react';
 import { gameFlowReducer } from './lib/gameFlow/reducer';
-import type { GameFlowAction } from './types/gameFlow';
 import { storage, checkAndMigrateStorage } from './lib/storage/localStorage';
 import { useUrlState } from './hooks/useUrlState';
 import { ModeSelector } from './components/game/ModeSelector';
@@ -15,57 +14,10 @@ import { URLSharer } from './components/game/URLSharer';
 import { StoryPanel } from './components/game/StoryPanel';
 import { PlaybackControls } from './components/game/PlaybackControls';
 import { PiecePickerModal } from './components/game/PiecePickerModal';
+import { Player2NameEntryScreen } from './components/game/Player2NameEntryScreen';
 import { KingsChessEngine } from './lib/chess/KingsChessEngine';
 import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
 import type { GameState, Piece, Position, PieceType } from './lib/validation/schemas';
-
-/**
- * Player 2 Name Entry Screen Component
- * Separate component to properly use React hooks
- */
-function Player2NameEntryScreen({ dispatch }: { dispatch: React.Dispatch<GameFlowAction> }): ReactElement {
-  const [isNameValid, setIsNameValid] = useState(false);
-
-  return (
-    <div style={{
-      maxWidth: '600px',
-      margin: '0 auto',
-      padding: 'var(--spacing-xl)',
-    }}>
-      <h1 style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
-        Player 2's Turn
-      </h1>
-      <div className="card">
-        <h2 style={{ marginBottom: 'var(--spacing-md)' }}>Enter Your Name</h2>
-        <p style={{ marginBottom: 'var(--spacing-md)', color: 'var(--text-secondary)' }}>
-          Before we continue, Player 2 needs to enter their name.
-        </p>
-        <NameForm
-          storageKey="player2"
-          onNameChange={(name) => {
-            // Name is saved to localStorage by NameForm
-            // Just track validation state for button
-            setIsNameValid(name.trim().length > 0);
-          }}
-        />
-        <button
-          onClick={() => {
-            // Get the saved name from localStorage
-            const player2Name = storage.getPlayer2Name();
-            if (player2Name && player2Name.trim().length > 0) {
-              dispatch({ type: 'SET_PLAYER2_NAME', name: player2Name });
-              dispatch({ type: 'COMPLETE_HANDOFF' });
-            }
-          }}
-          disabled={!isNameValid}
-          style={{ marginTop: 'var(--spacing-md)', width: '100%' }}
-        >
-          Continue to Game
-        </button>
-      </div>
-    </div>
-  );
-}
 
 /**
  * Main App component for King's Cooking Chess Game.
@@ -85,22 +37,70 @@ function Player2NameEntryScreen({ dispatch }: { dispatch: React.Dispatch<GameFlo
  * @returns App component
  */
 export default function App(): ReactElement {
+  /**
+   * Game flow state machine.
+   *
+   * Manages 7 phases: mode-selection, setup, color-selection, piece-selection,
+   * playing, handoff, victory.
+   *
+   * @see {@link GameFlowState} for phase definitions
+   * @see {@link gameFlowReducer} for state transition logic
+   * @see {@link docs/ARCHITECTURE.md} for state machine diagram
+   */
   const [state, dispatch] = useReducer(gameFlowReducer, { phase: 'mode-selection' });
 
-  // Story panel visibility state
+  /**
+   * Story panel visibility state.
+   *
+   * Controls overlay modal showing game story and instructions.
+   * Automatically shown once per player in hot-seat mode, once per device in URL mode.
+   *
+   * @see {@link StoryPanel} component
+   */
   const [showStoryPanel, setShowStoryPanel] = useState(false);
 
-  // Handoff step tracking for Player 2 name collection
+  /**
+   * Handoff step tracking for Player 2 name collection (hot-seat mode only).
+   *
+   * Two-step flow after Player 1's first move:
+   * 1. handoffStepCompleted=false: Show HandoffScreen (privacy screen)
+   * 2. handoffStepCompleted=true: Show Player2NameEntryScreen
+   *
+   * Reset to false on phase change to handoff.
+   *
+   * @see {@link Player2NameEntryScreen}
+   * @see {@link HandoffScreen}
+   */
   const [handoffStepCompleted, setHandoffStepCompleted] = useState(false);
 
-  // History navigation state (null = at latest move)
-  // Always initialize to null on mount to show current game state
+  /**
+   * History navigation state (null = at latest move).
+   *
+   * Controls history playback feature:
+   * - null: Viewing current game state (board is interactive)
+   * - number: Viewing past move at index (board is read-only)
+   *
+   * Always initialize to null on mount to show current game state.
+   * Reset to null when entering playing phase.
+   *
+   * @see {@link PlaybackControls}
+   * @see {@link reconstructGameStateAtMove}
+   */
   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
 
-  // Derived state: are we viewing history?
+  /** Derived state: are we viewing history? */
   const isViewingHistory = historyIndex !== null;
 
-  // Promotion state for pawn promotion flow
+  /**
+   * Promotion state for pawn promotion flow.
+   *
+   * When pawn reaches promotion row, stores move details and engine state
+   * to show PiecePickerModal. User selects promotion piece (queen/rook/bishop/knight),
+   * then move is completed with selected piece.
+   *
+   * @see {@link PiecePickerModal}
+   * @see {@link handlePromotionSelect}
+   */
   const [pendingPromotion, setPendingPromotion] = useState<{
     from: Position;
     to: Position;
