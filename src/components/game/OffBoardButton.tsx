@@ -16,6 +16,12 @@ interface OffBoardButtonProps {
   pieceType: PieceType | null;
   /** Owner of the court (light/dark) */
   courtOwner: 'light' | 'dark';
+  /** Is there a pending off-board move awaiting confirmation? */
+  isPendingOffBoard?: boolean;
+  /** Callback to confirm pending off-board move */
+  onConfirmMove?: () => void;
+  /** Callback to cancel pending off-board move */
+  onCancelMove?: () => void;
 }
 
 /**
@@ -44,6 +50,9 @@ export const OffBoardButton = ({
   disabled,
   pieceType,
   courtOwner,
+  isPendingOffBoard = false,
+  onConfirmMove,
+  onCancelMove,
 }: OffBoardButtonProps): ReactElement => {
   // Determine button classes
   const buttonClasses = [
@@ -58,6 +67,40 @@ export const OffBoardButton = ({
     ? 'No piece can move to opponent\'s court'
     : `Move ${pieceType} to ${courtOwner === 'light' ? 'Light' : 'Dark'} King's Court to score`;
 
+  // If pending off-board move, show Cancel + Party + Confirm buttons
+  if (isPendingOffBoard && onConfirmMove && onCancelMove) {
+    return (
+      <div className={styles.pendingButtonGroup}>
+        <button
+          type="button"
+          className={styles.cancelButton}
+          onClick={onCancelMove}
+          aria-label="Cancel off-board move"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className={styles.partyButtonPending}
+          disabled
+          aria-label="Pending party move"
+        >
+          <span aria-hidden="true">🎉</span>
+          <span>Party!</span>
+        </button>
+        <button
+          type="button"
+          className={styles.confirmButton}
+          onClick={onConfirmMove}
+          aria-label="Confirm off-board move to score"
+        >
+          Confirm
+        </button>
+      </div>
+    );
+  }
+
+  // Default: just show Party button
   return (
     <button
       type="button"
