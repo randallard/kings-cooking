@@ -46,7 +46,7 @@
 }
 
 .piece {
-  font-size: 2rem;
+  font-size: 4rem; /* 80% of cell space on mobile */
   line-height: 1;
   user-select: none;
   color:black;
@@ -55,7 +55,7 @@
 /* Responsive sizing */
 @media (min-width: 768px) {
   .piece {
-    font-size: 3rem;
+    font-size: 6rem; /* 80% of cell space on larger screens */
   }
 }
 
