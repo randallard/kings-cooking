@@ -5,6 +5,7 @@
 
 import { type ReactElement } from 'react';
 import type { Piece, Position } from '@/lib/validation/schemas';
+import { MoveConfirmButton } from './MoveConfirmButton';
 import styles from './GameCell.module.css';
 
 interface GameCellProps {
@@ -26,6 +27,12 @@ interface GameCellProps {
   onClick: (position: Position) => void;
   /** Is it this player's turn? */
   disabled?: boolean;
+  /** Callback when user confirms pending move (overlay mode) */
+  onConfirmMove?: () => void;
+  /** Callback when user cancels pending move (overlay mode) */
+  onCancelMove?: () => void;
+  /** Is user viewing history? (disables overlay) */
+  isViewingHistory?: boolean;
 }
 
 /**
@@ -58,6 +65,9 @@ export const GameCell = ({
   isPendingDestination = false,
   onClick,
   disabled = false,
+  onConfirmMove,
+  onCancelMove,
+  isViewingHistory = false,
 }: GameCellProps): ReactElement => {
   // 1. Determine cell color (light/dark square)
   if (!position) {
@@ -118,6 +128,15 @@ export const GameCell = ({
 
       {/* Legal move indicator */}
       {isLegalMove && <span className={styles.moveIndicator} aria-hidden="true" />}
+
+      {/* Move confirmation overlay (appears in destination square) */}
+      {isPendingDestination && !isViewingHistory && onConfirmMove && onCancelMove && (
+        <MoveConfirmButton
+          isOverlay={true}
+          onConfirm={onConfirmMove}
+          onCancel={onCancelMove}
+        />
+      )}
     </div>
   );
 };

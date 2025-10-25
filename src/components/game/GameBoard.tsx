@@ -20,6 +20,8 @@ interface GameBoardProps {
   gameState: GameState;
   /** Callback when move is completed */
   onMove: (from: Position, to: Position | 'off_board') => void;
+  /** Callback to confirm pending move (executes move) */
+  onConfirmMove?: () => void;
   /** Callback to cancel pending move */
   onCancelMove?: () => void;
   /** Is it this player's turn? */
@@ -53,6 +55,7 @@ interface GameBoardProps {
 export const GameBoard = ({
   gameState,
   onMove,
+  onConfirmMove,
   onCancelMove,
   isPlayerTurn = true,
   pendingMove,
@@ -267,6 +270,11 @@ export const GameBoard = ({
     setSelectedPosition(null);
   }, [selectedPosition, canSelectedPieceMoveOffBoard, onMove]);
 
+  // Check if there's a pending off-board move
+  const isPendingOffBoardMove = Boolean(
+    pendingMove && pendingMove.to === 'off_board'
+  );
+
   return (
     <div className={styles.gameBoardContainer}>
       {/* Dark King's Court (above board) - Light pieces score here */}
@@ -280,6 +288,11 @@ export const GameBoard = ({
         onOffBoardMove={handleOffBoardMove}
         currentPlayer={realCurrentPlayer ?? gameState.currentPlayer}
         selectedPieceType={selectedPieceType}
+        {...(isPendingOffBoardMove && gameState.currentPlayer === 'light' && onConfirmMove && onCancelMove ? {
+          isPendingOffBoard: true,
+          onConfirmMove,
+          onCancelMove,
+        } : {})}
       />
 
       {/* 3x3 Chess Board */}
@@ -339,6 +352,11 @@ export const GameBoard = ({
                   isPendingDestination={isPendingDest}
                   onClick={handleCellClick}
                   disabled={!isPlayerTurn}
+                  {...(isPendingDest && onConfirmMove && onCancelMove ? {
+                    onConfirmMove,
+                    onCancelMove,
+                  } : {})}
+                  isViewingHistory={false}
                 />
               );
             })}
@@ -357,6 +375,11 @@ export const GameBoard = ({
         onOffBoardMove={handleOffBoardMove}
         currentPlayer={realCurrentPlayer ?? gameState.currentPlayer}
         selectedPieceType={selectedPieceType}
+        {...(isPendingOffBoardMove && gameState.currentPlayer === 'dark' && onConfirmMove && onCancelMove ? {
+          isPendingOffBoard: true,
+          onConfirmMove,
+          onCancelMove,
+        } : {})}
       />
 
       {/* Screen reader announcements */}

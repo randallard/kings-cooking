@@ -23,6 +23,12 @@ interface CourtAreaProps {
   currentPlayer: 'light' | 'dark';
   /** Selected piece type (if any) */
   selectedPieceType: PieceType | null;
+  /** Is there a pending off-board move? */
+  isPendingOffBoard?: boolean;
+  /** Callback to confirm pending off-board move */
+  onConfirmMove?: () => void;
+  /** Callback to cancel pending off-board move */
+  onCancelMove?: () => void;
 }
 
 /**
@@ -86,6 +92,9 @@ export const CourtArea = ({
   onOffBoardMove,
   currentPlayer,
   selectedPieceType,
+  isPendingOffBoard = false,
+  onConfirmMove,
+  onCancelMove,
 }: CourtAreaProps): ReactElement => {
   // Determine if this court should show button
   // Light scores in Dark's court, Dark scores in Light's court
@@ -147,6 +156,11 @@ export const CourtArea = ({
             disabled={!canMoveOffBoard}
             pieceType={selectedPieceType}
             courtOwner={courtOwner}
+            {...(isPendingOffBoard && onConfirmMove && onCancelMove ? {
+              isPendingOffBoard: true,
+              onConfirmMove,
+              onCancelMove,
+            } : {})}
           />
         </div>
       )}
