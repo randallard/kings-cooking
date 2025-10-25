@@ -321,4 +321,108 @@ describe('GameCell', () => {
       expect(screen.getByText('♟\uFE0E')).toBeInTheDocument(); // Dark pawn with text presentation selector
     });
   });
+
+  describe('Overlay Integration', () => {
+    it('should render MoveConfirmButton when isPendingDestination and callbacks provided', () => {
+      render(
+        <GameCell
+          position={[1, 1]}
+          piece={mockPiece}
+          isSelected={false}
+          isLegalMove={false}
+          isLastMove={false}
+          isPendingDestination={true}
+          onConfirmMove={vi.fn()}
+          onCancelMove={vi.fn()}
+          onClick={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText('Confirm')).toBeInTheDocument();
+      expect(screen.getByText('Cancel')).toBeInTheDocument();
+    });
+
+    it('should not render overlay during history playback', () => {
+      render(
+        <GameCell
+          position={[1, 1]}
+          piece={mockPiece}
+          isSelected={false}
+          isLegalMove={false}
+          isLastMove={false}
+          isPendingDestination={true}
+          isViewingHistory={true}
+          onConfirmMove={vi.fn()}
+          onCancelMove={vi.fn()}
+          onClick={vi.fn()}
+        />
+      );
+
+      expect(screen.queryByText('Confirm')).not.toBeInTheDocument();
+      expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
+    });
+
+    it('should not render overlay if callbacks are missing', () => {
+      render(
+        <GameCell
+          position={[1, 1]}
+          piece={mockPiece}
+          isSelected={false}
+          isLegalMove={false}
+          isLastMove={false}
+          isPendingDestination={true}
+          onClick={vi.fn()}
+        />
+      );
+
+      expect(screen.queryByText('Confirm')).not.toBeInTheDocument();
+      expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
+    });
+
+    it('should call onConfirmMove when Confirm button clicked', async () => {
+      const user = userEvent.setup();
+      const onConfirmMove = vi.fn();
+
+      render(
+        <GameCell
+          position={[1, 1]}
+          piece={mockPiece}
+          isSelected={false}
+          isLegalMove={false}
+          isLastMove={false}
+          isPendingDestination={true}
+          onConfirmMove={onConfirmMove}
+          onCancelMove={vi.fn()}
+          onClick={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByText('Confirm'));
+
+      expect(onConfirmMove).toHaveBeenCalledTimes(1);
+    });
+
+    it('should call onCancelMove when Cancel button clicked', async () => {
+      const user = userEvent.setup();
+      const onCancelMove = vi.fn();
+
+      render(
+        <GameCell
+          position={[1, 1]}
+          piece={mockPiece}
+          isSelected={false}
+          isLegalMove={false}
+          isLastMove={false}
+          isPendingDestination={true}
+          onConfirmMove={vi.fn()}
+          onCancelMove={onCancelMove}
+          onClick={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByText('Cancel'));
+
+      expect(onCancelMove).toHaveBeenCalledTimes(1);
+    });
+  });
 });

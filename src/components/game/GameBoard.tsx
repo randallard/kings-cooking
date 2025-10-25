@@ -20,6 +20,8 @@ interface GameBoardProps {
   gameState: GameState;
   /** Callback when move is completed */
   onMove: (from: Position, to: Position | 'off_board') => void;
+  /** Callback to confirm pending move (executes move) */
+  onConfirmMove?: () => void;
   /** Callback to cancel pending move */
   onCancelMove?: () => void;
   /** Is it this player's turn? */
@@ -53,6 +55,7 @@ interface GameBoardProps {
 export const GameBoard = ({
   gameState,
   onMove,
+  onConfirmMove,
   onCancelMove,
   isPlayerTurn = true,
   pendingMove,
@@ -339,6 +342,11 @@ export const GameBoard = ({
                   isPendingDestination={isPendingDest}
                   onClick={handleCellClick}
                   disabled={!isPlayerTurn}
+                  {...(isPendingDest && onConfirmMove && onCancelMove ? {
+                    onConfirmMove,
+                    onCancelMove,
+                  } : {})}
+                  isViewingHistory={false}
                 />
               );
             })}

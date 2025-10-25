@@ -244,4 +244,66 @@ describe('MoveConfirmButton', () => {
       expect(onConfirm).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('Overlay Mode', () => {
+    it('should render Cancel and Confirm buttons in overlay mode', () => {
+      render(
+        <MoveConfirmButton
+          isOverlay={true}
+          onConfirm={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText('Cancel')).toBeInTheDocument();
+      expect(screen.getByText('Confirm')).toBeInTheDocument();
+    });
+
+    it('should call onCancel when Cancel button is clicked', async () => {
+      const user = userEvent.setup();
+      const onCancel = vi.fn();
+
+      render(
+        <MoveConfirmButton
+          isOverlay={true}
+          onConfirm={vi.fn()}
+          onCancel={onCancel}
+        />
+      );
+
+      await user.click(screen.getByText('Cancel'));
+
+      expect(onCancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('should call onConfirm when Confirm button is clicked in overlay mode', async () => {
+      const user = userEvent.setup();
+      const onConfirm = vi.fn();
+
+      render(
+        <MoveConfirmButton
+          isOverlay={true}
+          onConfirm={onConfirm}
+          onCancel={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByText('Confirm'));
+
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not render overlay if onCancel is not provided', () => {
+      render(
+        <MoveConfirmButton
+          isOverlay={true}
+          onConfirm={vi.fn()}
+        />
+      );
+
+      // Should fallback to traditional mode
+      expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
+      expect(screen.getByText('Confirm Move')).toBeInTheDocument();
+    });
+  });
 });

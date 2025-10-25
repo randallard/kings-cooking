@@ -7,7 +7,6 @@ import { NameForm } from './components/game/NameForm';
 import { ColorSelectionScreen } from './components/game/ColorSelectionScreen';
 import { PieceSelectionScreen } from './components/game/PieceSelectionScreen';
 import { GameBoard } from './components/game/GameBoard';
-import { MoveConfirmButton } from './components/game/MoveConfirmButton';
 import { HandoffScreen } from './components/game/HandoffScreen';
 import { VictoryScreen } from './components/game/VictoryScreen';
 import { URLSharer } from './components/game/URLSharer';
@@ -769,13 +768,6 @@ export default function App(): ReactElement {
               currentMoveIndex={historyIndex ?? state.gameState.moveHistory.length}
               totalMoves={state.gameState.moveHistory.length}
             />
-            <div style={{ marginTop: 'var(--spacing-sm)' }}>
-              <MoveConfirmButton
-                onConfirm={handleConfirmMove}
-                disabled={!state.pendingMove || isViewingHistory}
-                isProcessing={false}
-              />
-            </div>
           </div>
 
           <GameBoard
@@ -785,6 +777,7 @@ export default function App(): ReactElement {
                 dispatch({ type: 'STAGE_MOVE', from, to });
               }
             }}
+            onConfirmMove={handleConfirmMove}
             onCancelMove={() => {
               dispatch({ type: 'DESELECT_PIECE' });
             }}

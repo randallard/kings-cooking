@@ -9,6 +9,10 @@ import styles from './MoveConfirmButton.module.css';
 interface MoveConfirmButtonProps {
   /** Callback when user confirms move */
   onConfirm: () => void;
+  /** Callback when user cancels move (overlay mode only) */
+  onCancel?: () => void;
+  /** Render as compact overlay (two buttons side-by-side) */
+  isOverlay?: boolean;
   /** Is button disabled (no move selected) */
   disabled?: boolean;
   /** Is move currently being processed */
@@ -39,10 +43,38 @@ interface MoveConfirmButtonProps {
  */
 export const MoveConfirmButton = ({
   onConfirm,
+  onCancel,
+  isOverlay = false,
   disabled = false,
   isProcessing = false,
   error = null,
 }: MoveConfirmButtonProps): ReactElement => {
+  // Overlay mode: render Cancel + Confirm buttons side-by-side
+  if (isOverlay && onCancel) {
+    return (
+      <div className={styles.overlay}>
+        <button
+          type="button"
+          onClick={onCancel}
+          className={styles.cancelButton}
+          aria-label="Cancel move and return piece to original position"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={disabled}
+          className={styles.confirmButton}
+          aria-label="Confirm move"
+        >
+          Confirm
+        </button>
+      </div>
+    );
+  }
+
+  // Traditional mode: single Confirm button (existing implementation)
   // Determine button classes
   const buttonClasses = [
     styles.confirmButton,
