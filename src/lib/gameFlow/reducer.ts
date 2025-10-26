@@ -123,6 +123,9 @@ function handleUrlLoad(
       // Check if saved name matches Player 1 (white)
       if (myName === player1Name) {
         // This is Player 1 returning to the game - go directly to playing
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+          console.log('  ➡️ Player 1 returning - going to playing phase');
+        }
         return {
           phase: 'playing',
           mode: 'url',
@@ -135,6 +138,10 @@ function handleUrlLoad(
         };
       } else {
         // This is Player 2 with a saved name - go directly to playing
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+          console.log('  ➡️ Player 2 with saved name - going to playing phase');
+          console.log('  📝 Using saved name:', myName);
+        }
         return {
           phase: 'playing',
           mode: 'url',
@@ -148,6 +155,13 @@ function handleUrlLoad(
       }
     } else {
       // No saved name - must be Player 2's first time - go to handoff phase
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        console.log('  ➡️ No saved name - going to handoff phase for name entry');
+        console.log('  📝 player1Name:', player1Name);
+        console.log('  📝 player2Name (before entry):', player2Name);
+        console.log('  📝 gameState.lightPlayer.name:', payload.gameState.lightPlayer.name);
+        console.log('  📝 gameState.darkPlayer.name:', payload.gameState.darkPlayer.name);
+      }
       return {
         phase: 'handoff',
         mode: 'url',
