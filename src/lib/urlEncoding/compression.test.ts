@@ -5,25 +5,49 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { compressPayload, decompressPayload, getCompressionStats } from './compression';
-import type { DeltaPayload, FullStatePayload } from './types';
+import type { FullStatePayload } from './types';
 import { v4 as uuid } from 'uuid';
 import { PlayerIdSchema, GameIdSchema } from '@/lib/validation/schemas';
 
 describe('Compression Utilities', () => {
-  let deltaPayload: DeltaPayload;
+  let fullStatePayload: FullStatePayload;
 
   beforeEach(() => {
-    deltaPayload = {
-      type: 'delta',
-      move: { from: [2, 0], to: [1, 0] },
-      turn: 1,
-      checksum: 'abc123',
+    fullStatePayload = {
+      type: 'full_state',
+      gameState: {
+        version: '1.0.0',
+        gameId: GameIdSchema.parse(uuid()),
+        board: [
+          [null, null, null],
+          [null, null, null],
+          [null, null, null],
+        ],
+        lightCourt: [],
+        darkCourt: [],
+        capturedLight: [],
+        capturedDark: [],
+        currentTurn: 0,
+        currentPlayer: 'light',
+        lightPlayer: {
+          id: PlayerIdSchema.parse(uuid()),
+          name: 'Player 1',
+        },
+        darkPlayer: {
+          id: PlayerIdSchema.parse(uuid()),
+          name: 'Player 2',
+        },
+        status: 'playing',
+        winner: null,
+        moveHistory: [],
+        checksum: 'test-checksum',
+      },
     };
   });
 
   describe('compressPayload', () => {
-    it('should compress delta payload', () => {
-      const compressed = compressPayload(deltaPayload);
+    it('should compress full state payload', () => {
+      const compressed = compressPayload(fullStatePayload);
 
       expect(compressed).toBeTruthy();
       expect(typeof compressed).toBe('string');
@@ -31,40 +55,25 @@ describe('Compression Utilities', () => {
     });
 
     it('should produce URL-safe characters', () => {
-      const compressed = compressPayload(deltaPayload);
+      const compressed = compressPayload(fullStatePayload);
 
       // Should not contain characters that need percent encoding
       expect(compressed).not.toMatch(/[^A-Za-z0-9_\-+]/);
     });
 
     it('should compress to URL-safe string', () => {
-      const compressed = compressPayload(deltaPayload);
+      const compressed = compressPayload(fullStatePayload);
 
-      // Compression may not reduce size for very small payloads
-      // but should still produce valid output
       expect(compressed.length).toBeGreaterThan(0);
       expect(typeof compressed).toBe('string');
     });
 
-    it('should handle delta with optional playerName', () => {
-      const payloadWithName: DeltaPayload = {
-        ...deltaPayload,
+    it('should handle full state with optional playerName', () => {
+      const payloadWithName: FullStatePayload = {
+        ...fullStatePayload,
         playerName: 'Player 2',
       };
       const compressed = compressPayload(payloadWithName);
-
-      expect(compressed).toBeTruthy();
-      expect(compressed.length).toBeGreaterThan(0);
-    });
-
-    it('should handle move to off_board', () => {
-      const offBoardPayload: DeltaPayload = {
-        type: 'delta',
-        move: { from: [0, 2], to: 'off_board' },
-        turn: 5,
-        checksum: 'xyz789',
-      };
-      const compressed = compressPayload(offBoardPayload);
 
       expect(compressed).toBeTruthy();
       expect(compressed.length).toBeGreaterThan(0);
@@ -73,10 +82,10 @@ describe('Compression Utilities', () => {
 
   describe('decompressPayload', () => {
     it('should decompress valid compressed payload', () => {
-      const compressed = compressPayload(deltaPayload);
+      const compressed = compressPayload(fullStatePayload);
       const decompressed = decompressPayload(compressed);
 
-      expect(decompressed).toEqual(deltaPayload);
+      expect(decompressed).toEqual(fullStatePayload);
     });
 
     it('should return null for corrupted data', () => {
@@ -93,11 +102,11 @@ describe('Compression Utilities', () => {
     });
 
     it('should handle whitespace trimming', () => {
-      const compressed = compressPayload(deltaPayload);
+      const compressed = compressPayload(fullStatePayload);
       const withWhitespace = `  ${compressed}  `;
       const result = decompressPayload(withWhitespace);
 
-      expect(result).toEqual(deltaPayload);
+      expect(result).toEqual(fullStatePayload);
     });
 
     it('should round-trip full state payload', () => {
@@ -134,22 +143,6 @@ describe('Compression Utilities', () => {
       expect(decompressed).toEqual(fullStatePayload);
     });
 
-    it('should round-trip resync request payload', () => {
-      const resyncPayload = {
-        type: 'resync_request' as const,
-        move: { from: [1, 1] as [number, number], to: [2, 2] as [number, number] },
-        turn: 3,
-        checksum: 'mismatch123',
-        playerName: 'Player 1',
-        message: 'State out of sync',
-      };
-
-      const compressed = compressPayload(resyncPayload);
-      const decompressed = decompressPayload(compressed);
-
-      expect(decompressed).toEqual(resyncPayload);
-    });
-
     it('should return null for malformed JSON', () => {
       // Create a string that decompresses but is not valid JSON
       const invalidJson = 'KwRgdgxg' + 'invalid';
@@ -161,30 +154,16 @@ describe('Compression Utilities', () => {
     it('should return null for data that fails Zod validation', () => {
       // Manually create compressed data with invalid schema
       const invalidData = { type: 'invalid_type', foo: 'bar' };
-      const compressed = compressPayload(invalidData as unknown as DeltaPayload);
+      const compressed = compressPayload(invalidData as unknown as FullStatePayload);
       const result = decompressPayload(compressed);
 
       expect(result).toBeNull();
-    });
-
-    it('should handle delta with move to off_board', () => {
-      const offBoardPayload: DeltaPayload = {
-        type: 'delta',
-        move: { from: [0, 2], to: 'off_board' },
-        turn: 5,
-        checksum: 'xyz789',
-      };
-
-      const compressed = compressPayload(offBoardPayload);
-      const decompressed = decompressPayload(compressed);
-
-      expect(decompressed).toEqual(offBoardPayload);
     });
   });
 
   describe('getCompressionStats', () => {
     it('should return accurate statistics', () => {
-      const stats = getCompressionStats(deltaPayload);
+      const stats = getCompressionStats(fullStatePayload);
 
       expect(stats.originalSize).toBeGreaterThan(0);
       expect(stats.compressedSize).toBeGreaterThan(0);
@@ -192,11 +171,11 @@ describe('Compression Utilities', () => {
     });
 
     it('should compress larger payloads better', () => {
-      // Small payloads may not compress well
-      const smallStats = getCompressionStats(deltaPayload);
+      // Small payload (empty game state)
+      const smallStats = getCompressionStats(fullStatePayload);
 
-      // Larger full state payload
-      const fullStatePayload: FullStatePayload = {
+      // Larger full state payload with move history
+      const largeStatePayload: FullStatePayload = {
         type: 'full_state',
         gameState: {
           version: '1.0.0',
@@ -204,9 +183,11 @@ describe('Compression Utilities', () => {
           board: [[null, null, null], [null, null, null], [null, null, null]],
           lightCourt: [],
           darkCourt: [],
-          capturedLight: [],
+          capturedLight: [
+            { type: 'rook', owner: 'dark', position: null, moveCount: 2, id: GameIdSchema.parse(uuid()) },
+          ],
           capturedDark: [],
-          currentTurn: 0,
+          currentTurn: 5,
           currentPlayer: 'light',
           lightPlayer: {
             id: PlayerIdSchema.parse(uuid()),
@@ -218,23 +199,35 @@ describe('Compression Utilities', () => {
           },
           status: 'playing',
           winner: null,
-          moveHistory: [],
-          checksum: 'initial',
+          moveHistory: Array(5).fill(null).map((_, i) => ({
+            from: [0, 0] as [number, number],
+            to: [1, 1] as [number, number],
+            piece: {
+              type: 'rook' as const,
+              owner: i % 2 === 0 ? ('light' as const) : ('dark' as const),
+              position: null,
+              moveCount: i,
+              id: GameIdSchema.parse(uuid()),
+            },
+            captured: null,
+            timestamp: Date.now() + i,
+          })),
+          checksum: 'larger-checksum',
         },
       };
 
-      const largeStats = getCompressionStats(fullStatePayload);
+      const largeStats = getCompressionStats(largeStatePayload);
 
-      // Large payload should have better compression ratio or be absolutely smaller when compressed
+      // Larger payload should have larger original size
       expect(largeStats.originalSize).toBeGreaterThan(smallStats.originalSize);
     });
 
     it('should show better compression for larger payloads', () => {
-      // Delta payload stats
-      const deltaStats = getCompressionStats(deltaPayload);
+      // Small payload stats
+      const smallStats = getCompressionStats(fullStatePayload);
 
-      // Full state payload should compress better
-      const fullStatePayload: FullStatePayload = {
+      // Larger full state payload with more data (move history, captured pieces)
+      const largeStatePayload: FullStatePayload = {
         type: 'full_state',
         gameState: {
           version: '1.0.0',
@@ -242,9 +235,14 @@ describe('Compression Utilities', () => {
           board: [[null, null, null], [null, null, null], [null, null, null]],
           lightCourt: [],
           darkCourt: [],
-          capturedLight: [],
-          capturedDark: [],
-          currentTurn: 0,
+          capturedLight: [
+            { type: 'rook', owner: 'dark', position: null, moveCount: 5, id: GameIdSchema.parse(uuid()) },
+            { type: 'knight', owner: 'dark', position: null, moveCount: 3, id: GameIdSchema.parse(uuid()) },
+          ],
+          capturedDark: [
+            { type: 'bishop', owner: 'light', position: null, moveCount: 2, id: GameIdSchema.parse(uuid()) },
+          ],
+          currentTurn: 15,
           currentPlayer: 'light',
           lightPlayer: {
             id: PlayerIdSchema.parse(uuid()),
@@ -256,16 +254,28 @@ describe('Compression Utilities', () => {
           },
           status: 'playing',
           winner: null,
-          moveHistory: [],
-          checksum: 'initial',
+          moveHistory: Array(10).fill(null).map((_, i) => ({
+            from: [0, 0] as [number, number],
+            to: [1, 1] as [number, number],
+            piece: {
+              type: 'rook' as const,
+              owner: i % 2 === 0 ? ('light' as const) : ('dark' as const),
+              position: null,
+              moveCount: i,
+              id: GameIdSchema.parse(uuid()),
+            },
+            captured: null,
+            timestamp: Date.now() + i,
+          })),
+          checksum: 'large-payload-checksum',
         },
       };
 
-      const fullStateStats = getCompressionStats(fullStatePayload);
+      const fullStateStats = getCompressionStats(largeStatePayload);
 
-      // Full state should be larger overall
-      expect(fullStateStats.originalSize).toBeGreaterThan(deltaStats.originalSize);
-      expect(fullStateStats.compressedSize).toBeGreaterThan(deltaStats.compressedSize);
+      // Larger payload should have larger original size and compressed size
+      expect(fullStateStats.originalSize).toBeGreaterThan(smallStats.originalSize);
+      expect(fullStateStats.compressedSize).toBeGreaterThan(smallStats.compressedSize);
     });
   });
 });

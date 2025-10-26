@@ -4,7 +4,7 @@
  */
 
 import type { GameState, Position } from '../lib/validation/schemas';
-import type { FullStatePayload, DeltaPayload } from '../lib/urlEncoding/types';
+import type { FullStatePayload } from '../lib/urlEncoding/types';
 import type { KingsChessEngine } from '../lib/chess/KingsChessEngine';
 import type { SelectionMode, SelectedPieces } from '../lib/pieceSelection/types';
 
@@ -374,10 +374,10 @@ export interface NewGameAction {
 /**
  * LOAD_FROM_URL action (URL mode only).
  * Load game state from URL hash.
- * Can be full state (first move) or delta (subsequent moves).
+ * All URLs now use full state payloads.
  */
 export interface LoadFromUrlAction {
   type: 'LOAD_FROM_URL';
-  /** URL payload (full state or delta) */
-  payload: FullStatePayload | DeltaPayload;
+  /** URL payload (always full state) */
+  payload: FullStatePayload;
 }
