@@ -11,7 +11,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { compressPayload, decompressPayload } from './compression';
-import type { DeltaPayload, FullStatePayload, ResyncRequestPayload } from './types';
+import type { FullStatePayload } from './types';
 import type { GameState } from '@/lib/validation/schemas';
 import { GameIdSchema, PlayerIdSchema } from '@/lib/validation/schemas';
 
@@ -61,69 +61,6 @@ function createMockGameState(): GameState {
 }
 
 describe('URL Encoding Integration Tests', () => {
-  describe('Delta Payload Round-Trip', () => {
-    it('should round-trip delta payload successfully', () => {
-      const deltaPayload: DeltaPayload = {
-        type: 'delta',
-        move: {
-          from: [2, 0],
-          to: [1, 0],
-        },
-        turn: 1,
-        checksum: 'abc123',
-        playerName: 'Player1',
-      };
-
-      // Compress
-      const compressed = compressPayload(deltaPayload);
-      expect(compressed).toBeTruthy();
-      expect(compressed.length).toBeGreaterThan(0);
-      expect(compressed.length).toBeLessThan(200); // Delta should be < 200 chars
-
-      // Decompress
-      const decompressed = decompressPayload(compressed);
-      expect(decompressed).toEqual(deltaPayload);
-    });
-
-    it('should handle delta payload without player name', () => {
-      const deltaPayload: DeltaPayload = {
-        type: 'delta',
-        move: {
-          from: [0, 0],
-          to: [1, 1],
-        },
-        turn: 5,
-        checksum: 'xyz789',
-      };
-
-      const compressed = compressPayload(deltaPayload);
-      const decompressed = decompressPayload(compressed);
-
-      expect(decompressed).toEqual(deltaPayload);
-      expect(decompressed?.playerName).toBeUndefined();
-    });
-
-    it('should handle off-board moves', () => {
-      const deltaPayload: DeltaPayload = {
-        type: 'delta',
-        move: {
-          from: [2, 2],
-          to: 'off_board',
-        },
-        turn: 10,
-        checksum: 'off123',
-      };
-
-      const compressed = compressPayload(deltaPayload);
-      const decompressed = decompressPayload(compressed);
-
-      expect(decompressed).toEqual(deltaPayload);
-      if (decompressed?.type === 'delta') {
-        expect(decompressed.move.to).toBe('off_board');
-      }
-    });
-  });
-
   describe('Full State Payload Round-Trip', () => {
     it('should round-trip full state payload successfully', () => {
       const mockGameState = createMockGameState();
@@ -142,27 +79,6 @@ describe('URL Encoding Integration Tests', () => {
 
       const decompressed = decompressPayload(compressed);
       expect(decompressed).toEqual(fullStatePayload);
-    });
-  });
-
-  describe('Resync Request Payload Round-Trip', () => {
-    it('should round-trip resync request payload successfully', () => {
-      const resyncPayload: ResyncRequestPayload = {
-        type: 'resync_request',
-        move: {
-          from: [1, 1],
-          to: [2, 2],
-        },
-        turn: 8,
-        checksum: 'mismatch123',
-        playerName: 'PlayerA',
-        message: 'Checksum mismatch detected',
-      };
-
-      const compressed = compressPayload(resyncPayload);
-      const decompressed = decompressPayload(compressed);
-
-      expect(decompressed).toEqual(resyncPayload);
     });
   });
 
@@ -185,12 +101,11 @@ describe('URL Encoding Integration Tests', () => {
     });
 
     it('should handle invalid JSON', () => {
+      const mockGameState = createMockGameState();
       // This is a valid lz-string but decompresses to invalid JSON
       const invalidJson = compressPayload({
-        type: 'delta',
-        move: { from: [0, 0], to: [1, 1] },
-        turn: 1,
-        checksum: 'test',
+        type: 'full_state',
+        gameState: mockGameState,
       });
 
       // Corrupt the compressed data
@@ -203,12 +118,12 @@ describe('URL Encoding Integration Tests', () => {
     it('should handle missing required fields', () => {
       // Create payload without required fields
       const invalidPayload = {
-        type: 'delta',
-        // missing move, turn, checksum
+        type: 'full_state',
+        // missing gameState
       };
 
       // Compression doesn't validate - it just compresses
-      const compressed = compressPayload(invalidPayload as DeltaPayload);
+      const compressed = compressPayload(invalidPayload as FullStatePayload);
       expect(compressed).toBeTruthy();
 
       // Decompression should fail validation
@@ -217,128 +132,33 @@ describe('URL Encoding Integration Tests', () => {
     });
   });
 
-  describe('Checksum Validation Flow', () => {
-    it('should detect checksum mismatch', () => {
-      const payload1: DeltaPayload = {
-        type: 'delta',
-        move: { from: [0, 0], to: [1, 1] },
-        turn: 5,
-        checksum: 'checksum_A',
-      };
+  describe('Multiple Round-Trips', () => {
+    it('should handle multiple full state compressions', () => {
+      const mockGameState = createMockGameState();
 
-      const payload2: DeltaPayload = {
-        type: 'delta',
-        move: { from: [0, 0], to: [1, 1] },
-        turn: 5,
-        checksum: 'checksum_B', // Different checksum
-      };
-
-      const compressed1 = compressPayload(payload1);
-      const compressed2 = compressPayload(payload2);
-
-      expect(compressed1).not.toBe(compressed2);
-
-      const decompressed1 = decompressPayload(compressed1);
-      const decompressed2 = decompressPayload(compressed2);
-
-      expect(decompressed1?.type).toBe('delta');
-      expect(decompressed2?.type).toBe('delta');
-
-      if (decompressed1?.type === 'delta' && decompressed2?.type === 'delta') {
-        expect(decompressed1.checksum).not.toBe(decompressed2.checksum);
-      }
-    });
-  });
-
-  describe('Turn Number Validation Flow', () => {
-    it('should detect turn number mismatch', () => {
-      const payload1: DeltaPayload = {
-        type: 'delta',
-        move: { from: [0, 0], to: [1, 1] },
-        turn: 5,
-        checksum: 'check123',
-      };
-
-      const payload2: DeltaPayload = {
-        type: 'delta',
-        move: { from: [0, 0], to: [1, 1] },
-        turn: 7, // Skipped turn 6
-        checksum: 'check123',
-      };
-
-      const compressed1 = compressPayload(payload1);
-      const compressed2 = compressPayload(payload2);
-
-      const decompressed1 = decompressPayload(compressed1);
-      const decompressed2 = decompressPayload(compressed2);
-
-      expect(decompressed1?.type).toBe('delta');
-      expect(decompressed2?.type).toBe('delta');
-
-      if (decompressed1?.type === 'delta' && decompressed2?.type === 'delta') {
-        expect(decompressed2.turn).toBe(decompressed1.turn + 2);
-      }
-    });
-  });
-
-  describe('10-Move Game Simulation', () => {
-    it('should handle 10-move game with alternating players', () => {
-      const moves: DeltaPayload[] = [];
-
-      // Generate 10 moves
+      // Test 10 round-trips to ensure stability
       for (let i = 0; i < 10; i++) {
-        const move: DeltaPayload = {
-          type: 'delta',
-          move: {
-            from: [i % 3, 0],
-            to: [i % 3, 1],
+        const payload: FullStatePayload = {
+          type: 'full_state',
+          gameState: {
+            ...mockGameState,
+            currentTurn: i,
           },
-          turn: i,
-          checksum: `checksum_${i}`,
-          playerName: i % 2 === 0 ? 'Player1' : 'Player2',
         };
 
-        moves.push(move);
-
-        // Round-trip each move
-        const compressed = compressPayload(move);
+        // Round-trip
+        const compressed = compressPayload(payload);
         const decompressed = decompressPayload(compressed);
 
-        expect(decompressed).toEqual(move);
+        expect(decompressed).toEqual(payload);
 
-        // Verify compression ratio
-        const originalSize = JSON.stringify(move).length;
-        const compressedSize = compressed.length;
-        const ratio = compressedSize / originalSize;
-
-        // Note: Small payloads may not compress well (can even expand)
-        // Just verify compression produces valid output
-        expect(ratio).toBeGreaterThan(0);
+        // Verify compression produces valid output
+        expect(compressed.length).toBeGreaterThan(0);
       }
-
-      // Verify all moves were processed
-      expect(moves.length).toBe(10);
-      expect(moves[9]?.turn).toBe(9);
     });
   });
 
   describe('URL Length Limits', () => {
-    it('should keep delta payloads under 200 characters', () => {
-      const deltaPayload: DeltaPayload = {
-        type: 'delta',
-        move: {
-          from: [2, 2],
-          to: [1, 1],
-        },
-        turn: 42,
-        checksum: 'very_long_checksum_string_123456789',
-        playerName: 'VeryLongPlayerName',
-      };
-
-      const compressed = compressPayload(deltaPayload);
-      expect(compressed.length).toBeLessThan(200);
-    });
-
     it('should keep full state payloads under 2000 characters', () => {
       // Create a reasonably sized game state
       const mockGameState = createMockGameState();
@@ -387,11 +207,10 @@ describe('URL Encoding Integration Tests', () => {
     });
 
     it('should simulate URL update flow', () => {
-      const payload: DeltaPayload = {
-        type: 'delta',
-        move: { from: [0, 0], to: [1, 1] },
-        turn: 1,
-        checksum: 'test123',
+      const mockGameState = createMockGameState();
+      const payload: FullStatePayload = {
+        type: 'full_state',
+        gameState: mockGameState,
       };
 
       // Simulate encoding
@@ -412,11 +231,10 @@ describe('URL Encoding Integration Tests', () => {
 
   describe('Performance Tests', () => {
     it('should compress and decompress within reasonable time', () => {
-      const payload: DeltaPayload = {
-        type: 'delta',
-        move: { from: [1, 1], to: [2, 2] },
-        turn: 50,
-        checksum: 'perf_test',
+      const mockGameState = createMockGameState();
+      const payload: FullStatePayload = {
+        type: 'full_state',
+        gameState: mockGameState,
       };
 
       const startCompress = performance.now();

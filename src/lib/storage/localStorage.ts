@@ -12,7 +12,6 @@
  */
 
 import { z } from 'zod';
-import { GameStateSchema, type GameState } from '../validation/schemas';
 import { SelectedPiecesSchema, type SelectedPieces } from '../pieceSelection/types';
 
 // ============================================================================
@@ -53,9 +52,6 @@ export const STORAGE_KEYS = {
 
   /** Player 2 name (hot-seat mode only) */
   PLAYER2_NAME: 'kings-cooking:player2-name',
-
-  /** Current game state */
-  GAME_STATE: 'kings-cooking:game-state',
 
   /** Selected game mode */
   GAME_MODE: 'kings-cooking:game-mode',
@@ -220,7 +216,8 @@ export function checkAndMigrateStorage(): boolean {
       console.log(`Migrating storage from ${currentVersion || 'unknown'} to ${STORAGE_VERSION}`);
 
       // Clear game data that may have old format (white/black)
-      localStorage.removeItem(STORAGE_KEYS.GAME_STATE);
+      // Note: GAME_STATE no longer used, but clean up old data
+      localStorage.removeItem('kings-cooking:game-state');
       localStorage.removeItem(STORAGE_KEYS.GAME_MODE);
       localStorage.removeItem(STORAGE_KEYS.MY_PLAYER_ID);
 
@@ -296,13 +293,6 @@ export const storage = {
 
   clearGameMode: (): void =>
     removeItem(STORAGE_KEYS.GAME_MODE),
-
-  // Game state (with full validation)
-  getGameState: (): GameState | null =>
-    getValidatedItem(STORAGE_KEYS.GAME_STATE, GameStateSchema) as GameState | null,
-
-  setGameState: (state: GameState): boolean =>
-    setValidatedItem(STORAGE_KEYS.GAME_STATE, state, GameStateSchema),
 
   // Piece selection state
   getPieceSelectionMode: (): 'mirrored' | 'independent' | 'random' | null =>

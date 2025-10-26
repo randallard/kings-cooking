@@ -104,7 +104,6 @@ export default function App(): ReactElement {
     from: Position;
     to: Position;
     engine: KingsChessEngine;
-    checksumBeforeMove: string;
   } | null>(null);
 
   // Reset history view when phase changes or game loads
@@ -122,8 +121,8 @@ export default function App(): ReactElement {
   } = useUrlState({
     onPayloadReceived: (payload) => {
       // When URL payload is received, dispatch LOAD_FROM_URL action
-      // Filter to only full_state and delta types (exclude resync_request)
-      if (payload.type === 'full_state' || payload.type === 'delta') {
+      // All payloads are now full_state (no delta payloads)
+      if (payload.type === 'full_state') {
         dispatch({ type: 'LOAD_FROM_URL', payload });
       }
     },
@@ -133,58 +132,15 @@ export default function App(): ReactElement {
     },
   });
 
-  // Task 10: Restore game state from localStorage on page refresh
+  // Storage migration check
   useEffect(() => {
     // Check and migrate storage if needed (Issue #4 - light/dark refactor)
     const migrated = checkAndMigrateStorage();
     if (migrated) {
       console.log('📦 Storage migrated to v2.0.0 - cleared old game data (white/black → light/dark)');
-      // Early return - no saved data to restore after migration
-      return;
     }
-
-    const savedMode = storage.getGameMode();
-    const savedGameState = storage.getGameState();
-    const savedPlayer1 = storage.getPlayer1Name();
-    const savedPlayer2 = storage.getPlayer2Name();
-
-    // Only restore if we're in mode-selection phase (initial mount)
-    if (state.phase === 'mode-selection' && savedMode && savedGameState) {
-      // We have a saved game - restore it
-      console.log('Restoring saved game from localStorage');
-
-      // Check if game is over
-      const isGameOver = savedGameState.status === 'light_wins' ||
-                        savedGameState.status === 'dark_wins' ||
-                        savedGameState.status === 'draw';
-
-      if (isGameOver) {
-        // Game is over - let user start a new game instead of restoring victory screen
-        // Clear the saved state
-        storage.clearAll();
-        console.log('Cleared saved game (game was over)');
-      } else {
-        // Game is in progress - restore to playing phase
-        // We need to build the full playing state
-        dispatch({ type: 'SELECT_MODE', mode: savedMode });
-
-        if (savedPlayer1) {
-          dispatch({ type: 'SET_PLAYER1_NAME', name: savedPlayer1 });
-        }
-
-        if (savedPlayer2) {
-          dispatch({ type: 'SET_PLAYER2_NAME', name: savedPlayer2 });
-        }
-
-        dispatch({ type: 'START_GAME' });
-
-        // The START_GAME will create initial state, but we need to replace it with saved state
-        // This is handled by the reducer's LOAD_FROM_URL action for URL mode
-        // For hot-seat mode, we need the game state to be restored after START_GAME
-        // TODO: Add a RESTORE_GAME action for cleaner restoration
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Note: Game state is no longer persisted to localStorage
+    // URLs now contain full game state for persistence
   }, []); // Empty deps - only run on mount
 
   // Task 9: Browser back button handling
@@ -197,12 +153,8 @@ export default function App(): ReactElement {
         // Push state back to keep user on page
         window.history.pushState(null, '', window.location.href);
 
-        // Fallback: Reload from localStorage
-        const savedState = storage.getGameState();
-        if (savedState) {
-          console.log('Browser back button pressed - reloading game state from localStorage');
-          // TODO: Show toast notification: "Loaded current game state from device"
-        }
+        // Note: Game state is now in URL hash, not localStorage
+        console.log('Browser back button pressed - game state preserved in URL');
       }
     };
 
@@ -516,9 +468,6 @@ export default function App(): ReactElement {
     const handleConfirmMove = (): void => {
       if (!state.pendingMove) return;
 
-      // CRITICAL: Get checksum BEFORE making the move (for delta verification)
-      const checksumBeforeMove = state.gameState.checksum;
-
       // Create engine and load current game state
       const engine = new KingsChessEngine(
         state.gameState.lightPlayer,
@@ -536,7 +485,6 @@ export default function App(): ReactElement {
           from: result.from,
           to: result.to,
           engine,
-          checksumBeforeMove,
         });
         // Don't dispatch anything yet - wait for promotion piece selection
         return;
@@ -544,9 +492,6 @@ export default function App(): ReactElement {
 
       if (result.success) {
         const newState = engine.getGameState();
-
-        // Save game state to localStorage
-        storage.setGameState(newState);
 
         // Dispatch CONFIRM_MOVE with result
         dispatch({
@@ -559,74 +504,33 @@ export default function App(): ReactElement {
 
         // Task 7: Generate URL if in URL mode
         if (state.mode === 'url' && state.pendingMove) {
-          const isFirstMove = newState.currentTurn === 1;
-
           console.log('🔍 URL Generation Debug:');
           console.log('  currentTurn:', newState.currentTurn);
-          console.log('  isFirstMove:', isFirstMove);
           console.log('  currentPlayer:', newState.currentPlayer);
           console.log('  player1Name:', state.player1Name);
           console.log('  player2Name:', state.player2Name);
-          console.log('  checksumBeforeMove:', checksumBeforeMove);
-          console.log('  checksumAfterMove:', engine.getChecksum());
+          console.log('  checksum:', newState.checksum);
 
-          // Ensure from/to are valid positions (not null)
-          const from = state.pendingMove.from;
-          const to = state.pendingMove.to;
+          // Always send full game state
+          console.log('  ➡️ Generating FULL_STATE URL');
+          const fullStatePayload = {
+            type: 'full_state' as const,
+            gameState: newState,
+            playerName: state.player1Name || undefined,
+          };
+          updateUrlImmediate(fullStatePayload);
 
-          if (isFirstMove) {
-            // First move: Send full game state
-            console.log('  ➡️ Generating FULL_STATE URL');
-            const fullStatePayload = {
-              type: 'full_state' as const,
-              gameState: newState,
-              playerName: state.player1Name || undefined,
-            };
-            updateUrlImmediate(fullStatePayload);
-
-            // Detailed logging for localhost
-            if (window.location.hostname === 'localhost') {
-              console.log('📦 FULL_STATE Payload:', {
-                type: fullStatePayload.type,
-                playerName: fullStatePayload.playerName,
-                currentTurn: newState.currentTurn,
-                checksum: newState.checksum,
-                lightPlayer: newState.lightPlayer.name,
-                darkPlayer: newState.darkPlayer.name,
-                board: newState.board,
-              });
-            }
-          } else {
-            // Subsequent moves: Send delta with checksum
-            // CRITICAL: Use checksum from BEFORE the move, so receiver can verify their state
-            console.log('  ➡️ Generating DELTA URL');
-            if (from && to) {
-              const deltaPayload = {
-                type: 'delta' as const,
-                move: {
-                  from,
-                  to,
-                },
-                turn: newState.currentTurn,
-                checksum: checksumBeforeMove, // Checksum BEFORE move for verification
-                playerName: state.player2Name || undefined,
-              };
-              updateUrlImmediate(deltaPayload);
-
-              // Detailed logging for localhost
-              if (window.location.hostname === 'localhost') {
-                console.log('📦 DELTA Payload:', {
-                  type: deltaPayload.type,
-                  playerName: deltaPayload.playerName,
-                  move: deltaPayload.move,
-                  turn: deltaPayload.turn,
-                  checksumInPayload: deltaPayload.checksum,
-                  checksumBeforeMove: checksumBeforeMove,
-                  checksumAfterMove: engine.getChecksum(),
-                  currentTurn: newState.currentTurn,
-                });
-              }
-            }
+          // Detailed logging for localhost
+          if (window.location.hostname === 'localhost') {
+            console.log('📦 FULL_STATE Payload:', {
+              type: fullStatePayload.type,
+              playerName: fullStatePayload.playerName,
+              currentTurn: newState.currentTurn,
+              checksum: newState.checksum,
+              lightPlayer: newState.lightPlayer.name,
+              darkPlayer: newState.darkPlayer.name,
+              board: newState.board,
+            });
           }
 
           // Get the share URL and dispatch URL_GENERATED
@@ -650,9 +554,6 @@ export default function App(): ReactElement {
       if (result.success) {
         const newState = pendingPromotion.engine.getGameState();
 
-        // Save game state to localStorage
-        storage.setGameState(newState);
-
         // Dispatch CONFIRM_MOVE with result
         dispatch({
           type: 'CONFIRM_MOVE',
@@ -664,33 +565,13 @@ export default function App(): ReactElement {
 
         // Task 7: Generate URL if in URL mode
         if (state.mode === 'url') {
-          const isFirstMove = newState.currentTurn === 1;
-          const checksumBeforeMove = pendingPromotion.checksumBeforeMove;
-
-          if (isFirstMove) {
-            // First move: Send full game state
-            const fullStatePayload = {
-              type: 'full_state' as const,
-              gameState: newState,
-              playerName: state.player1Name || undefined,
-            };
-            updateUrlImmediate(fullStatePayload);
-          } else {
-            // Subsequent moves: Send delta with checksum
-            // pendingPromotion.from and .to are guaranteed to be [number, number] (not null)
-            // because we validated them when setting pendingPromotion
-            const deltaPayload = {
-              type: 'delta' as const,
-              move: {
-                from: pendingPromotion.from as [number, number],
-                to: pendingPromotion.to as [number, number],
-              },
-              turn: newState.currentTurn,
-              checksum: checksumBeforeMove,
-              playerName: state.player2Name || undefined,
-            };
-            updateUrlImmediate(deltaPayload);
-          }
+          // Always send full game state
+          const fullStatePayload = {
+            type: 'full_state' as const,
+            gameState: newState,
+            playerName: state.player1Name || undefined,
+          };
+          updateUrlImmediate(fullStatePayload);
 
           const shareUrl = getShareUrl();
           dispatch({ type: 'URL_GENERATED', url: shareUrl });

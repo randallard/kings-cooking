@@ -4,7 +4,7 @@
  */
 
 import type { GameFlowState, GameFlowAction } from '../../types/gameFlow';
-import type { DeltaPayload, FullStatePayload } from '../urlEncoding/types';
+import type { FullStatePayload } from '../urlEncoding/types';
 import type { GameState } from '../validation/schemas';
 import { KingsChessEngine } from '../chess/KingsChessEngine';
 import { storage } from '../storage/localStorage';
@@ -31,16 +31,16 @@ function createInitialGameState(): GameState {
 /**
  * Handles URL loading for LOAD_FROM_URL action.
  *
- * For full_state: Restores complete game, transitions to playing phase
- * For delta: Applies move to existing state, verifies checksum
+ * Restores complete game from full state payload, transitions to playing phase.
+ * All URLs now contain full game state (no delta payloads).
  *
  * @param state - Current game flow state
- * @param payload - URL payload (full state or delta)
+ * @param payload - Full state URL payload
  * @returns New game flow state
  */
 function handleUrlLoad(
   state: GameFlowState,
-  payload: FullStatePayload | DeltaPayload
+  payload: FullStatePayload
 ): GameFlowState {
   // Localhost debugging
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
@@ -50,8 +50,7 @@ function handleUrlLoad(
     });
   }
 
-  if (payload.type === 'full_state') {
-    // Full state: Restore complete game (Player 2 receiving first URL, or Player 1 returning)
+  // Full state: Restore complete game (all URLs now use full state)
     let player1Name = payload.gameState.lightPlayer.name;
     let player2Name = payload.gameState.darkPlayer.name;
 
@@ -160,129 +159,6 @@ function handleUrlLoad(
         generatedUrl: null, // Player 2 doesn't generate URL yet
       };
     }
-  } else {
-    // Delta: Apply move to existing state
-    const currentState = storage.getGameState();
-    if (!currentState) {
-      console.error('Cannot apply delta - no current game state in localStorage');
-      return state;
-    }
-
-    const engine = new KingsChessEngine(
-      currentState.lightPlayer,
-      currentState.darkPlayer,
-      currentState
-    );
-
-    // Get current checksum
-    const currentChecksum = engine.getChecksum();
-
-    // Localhost debugging
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      console.log('📥 Received DELTA:', {
-        playerName: payload.playerName,
-        move: payload.move,
-        turn: payload.turn,
-        checksumInPayload: payload.checksum,
-        myCurrentChecksum: currentChecksum,
-        myCurrentTurn: currentState.currentTurn,
-        myCurrentPlayer: currentState.currentPlayer,
-        myLightPlayer: currentState.lightPlayer.name,
-        myDarkPlayer: currentState.darkPlayer.name,
-        myBoard: currentState.board,
-      });
-    }
-
-    // CRITICAL: Check if this delta has already been applied
-    // If our current turn equals the payload turn, the move was already applied
-    if (currentState.currentTurn === payload.turn) {
-      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        console.log('  ⏭️ Delta already applied (turn matches), skipping...');
-      }
-      // Delta already applied - transition to playing phase with current state
-      return {
-        phase: 'playing',
-        mode: 'url',
-        player1Name: currentState.lightPlayer.name,
-        player2Name: currentState.darkPlayer.name,
-        gameState: currentState,
-        selectedPosition: null,
-        legalMoves: [],
-        pendingMove: null,
-      };
-    }
-
-    // Verify checksum before applying
-    if (currentChecksum !== payload.checksum) {
-      console.error('❌ State diverged - checksums do not match');
-      console.error('  Expected (from payload):', payload.checksum);
-      console.error('  Actual (my current state):', currentChecksum);
-      console.error('  My current turn:', currentState.currentTurn);
-      console.error('  Payload turn:', payload.turn);
-      // TODO: Show History Comparison Modal (Phase 3 resync flow)
-      return state;
-    }
-
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      console.log('  ✅ Checksum verified! Applying move...');
-    }
-
-    // Apply delta move
-    const result = engine.makeMove(payload.move.from, payload.move.to);
-    if (!result.success) {
-      console.error('Failed to apply delta move:', result.error);
-      return state;
-    }
-
-    const newGameState = engine.getGameState();
-    storage.setGameState(newGameState);
-
-    // Localhost debugging
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      console.log('  ✅ Move applied successfully:', {
-        newTurn: newGameState.currentTurn,
-        newChecksum: newGameState.checksum,
-        newCurrentPlayer: newGameState.currentPlayer,
-      });
-    }
-
-    // CRITICAL: Clear the URL hash after successfully applying a delta
-    // This prevents the same delta from being applied twice
-    if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-      if (window.location.hostname === 'localhost') {
-        console.log('  🧹 Cleared URL hash to prevent duplicate application');
-      }
-    }
-
-    // Check for game over
-    const victoryResult = engine.checkGameEnd();
-    if (victoryResult.gameOver) {
-      const player1Name = newGameState.lightPlayer.name;
-      const player2Name = newGameState.darkPlayer.name;
-
-      return {
-        phase: 'victory',
-        mode: 'url',
-        winner: victoryResult.winner || 'draw',
-        gameState: newGameState,
-        player1Name,
-        player2Name,
-      };
-    }
-
-    // Transition to playing phase
-    return {
-      phase: 'playing',
-      mode: 'url',
-      player1Name: newGameState.lightPlayer.name,
-      player2Name: newGameState.darkPlayer.name,
-      gameState: newGameState,
-      selectedPosition: null,
-      legalMoves: [],
-      pendingMove: null,
-    };
-  }
 }
 
 /**
