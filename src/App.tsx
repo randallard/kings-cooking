@@ -143,6 +143,31 @@ export default function App(): ReactElement {
     // URLs now contain full game state for persistence
   }, []); // Empty deps - only run on mount
 
+  // Generate initial URL when Player 1 finishes piece selection in URL mode
+  useEffect(() => {
+    if (state.phase === 'handoff') {
+      const handoffState = state;
+      if (
+        handoffState.mode === 'url' &&
+        handoffState.gameState &&
+        !handoffState.generatedUrl &&
+        storage.getMyName() // Only for Player 1 who has a saved name
+      ) {
+        // Generate initial URL with starting game state (no moves yet)
+        const fullStatePayload = {
+          type: 'full_state' as const,
+          gameState: handoffState.gameState,
+          playerName: handoffState.player1Name || undefined,
+        };
+        updateUrlImmediate(fullStatePayload);
+        const url = getShareUrl();
+        dispatch({ type: 'URL_GENERATED', url });
+
+        console.log('✅ Initial URL generated for Player 1 after piece selection');
+      }
+    }
+  }, [state]);
+
   // Task 9: Browser back button handling
   useEffect(() => {
     const handlePopState = (event: PopStateEvent): void => {
@@ -825,9 +850,10 @@ export default function App(): ReactElement {
       );
     } else {
       // URL mode: Determine if this is Player 1 sharing URL or Player 2 entering name
-      // Player 2 case: generatedUrl is null (came from LOAD_FROM_URL, hasn't clicked "Start Playing" yet)
-      // Player 1 case: generatedUrl is set (came from CONFIRM_MOVE)
-      const isPlayer2EnteringName = !state.generatedUrl;
+      // Player 1: Has saved name in localStorage (entered during setup)
+      // Player 2: No saved name (first time opening URL)
+      const myName = storage.getMyName();
+      const isPlayer2EnteringName = !myName;
 
       if (isPlayer2EnteringName) {
         return (

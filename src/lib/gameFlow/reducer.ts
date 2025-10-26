@@ -309,7 +309,20 @@ export function gameFlowReducer(
       const engine = new KingsChessEngine(lightPlayer, darkPlayer, gameState);
       const finalGameState = engine.getGameState();
 
-      // Check if current device holder (Player 1) doesn't match light player
+      // URL mode: Always go to handoff phase to generate initial URL
+      if (state.mode === 'url') {
+        return {
+          phase: 'handoff',
+          mode: 'url',
+          player1Name: state.player1Name,
+          player2Name: state.player2Name || '', // Empty for Player 2 to fill in later
+          gameState: finalGameState,
+          countdown: 0,
+          generatedUrl: null, // Will be generated in App.tsx useEffect
+        };
+      }
+
+      // Hot-seat mode: Check if current device holder (Player 1) doesn't match light player
       const currentPlayerIsLight = state.player1Color === 'light';
       if (!currentPlayerIsLight) {
         // Need to handoff to light player before game starts
@@ -319,10 +332,11 @@ export function gameFlowReducer(
           player1Name: state.player1Name,
           player2Name: state.player2Name,
           gameState: finalGameState,
+          countdown: 3,
         };
       }
 
-      // Device holder is light player, start game directly
+      // Hot-seat mode: Device holder is light player, start game directly
       return {
         phase: 'playing',
         mode: state.mode,
