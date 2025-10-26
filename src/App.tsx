@@ -513,10 +513,26 @@ export default function App(): ReactElement {
 
           // Always send full game state
           console.log('  ➡️ Generating FULL_STATE URL');
+
+          // Determine which player just made the move
+          // After a move, currentPlayer switches to the next player
+          // So if currentPlayer is 'light', then 'dark' just moved
+          const playerWhoMoved = newState.currentPlayer === 'light' ? 'dark' : 'light';
+
+          // Get the name of the player who just moved from the gameState
+          // Use gameState player names directly (not state.player1Name/player2Name)
+          // because player1 might be light OR dark depending on color selection
+          const playerName = playerWhoMoved === 'light'
+            ? newState.lightPlayer.name
+            : newState.darkPlayer.name;
+
+          console.log(`  👤 Player who moved: ${playerWhoMoved}`);
+          console.log(`  📤 Sending playerName: ${playerName}`);
+
           const fullStatePayload = {
             type: 'full_state' as const,
             gameState: newState,
-            playerName: state.player1Name || undefined,
+            playerName: playerName || undefined,
           };
           updateUrlImmediate(fullStatePayload);
 
@@ -565,11 +581,23 @@ export default function App(): ReactElement {
 
         // Task 7: Generate URL if in URL mode
         if (state.mode === 'url') {
+          // Determine which player just made the move
+          // After a move, currentPlayer switches to the next player
+          // So if currentPlayer is 'light', then 'dark' just moved
+          const playerWhoMoved = newState.currentPlayer === 'light' ? 'dark' : 'light';
+
+          // Get the name of the player who just moved from the gameState
+          // Use gameState player names directly (not state.player1Name/player2Name)
+          // because player1 might be light OR dark depending on color selection
+          const playerName = playerWhoMoved === 'light'
+            ? newState.lightPlayer.name
+            : newState.darkPlayer.name;
+
           // Always send full game state
           const fullStatePayload = {
             type: 'full_state' as const,
             gameState: newState,
-            playerName: state.player1Name || undefined,
+            playerName: playerName || undefined,
           };
           updateUrlImmediate(fullStatePayload);
 
