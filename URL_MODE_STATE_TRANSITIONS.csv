@@ -1,0 +1,104 @@
+Flow,Player,Start Phase,Action,Result Phase,State Data Available,URL Contains,Notes
+Random+Light,P1,mode-selection,select URL mode,setup,mode: url,N/A,
+Random+Light,P1,setup,enter name (Ryan),setup,mode: url; player1Name: Ryan,N/A,
+Random+Light,P1,setup,click continue,color-selection,mode: url; player1Name: Ryan,N/A,
+Random+Light,P1,color-selection,choose light,piece-selection,mode: url; player1Name: Ryan; player1Color: light,N/A,
+Random+Light,P1,piece-selection,choose random,piece-selection,mode: url; player1Name: Ryan; player1Color: light; selectionMode: random,N/A,Both pieces auto-generated
+Random+Light,P1,piece-selection,start game,playing,mode: url; player1Name: Ryan; player2Name: ''; player1Color: light; selectionMode: random; gameState: complete board,N/A,P1 is light so goes to playing
+Random+Light,P1,playing,make move,playing,gameState: after move,N/A,
+Random+Light,P1,playing,confirm move,handoff,gameState: after move; generatedUrl: null,N/A,Transition to handoff
+Random+Light,P1,handoff,URL generated,handoff,gameState: after move; generatedUrl: <url>,Full gameState + playerName: Ryan,Shows URLSharer
+Random+Light,P2,N/A,open URL,handoff,player1Name: Ryan; player2Name: ''; gameState: complete board; generatedUrl: null,Full gameState,LOAD_FROM_URL dispatched
+Random+Light,P2,handoff,enter name (Ted),handoff,player1Name: Ryan; player2Name: Ted; gameState: complete board,N/A,
+Random+Light,P2,handoff,start playing,playing,player1Name: Ryan; player2Name: Ted; gameState: complete board,N/A,COMPLETE_HANDOFF dispatched
+Random+Light,P2,playing,make move,playing,gameState: after P2 move,N/A,
+Random+Light,P2,playing,confirm move,handoff,gameState: after P2 move; generatedUrl: null,N/A,
+Random+Light,P2,handoff,URL generated,handoff,gameState: after P2 move; generatedUrl: <url>,Delta or Full gameState + playerName: Ted,
+Random+Light,P1,N/A,open URL,playing,player1Name: Ryan; player2Name: Ted; gameState: after P2 move,Delta or Full gameState,P1 has saved name; goes to playing
+
+Random+Dark,P1,mode-selection,select URL mode,setup,mode: url,N/A,
+Random+Dark,P1,setup,enter name (Ryan),setup,mode: url; player1Name: Ryan,N/A,
+Random+Dark,P1,setup,click continue,color-selection,mode: url; player1Name: Ryan,N/A,
+Random+Dark,P1,color-selection,choose dark,piece-selection,mode: url; player1Name: Ryan; player1Color: dark,N/A,
+Random+Dark,P1,piece-selection,choose random,piece-selection,mode: url; player1Name: Ryan; player1Color: dark; selectionMode: random,N/A,Both pieces auto-generated
+Random+Dark,P1,piece-selection,start game,handoff,mode: url; player1Name: Ryan; player2Name: ''; player1Color: dark; gameState: complete board; generatedUrl: null,N/A,P1 is dark so P2 will move first; goes to handoff
+Random+Dark,P1,handoff,URL generated,handoff,gameState: complete board; generatedUrl: <url>,Full gameState + playerName: Ryan,Shows URLSharer (no moves yet)
+Random+Dark,P2,N/A,open URL,handoff,player1Name: Ryan; player2Name: ''; gameState: complete board; generatedUrl: null,Full gameState,LOAD_FROM_URL dispatched
+Random+Dark,P2,handoff,enter name (Ted),handoff,player1Name: Ryan; player2Name: Ted; gameState: complete board,N/A,
+Random+Dark,P2,handoff,start playing,playing,player1Name: Ryan; player2Name: Ted; gameState: complete board,N/A,COMPLETE_HANDOFF dispatched; P2 is light and moves first
+Random+Dark,P2,playing,make move,playing,gameState: after P2 first move,N/A,
+Random+Dark,P2,playing,confirm move,handoff,gameState: after P2 move; generatedUrl: null,N/A,
+Random+Dark,P2,handoff,URL generated,handoff,gameState: after P2 move; generatedUrl: <url>,Full gameState (turn 1) or Delta + playerName: Ted,
+Random+Dark,P1,N/A,open URL,playing,player1Name: Ryan; player2Name: Ted; gameState: after P2 move,Full gameState or Delta,P1 has saved name; goes to playing
+
+Mirrored+Light,P1,mode-selection,select URL mode,setup,mode: url,N/A,
+Mirrored+Light,P1,setup,enter name (Ryan),setup,mode: url; player1Name: Ryan,N/A,
+Mirrored+Light,P1,setup,click continue,color-selection,mode: url; player1Name: Ryan,N/A,
+Mirrored+Light,P1,color-selection,choose light,piece-selection,mode: url; player1Name: Ryan; player1Color: light,N/A,
+Mirrored+Light,P1,piece-selection,choose mirrored,piece-selection,mode: url; player1Name: Ryan; player1Color: light; selectionMode: mirrored,N/A,
+Mirrored+Light,P1,piece-selection,select 3 pieces,piece-selection,mode: url; player1Name: Ryan; player1Color: light; selectionMode: mirrored; player1Pieces: [rook knight queen]; player2Pieces: [rook knight queen],N/A,Both pieces set (mirrored)
+Mirrored+Light,P1,piece-selection,start game,playing,mode: url; player1Name: Ryan; player2Name: ''; gameState: complete board,N/A,P1 is light so goes to playing
+Mirrored+Light,P1,playing,make move,playing,gameState: after move,N/A,
+Mirrored+Light,P1,playing,confirm move,handoff,gameState: after move; generatedUrl: null,N/A,
+Mirrored+Light,P1,handoff,URL generated,handoff,gameState: after move; generatedUrl: <url>,Full gameState + playerName: Ryan,Shows URLSharer
+Mirrored+Light,P2,N/A,open URL,handoff,player1Name: Ryan; player2Name: ''; gameState: complete board; generatedUrl: null,Full gameState,LOAD_FROM_URL dispatched
+Mirrored+Light,P2,handoff,enter name (Ted),handoff,player1Name: Ryan; player2Name: Ted; gameState: complete board,N/A,
+Mirrored+Light,P2,handoff,start playing,playing,player1Name: Ryan; player2Name: Ted; gameState: complete board,N/A,COMPLETE_HANDOFF dispatched
+Mirrored+Light,P2,playing,make move,playing,gameState: after P2 move,N/A,
+Mirrored+Light,P2,playing,confirm move,handoff,gameState: after P2 move; generatedUrl: null,N/A,
+Mirrored+Light,P2,handoff,URL generated,handoff,gameState: after P2 move; generatedUrl: <url>,Delta or Full gameState + playerName: Ted,
+Mirrored+Light,P1,N/A,open URL,playing,player1Name: Ryan; player2Name: Ted; gameState: after P2 move,Delta or Full gameState,P1 has saved name; goes to playing
+
+Mirrored+Dark,P1,mode-selection,select URL mode,setup,mode: url,N/A,
+Mirrored+Dark,P1,setup,enter name (Ryan),setup,mode: url; player1Name: Ryan,N/A,
+Mirrored+Dark,P1,setup,click continue,color-selection,mode: url; player1Name: Ryan,N/A,
+Mirrored+Dark,P1,color-selection,choose dark,piece-selection,mode: url; player1Name: Ryan; player1Color: dark,N/A,
+Mirrored+Dark,P1,piece-selection,choose mirrored,piece-selection,mode: url; player1Name: Ryan; player1Color: dark; selectionMode: mirrored,N/A,
+Mirrored+Dark,P1,piece-selection,select 3 pieces,piece-selection,mode: url; player1Name: Ryan; player1Color: dark; selectionMode: mirrored; player1Pieces: [rook knight queen]; player2Pieces: [rook knight queen],N/A,Both pieces set (mirrored)
+Mirrored+Dark,P1,piece-selection,start game,handoff,mode: url; player1Name: Ryan; player2Name: ''; gameState: complete board; generatedUrl: null,N/A,P1 is dark so P2 will move first
+Mirrored+Dark,P1,handoff,URL generated,handoff,gameState: complete board; generatedUrl: <url>,Full gameState + playerName: Ryan,Shows URLSharer (no moves yet)
+Mirrored+Dark,P2,N/A,open URL,handoff,player1Name: Ryan; player2Name: ''; gameState: complete board; generatedUrl: null,Full gameState,LOAD_FROM_URL dispatched
+Mirrored+Dark,P2,handoff,enter name (Ted),handoff,player1Name: Ryan; player2Name: Ted; gameState: complete board,N/A,
+Mirrored+Dark,P2,handoff,start playing,playing,player1Name: Ryan; player2Name: Ted; gameState: complete board,N/A,COMPLETE_HANDOFF dispatched; P2 is light and moves first
+Mirrored+Dark,P2,playing,make move,playing,gameState: after P2 first move,N/A,
+Mirrored+Dark,P2,playing,confirm move,handoff,gameState: after P2 move; generatedUrl: null,N/A,
+Mirrored+Dark,P2,handoff,URL generated,handoff,gameState: after P2 move; generatedUrl: <url>,Full gameState (turn 1) or Delta + playerName: Ted,
+Mirrored+Dark,P1,N/A,open URL,playing,player1Name: Ryan; player2Name: Ted; gameState: after P2 move,Full gameState or Delta,P1 has saved name; goes to playing
+
+Independent+Light,P1,mode-selection,select URL mode,setup,mode: url,N/A,NOT CURRENTLY SUPPORTED
+Independent+Light,P1,setup,enter name (Ryan),setup,mode: url; player1Name: Ryan,N/A,
+Independent+Light,P1,setup,click continue,color-selection,mode: url; player1Name: Ryan,N/A,
+Independent+Light,P1,color-selection,choose light,piece-selection,mode: url; player1Name: Ryan; player1Color: light,N/A,
+Independent+Light,P1,piece-selection,choose independent,piece-selection,mode: url; player1Name: Ryan; player1Color: light; selectionMode: independent,N/A,
+Independent+Light,P1,piece-selection,select 3 pieces,piece-selection,mode: url; player1Name: Ryan; player1Color: light; selectionMode: independent; player1Pieces: [rook knight queen],N/A,Only P1 pieces set
+Independent+Light,P1,piece-selection,confirm selection,handoff,mode: url; player1Name: Ryan; player2Name: ''; gameState: INCOMPLETE board (row 2 has pieces; row 0 empty); generatedUrl: null,N/A,WOULD NEED: support for incomplete boards
+Independent+Light,P1,handoff,URL generated,handoff,gameState: incomplete board; generatedUrl: <url>,Full gameState (incomplete) + playerName: Ryan,WOULD SHOW: URLSharer with incomplete board
+Independent+Light,P2,N/A,open URL,handoff,player1Name: Ryan; player2Name: ''; gameState: incomplete board; generatedUrl: null,Full gameState (incomplete),LOAD_FROM_URL would need to detect incomplete
+Independent+Light,P2,handoff,enter name (Ted),handoff,player1Name: Ryan; player2Name: Ted; gameState: incomplete board,N/A,
+Independent+Light,P2,handoff,start playing,piece-selection,player1Name: Ryan; player2Name: Ted; selectionMode: independent; player1Pieces: [rook knight queen]; player2Pieces: null; gameState: incomplete,N/A,COMPLETE_HANDOFF would route to piece-selection
+Independent+Light,P2,piece-selection,select 3 pieces,piece-selection,player2Pieces: [bishop pawn queen],N/A,P2 selects different pieces
+Independent+Light,P2,piece-selection,confirm selection,handoff,gameState: COMPLETE board; generatedUrl: null,N/A,COMPLETE_PIECE_SELECTION creates complete board
+Independent+Light,P2,handoff,URL generated,handoff,gameState: complete board; generatedUrl: <url>,Full gameState (complete) + playerName: Ted,P1 is light; needs URL back to P1
+Independent+Light,P1,N/A,open URL,playing,player1Name: Ryan; player2Name: Ted; gameState: complete board,Full gameState (complete),P1 has saved name; board now complete
+Independent+Light,P1,playing,make move,playing,gameState: after P1 first move,N/A,
+Independent+Light,P1,playing,confirm move,handoff,gameState: after move; generatedUrl: null,N/A,
+Independent+Light,P1,handoff,URL generated,handoff,gameState: after move; generatedUrl: <url>,Full or Delta + playerName: Ryan,
+Independent+Light,P2,N/A,open URL,playing,player1Name: Ryan; player2Name: Ted; gameState: after move,Full or Delta,
+
+Independent+Dark,P1,mode-selection,select URL mode,setup,mode: url,N/A,NOT CURRENTLY SUPPORTED
+Independent+Dark,P1,setup,enter name (Ryan),setup,mode: url; player1Name: Ryan,N/A,
+Independent+Dark,P1,setup,click continue,color-selection,mode: url; player1Name: Ryan,N/A,
+Independent+Dark,P1,color-selection,choose dark,piece-selection,mode: url; player1Name: Ryan; player1Color: dark,N/A,
+Independent+Dark,P1,piece-selection,choose independent,piece-selection,mode: url; player1Name: Ryan; player1Color: dark; selectionMode: independent,N/A,
+Independent+Dark,P1,piece-selection,select 3 pieces,piece-selection,mode: url; player1Name: Ryan; player1Color: dark; selectionMode: independent; player1Pieces: [rook knight queen],N/A,Only P1 pieces set
+Independent+Dark,P1,piece-selection,confirm selection,handoff,mode: url; player1Name: Ryan; player2Name: ''; gameState: INCOMPLETE board (row 0 has pieces; row 2 empty); generatedUrl: null,N/A,WOULD NEED: support for incomplete boards
+Independent+Dark,P1,handoff,URL generated,handoff,gameState: incomplete board; generatedUrl: <url>,Full gameState (incomplete) + playerName: Ryan,WOULD SHOW: URLSharer with incomplete board
+Independent+Dark,P2,N/A,open URL,handoff,player1Name: Ryan; player2Name: ''; gameState: incomplete board; generatedUrl: null,Full gameState (incomplete),LOAD_FROM_URL would need to detect incomplete
+Independent+Dark,P2,handoff,enter name (Ted),handoff,player1Name: Ryan; player2Name: Ted; gameState: incomplete board,N/A,
+Independent+Dark,P2,handoff,start playing,piece-selection,player1Name: Ryan; player2Name: Ted; selectionMode: independent; player1Pieces: [rook knight queen]; player2Pieces: null; gameState: incomplete,N/A,COMPLETE_HANDOFF would route to piece-selection
+Independent+Dark,P2,piece-selection,select 3 pieces,piece-selection,player2Pieces: [bishop pawn queen],N/A,P2 selects different pieces
+Independent+Dark,P2,piece-selection,confirm selection,playing,gameState: COMPLETE board,N/A,P2 is light so makes first move
+Independent+Dark,P2,playing,make move,playing,gameState: after P2 first move,N/A,
+Independent+Dark,P2,playing,confirm move,handoff,gameState: after move; generatedUrl: null,N/A,
+Independent+Dark,P2,handoff,URL generated,handoff,gameState: after move; generatedUrl: <url>,Full or Delta + playerName: Ted,
+Independent+Dark,P1,N/A,open URL,playing,player1Name: Ryan; player2Name: Ted; gameState: after move,Full or Delta,P1 has saved name; goes to playing
