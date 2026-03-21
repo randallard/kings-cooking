@@ -136,6 +136,8 @@
 .pieceIcon {
   font-size: 3rem;
   line-height: 1;
+  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif;
+  font-variant-emoji: text;
 }
 
 /* Piece name */
