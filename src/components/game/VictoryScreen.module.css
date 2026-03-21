@@ -448,6 +448,8 @@
   padding: var(--spacing-xs, 0.25rem);
   background: var(--surface-tertiary, rgba(255, 255, 255, 0.1));
   border-radius: var(--border-radius-sm, 4px);
+  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif;
+  font-variant-emoji: text;
   min-width: 2.5rem;
   text-align: center;
   cursor: help;

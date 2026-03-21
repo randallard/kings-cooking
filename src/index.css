@@ -213,8 +213,4 @@ select:focus {
   border-width: 0;
 }
 
-/* Chess piece unicode rendering - force text mode instead of emoji on mobile */
-/* Using !important to override any CSS module specificity */
-span[aria-hidden="true"] {
-  font-variant-emoji: text !important;
-}
+/* Chess piece unicode rendering is handled per-component via .pieceIcon and .piece classes */

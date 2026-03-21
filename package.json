@@ -57,6 +57,7 @@
     "@vitest/coverage-v8": "^3.0.0",
     "@vitest/ui": "^3.0.0",
     "babel-plugin-react-compiler": "^0.0.0-experimental-c8b3f72-20240517",
+    "baseline-browser-mapping": "^2.10.9",
     "eslint": "^9.36.0",
     "eslint-plugin-react-compiler": "^0.0.0-experimental-c8b3f72-20240517",
     "eslint-plugin-react-hooks": "^5.2.0",

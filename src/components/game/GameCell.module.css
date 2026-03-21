@@ -50,6 +50,8 @@
   line-height: 1;
   user-select: none;
   color:black;
+  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif;
+  font-variant-emoji: text;
 }
 
 /* Responsive sizing */

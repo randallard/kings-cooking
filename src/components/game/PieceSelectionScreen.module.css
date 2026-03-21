@@ -172,6 +172,8 @@
 
 .pieceIcon {
   line-height: 1;
+  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'Apple Color Emoji', 'Noto Sans Symbols', sans-serif;
+  font-variant-emoji: text;
 }
 
 .emptyCell {
