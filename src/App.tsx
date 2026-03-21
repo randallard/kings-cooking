@@ -166,7 +166,7 @@ export default function App(): ReactElement {
         console.log('✅ Initial URL generated for Player 1 after piece selection');
       }
     }
-  }, [state]);
+  }, [state, getShareUrl, updateUrlImmediate]);
 
   // Task 9: Browser back button handling
   useEffect(() => {
