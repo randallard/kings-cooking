@@ -1,0 +1,4 @@
+[submodule "kings-cooking-python"]
+	path = kings-cooking-python
+	url = git@github.com:randallard/kings-cooking-python.git
+	ignore = dirty
