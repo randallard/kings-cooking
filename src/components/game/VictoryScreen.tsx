@@ -40,6 +40,8 @@ interface VictoryScreenProps {
   onReviewMoves?: () => void;
   /** Callback for starting a new game */
   onNewGame?: () => void;
+  /** Callback for returning to townage (AI agents mode only) */
+  onReturnToTownage?: () => void;
 }
 
 /**
@@ -91,6 +93,7 @@ export const VictoryScreen = ({
   shareUrl,
   onReviewMoves,
   onNewGame,
+  onReturnToTownage,
 }: VictoryScreenProps): ReactElement => {
 
   // Track whether URL has been copied (URL mode only)
@@ -217,6 +220,21 @@ export const VictoryScreen = ({
               data-testid="new-game-button"
             >
               New Game
+            </button>
+          </div>
+        )}
+
+        {/* RETURN TO TOWNAGE - AI agents mode only */}
+        {onReturnToTownage && (
+          <div className={styles.newGameSection}>
+            <button
+              type="button"
+              onClick={onReturnToTownage}
+              className={`${styles.button} ${styles.secondaryButton}`}
+              aria-label="Return to Townage"
+              data-testid="return-to-townage-button"
+            >
+              Return to Townage
             </button>
           </div>
         )}

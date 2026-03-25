@@ -12,6 +12,8 @@ interface ColorSelectionScreenProps {
   player1Name: string;
   /** Dispatch function for game flow actions */
   dispatch: (action: GameFlowAction) => void;
+  /** Optional override: called instead of dispatching SET_PLAYER_COLOR */
+  onColorSelect?: (color: 'light' | 'dark') => void;
 }
 
 /**
@@ -25,9 +27,14 @@ interface ColorSelectionScreenProps {
 export function ColorSelectionScreen({
   player1Name,
   dispatch,
+  onColorSelect,
 }: ColorSelectionScreenProps): ReactElement {
   const handleColorSelect = (color: 'light' | 'dark'): void => {
-    dispatch({ type: 'SET_PLAYER_COLOR', color });
+    if (onColorSelect) {
+      onColorSelect(color);
+    } else {
+      dispatch({ type: 'SET_PLAYER_COLOR', color });
+    }
   };
 
   return (

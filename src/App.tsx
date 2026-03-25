@@ -17,6 +17,12 @@ import { Player2NameEntryScreen } from './components/game/Player2NameEntryScreen
 import { KingsChessEngine } from './lib/chess/KingsChessEngine';
 import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
 import type { GameState, Piece, Position, PieceType } from './lib/validation/schemas';
+import { compressToEncodedURIComponent } from 'lz-string';
+import { parseLotHash } from './lib/townage/parseLotHash';
+import { saveMidGame, clearMidGame } from './lib/townage/midGameSave';
+import { buildPiecesWithMoves } from './lib/aiAgents/buildPiecesWithMoves';
+import { selectMove } from './lib/aiAgents/inferenceClient';
+import type { LotLaunchData } from './types/aiAgents';
 
 /**
  * Main App component for King's Cooking Chess Game.
@@ -47,6 +53,18 @@ export default function App(): ReactElement {
    * @see {@link docs/ARCHITECTURE.md} for state machine diagram
    */
   const [state, dispatch] = useReducer(gameFlowReducer, { phase: 'mode-selection' });
+
+  /**
+   * Townage.app lot launch data (null when not launched from townage).
+   * Parsed from #lot= hash on mount.
+   */
+  const [lotData, setLotData] = useState<LotLaunchData | null>(null);
+
+  /**
+   * Human player's color in AI Agents mode.
+   * Set when the player picks a color on the AI Agents launch screen.
+   */
+  const [playerColor, setPlayerColor] = useState<'light' | 'dark' | null>(null);
 
   /**
    * Story panel visibility state.
@@ -142,6 +160,81 @@ export default function App(): ReactElement {
     // Note: Game state is no longer persisted to localStorage
     // URLs now contain full game state for persistence
   }, []); // Empty deps - only run on mount
+
+  // Parse #lot= hash from townage.app on mount
+  useEffect(() => {
+    const parsed = parseLotHash(window.location.hash);
+    if (parsed) {
+      setLotData(parsed);
+      // Remove the hash so it doesn't interfere with URL state logic
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []); // Empty deps - only run on mount
+
+  // AI Agents: save mid-game state whenever the game state changes
+  useEffect(() => {
+    if (state.phase === 'playing' && state.mode === 'ai_agents' && lotData && playerColor) {
+      saveMidGame(lotData.npcId, {
+        gameState: state.gameState,
+        playerColor,
+        agentType: lotData.agentType,
+      });
+    }
+  }, [state, lotData, playerColor]);
+
+  // AI Agents: make AI move when it's the AI's turn
+  useEffect(() => {
+    if (state.phase !== 'playing' || state.mode !== 'ai_agents') return;
+    if (!lotData || !playerColor) return;
+
+    const aiColor: 'light' | 'dark' = playerColor === 'light' ? 'dark' : 'light';
+    if (state.gameState.currentPlayer !== aiColor) return; // Human's turn
+
+    const makeAiMove = async (): Promise<void> => {
+      try {
+        const engine = new KingsChessEngine(
+          state.gameState.lightPlayer,
+          state.gameState.darkPlayer,
+          state.gameState
+        );
+
+        const piecesWithMoves = buildPiecesWithMoves(engine, state.gameState, aiColor);
+
+        if (piecesWithMoves.length === 0) {
+          // AI has no legal moves — human wins
+          dispatch({ type: 'GAME_OVER', winner: playerColor });
+          return;
+        }
+
+        const response = await selectMove(
+          piecesWithMoves,
+          lotData.agentType,
+          state.gameState,
+          aiColor
+        );
+
+        const { from, to } = response.move;
+        let moveResult = engine.makeMove(from, to);
+
+        if (!moveResult.success && moveResult.requiresPromotion
+            && moveResult.from && moveResult.to && moveResult.to !== 'off_board') {
+          moveResult = engine.promotePawn(moveResult.from, moveResult.to, 'queen');
+        }
+
+        if (moveResult.success) {
+          const newState = engine.getGameState();
+          dispatch({ type: 'AI_MAKE_MOVE', result: { newState, engine } });
+        }
+      } catch (err) {
+        console.error('AI move failed:', err);
+        // Don't block the game — the human can still play
+      }
+    };
+
+    const timer = setTimeout(() => { void makeAiMove(); }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [state, lotData, playerColor]);
 
   // Generate initial URL when Player 1 finishes piece selection in URL mode
   useEffect(() => {
@@ -400,6 +493,31 @@ export default function App(): ReactElement {
   // Phase 1: Mode Selection
   // ===========================
   if (state.phase === 'mode-selection') {
+    // AI Agents mode: townage.app launched this game with a #lot= hash
+    if (lotData) {
+      return (
+        <div>
+          <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginTop: 'var(--spacing-md)' }}>
+            Playing vs {lotData.npcDisplayName}
+          </p>
+          <ColorSelectionScreen
+            player1Name={lotData.playerName ?? 'Player'}
+            dispatch={dispatch}
+            onColorSelect={(color) => {
+              setPlayerColor(color);
+              dispatch({
+                type: 'START_AI_AGENTS',
+                player1Name: lotData.playerName ?? 'Player',
+                player2Name: lotData.npcDisplayName,
+                player1Color: color,
+                seed: crypto.randomUUID(),
+              });
+            }}
+          />
+        </div>
+      );
+    }
+
     return (
       <ModeSelector
         onModeSelected={(mode) => {
@@ -652,9 +770,16 @@ export default function App(): ReactElement {
           King's Cooking Chess
         </h1>
 
-        {/* Story/Instructions toggle */}
+        {/* Story/Instructions toggle + Return to Townage (ai_agents mode) */}
         {!showStoryPanel && (
-          <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-sm)' }}>
+          <div style={{
+            textAlign: 'center',
+            marginBottom: 'var(--spacing-sm)',
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 'var(--spacing-md)',
+            flexWrap: 'wrap',
+          }}>
             <button
               onClick={() => setShowStoryPanel(true)}
               style={{
@@ -670,6 +795,25 @@ export default function App(): ReactElement {
             >
               Show Story/Instructions
             </button>
+            {state.mode === 'ai_agents' && lotData && (
+              <button
+                onClick={() => {
+                  window.location.href = lotData.returnUrl;
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  fontSize: 'var(--font-size-sm)',
+                  padding: 'var(--spacing-xs)',
+                }}
+                aria-label="Return to Townage (game will be saved)"
+              >
+                Return to Townage
+              </button>
+            )}
           </div>
         )}
 
@@ -977,9 +1121,38 @@ export default function App(): ReactElement {
     victoryProps.onNewGame = () => {
       // Clear victory URL copied flag
       localStorage.removeItem('kings-cooking:victory-url-copied');
+      // Clear mid-game save if in AI Agents mode
+      if (state.mode === 'ai_agents' && lotData) {
+        clearMidGame(lotData.npcId);
+      }
       // Dispatch NEW_GAME action
       dispatch({ type: 'NEW_GAME' });
     };
+
+    if (state.mode === 'ai_agents' && lotData) {
+      victoryProps.onReturnToTownage = () => {
+        clearMidGame(lotData.npcId);
+        const outcome =
+          state.winner === 'draw' ? 'tie'
+          : state.winner === playerColor ? 'player'
+          : 'opponent';
+        const lightScore = state.gameState.lightCourt.length;
+        const darkScore = state.gameState.darkCourt.length;
+        const playerScore = playerColor === 'light' ? lightScore : playerColor === 'dark' ? darkScore : 0;
+        const opponentScore = playerColor === 'light' ? darkScore : playerColor === 'dark' ? lightScore : 0;
+        const compressed = compressToEncodedURIComponent(
+          JSON.stringify({
+            sessionId: lotData.sessionId,
+            npcId: lotData.npcId,
+            winner: outcome,
+            game: 'kings-cooking',
+            playerScore,
+            opponentScore,
+          })
+        );
+        window.location.href = `${lotData.returnUrl}#r=${compressed}`;
+      };
+    }
 
     return <VictoryScreen {...victoryProps} />;
   }

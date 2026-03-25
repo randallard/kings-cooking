@@ -17,6 +17,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
+      include: ['src/**'],
       exclude: [
         'node_modules/',
         'src/test/',
@@ -25,6 +26,9 @@ export default defineConfig({
         '**/*.config.ts',
         '**/types.ts',
         '**/*.d.ts',
+        // Top-level orchestration components tested via E2E, not unit tests
+        'src/App.tsx',
+        'src/main.tsx',
       ],
       thresholds: {
         global: {

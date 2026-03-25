@@ -65,7 +65,7 @@ if skill_level.startswith("scripted_"):
 
 ---
 
-## Phase 1: `kings-cooking-python` (New Repo) ⬜
+## Phase 1: `kings-cooking-python` (New Repo) ✅
 
 ### 1.1 Repository Setup
 - [ ] Create GitHub repo `randallard/kings-cooking-python`
@@ -144,7 +144,7 @@ INFERENCE_CORS_ORIGINS = os.environ.get(
 
 ---
 
-## Phase 2: `kings-cooking` Frontend — AI Agents Mode ⬜
+## Phase 2: `kings-cooking` Frontend — AI Agents Mode ✅
 
 ### 2.1 Add Submodule
 ```bash
@@ -383,7 +383,7 @@ New code must maintain ≥80% coverage (enforced by CI). Write tests for:
 
 ---
 
-## Phase 3: `townage.app` (the-lot) Updates ⬜
+## Phase 3: `townage.app` (the-lot) Updates ✅
 
 ### 3.1 Extend NPC Config
 

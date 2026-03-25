@@ -8,7 +8,7 @@ import type { FullStatePayload } from '../urlEncoding/types';
 import type { GameState } from '../validation/schemas';
 import { KingsChessEngine } from '../chess/KingsChessEngine';
 import { storage } from '../storage/localStorage';
-import { createBoardWithPieces } from '../pieceSelection/logic';
+import { createBoardWithPieces, generateRandomPieces } from '../pieceSelection/logic';
 
 /**
  * Creates initial game state for a new game.
@@ -392,6 +392,17 @@ export function gameFlowReducer(
         };
       }
 
+      // AI Agents mode: no handoff screen — stay in playing for the AI's turn
+      if (state.mode === 'ai_agents') {
+        return {
+          ...state,
+          gameState: action.result.newState,
+          selectedPosition: null,
+          legalMoves: [],
+          pendingMove: null,
+        };
+      }
+
       // Check if this is first move in hot-seat mode with missing player2Name
       const isFirstMove = action.result.newState.currentTurn === 1;
       const needsPlayer2Name = state.mode === 'hotseat' &&
@@ -576,6 +587,82 @@ export function gameFlowReducer(
     case 'LOAD_FROM_URL':
       // URL mode only: restore game from URL on page load
       return handleUrlLoad(state, action.payload);
+
+    case 'START_AI_AGENTS': {
+      // Generate mirrored random pieces: both players get identical pieces
+      const player1Pieces = generateRandomPieces(action.seed);
+      const player2Pieces = generateRandomPieces(action.seed);
+
+      const board = createBoardWithPieces(player1Pieces, player2Pieces, action.player1Color);
+
+      const lightPlayer = {
+        id: crypto.randomUUID() as never,
+        name: action.player1Color === 'light' ? action.player1Name : action.player2Name,
+      };
+      const darkPlayer = {
+        id: crypto.randomUUID() as never,
+        name: action.player1Color === 'light' ? action.player2Name : action.player1Name,
+      };
+
+      const gameState: GameState = {
+        version: '1.0.0',
+        gameId: crypto.randomUUID() as never,
+        board,
+        lightCourt: [],
+        darkCourt: [],
+        capturedLight: [],
+        capturedDark: [],
+        currentTurn: 0,
+        currentPlayer: 'light',
+        lightPlayer,
+        darkPlayer,
+        status: 'playing',
+        winner: null,
+        moveHistory: [],
+        checksum: '',
+      };
+
+      const engine = new KingsChessEngine(lightPlayer, darkPlayer, gameState);
+      const finalGameState = engine.getGameState();
+
+      return {
+        phase: 'playing',
+        mode: 'ai_agents',
+        player1Name: action.player1Name,
+        player2Name: action.player2Name,
+        gameState: finalGameState,
+        selectedPosition: null,
+        legalMoves: [],
+        pendingMove: null,
+      };
+    }
+
+    case 'AI_MAKE_MOVE': {
+      if (state.phase !== 'playing') return state;
+
+      // Check for game over after AI move
+      const aiVictoryResult = action.result.engine.checkGameEnd();
+      if (aiVictoryResult.gameOver) {
+        storage.clearGameMode();
+        return {
+          phase: 'victory',
+          mode: state.mode,
+          winner: aiVictoryResult.winner || 'draw',
+          gameState: action.result.newState,
+          player1Name: state.player1Name,
+          player2Name: state.player2Name || 'Player 2',
+        };
+      }
+
+      // Stay in playing phase — human player's turn
+      return {
+        ...state,
+        gameState: action.result.newState,
+        selectedPosition: null,
+        legalMoves: [],
+        pendingMove: null,
+      };
+    }
 
     default: {
       // Exhaustive checking: TypeScript ensures all actions are handled

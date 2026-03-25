@@ -93,7 +93,7 @@ export interface PieceSelectionPhase {
 export interface PlayingPhase {
   phase: 'playing';
   /** Selected game mode */
-  mode: 'hotseat' | 'url';
+  mode: 'hotseat' | 'url' | 'ai_agents';
   /** Player 1 name */
   player1Name: string;
   /** Player 2 name (null until first handoff in hot-seat, or first URL load in URL mode) */
@@ -150,7 +150,7 @@ export interface HandoffPhase {
 export interface VictoryPhase {
   phase: 'victory';
   /** Selected game mode */
-  mode: 'hotseat' | 'url';
+  mode: 'hotseat' | 'url' | 'ai_agents';
   /** Winner of the game */
   winner: 'light' | 'dark' | 'draw';
   /** Final game state */
@@ -186,7 +186,9 @@ export type GameFlowAction =
   | UrlGeneratedAction
   | GameOverAction
   | NewGameAction
-  | LoadFromUrlAction;
+  | LoadFromUrlAction
+  | StartAiAgentsAction
+  | AiMakeMoveAction;
 
 /**
  * SELECT_MODE action.
@@ -380,4 +382,37 @@ export interface LoadFromUrlAction {
   type: 'LOAD_FROM_URL';
   /** URL payload (always full state) */
   payload: FullStatePayload;
+}
+
+/**
+ * START_AI_AGENTS action.
+ * Launch a game directly from townage.app: auto-generate random pieces,
+ * set player names, and jump straight to the playing phase.
+ */
+export interface StartAiAgentsAction {
+  type: 'START_AI_AGENTS';
+  /** Human player's display name (from townage.app lot data) */
+  player1Name: string;
+  /** NPC display name */
+  player2Name: string;
+  /** Human player's chosen color */
+  player1Color: 'light' | 'dark';
+  /** Seed for deterministic random piece generation */
+  seed: string;
+}
+
+/**
+ * AI_MAKE_MOVE action.
+ * The inference server has selected a move; apply it to the game state.
+ * Stays in playing phase (no handoff screen for AI turns).
+ */
+export interface AiMakeMoveAction {
+  type: 'AI_MAKE_MOVE';
+  /** Result of the move from chess engine */
+  result: {
+    /** New game state after AI move */
+    newState: GameState;
+    /** Chess engine instance (for victory checking) */
+    engine: KingsChessEngine;
+  };
 }

@@ -1862,4 +1862,200 @@ describe('gameFlowReducer', () => {
       expect(storage.clearGameMode).toHaveBeenCalledTimes(1);
     });
   });
+
+  // ==========================================================================
+  // AI Agents mode
+  // ==========================================================================
+
+  describe('START_AI_AGENTS', () => {
+    const mockGameState = createMockGameState();
+
+    beforeEach(() => {
+      (KingsChessEngine as unknown as Mock).mockImplementation(() => ({
+        getGameState: vi.fn().mockReturnValue(mockGameState),
+        checkGameEnd: vi.fn().mockReturnValue({ gameOver: false }),
+        getValidMoves: vi.fn().mockReturnValue([]),
+        makeMove: vi.fn(),
+      }));
+    });
+
+    it('transitions from mode-selection to playing with ai_agents mode', () => {
+      const initialState: GameFlowState = { phase: 'mode-selection' };
+      const action: GameFlowAction = {
+        type: 'START_AI_AGENTS',
+        player1Name: 'Alice',
+        player2Name: 'The Inn Keeper',
+        player1Color: 'light',
+        seed: 'test-seed-123',
+      };
+
+      const newState = gameFlowReducer(initialState, action);
+
+      expect(newState.phase).toBe('playing');
+      if (newState.phase === 'playing') {
+        expect(newState.mode).toBe('ai_agents');
+        expect(newState.player1Name).toBe('Alice');
+        expect(newState.player2Name).toBe('The Inn Keeper');
+        expect(newState.selectedPosition).toBeNull();
+        expect(newState.legalMoves).toEqual([]);
+        expect(newState.pendingMove).toBeNull();
+      }
+    });
+
+    it('uses mirrored pieces - both players get identical piece types', () => {
+      const initialState: GameFlowState = { phase: 'mode-selection' };
+      const action: GameFlowAction = {
+        type: 'START_AI_AGENTS',
+        player1Name: 'Alice',
+        player2Name: 'The Inn Keeper',
+        player1Color: 'light',
+        seed: 'mirror-test-seed',
+      };
+
+      const newState = gameFlowReducer(initialState, action);
+
+      expect(newState.phase).toBe('playing');
+      if (newState.phase === 'playing') {
+        const board = newState.gameState.board;
+        // Player 1 (light) is on row 2, Player 2 (dark) is on row 0
+        const p1Pieces = board[2]!.map((cell) => cell?.type);
+        const p2Pieces = board[0]!.map((cell) => cell?.type);
+        expect(p1Pieces).toEqual(p2Pieces);
+      }
+    });
+
+    it('sets player names correctly when player1 is dark', () => {
+      const initialState: GameFlowState = { phase: 'mode-selection' };
+      const action: GameFlowAction = {
+        type: 'START_AI_AGENTS',
+        player1Name: 'Alice',
+        player2Name: 'NPC',
+        player1Color: 'dark',
+        seed: 'seed-dark',
+      };
+
+      const newState = gameFlowReducer(initialState, action);
+      expect(newState.phase).toBe('playing');
+    });
+  });
+
+  describe('AI_MAKE_MOVE', () => {
+    const mockGameState = createMockGameState();
+    const mockEngine = {
+      getGameState: vi.fn().mockReturnValue(mockGameState),
+      checkGameEnd: vi.fn().mockReturnValue({ gameOver: false }),
+    };
+
+    it('stays in playing phase when game is not over', () => {
+      mockEngine.checkGameEnd.mockReturnValue({ gameOver: false });
+
+      const playingState: GameFlowState = {
+        phase: 'playing',
+        mode: 'ai_agents',
+        player1Name: 'Alice',
+        player2Name: 'NPC',
+        gameState: createMockGameState(),
+        selectedPosition: null,
+        legalMoves: [],
+        pendingMove: null,
+      };
+
+      const action: GameFlowAction = {
+        type: 'AI_MAKE_MOVE',
+        result: { newState: mockGameState, engine: mockEngine as unknown as import('../chess/KingsChessEngine').KingsChessEngine },
+      };
+
+      const newState = gameFlowReducer(playingState, action);
+
+      expect(newState.phase).toBe('playing');
+      if (newState.phase === 'playing') {
+        expect(newState.gameState).toBe(mockGameState);
+        expect(newState.selectedPosition).toBeNull();
+        expect(newState.pendingMove).toBeNull();
+      }
+    });
+
+    it('transitions to victory when AI move ends the game', () => {
+      const winningEngine = {
+        getGameState: vi.fn().mockReturnValue(mockGameState),
+        checkGameEnd: vi.fn().mockReturnValue({ gameOver: true, winner: 'dark' }),
+      };
+
+      const playingState: GameFlowState = {
+        phase: 'playing',
+        mode: 'ai_agents',
+        player1Name: 'Alice',
+        player2Name: 'NPC',
+        gameState: createMockGameState(),
+        selectedPosition: null,
+        legalMoves: [],
+        pendingMove: null,
+      };
+
+      const action: GameFlowAction = {
+        type: 'AI_MAKE_MOVE',
+        result: { newState: mockGameState, engine: winningEngine as unknown as import('../chess/KingsChessEngine').KingsChessEngine },
+      };
+
+      const newState = gameFlowReducer(playingState, action);
+
+      expect(newState.phase).toBe('victory');
+      if (newState.phase === 'victory') {
+        expect(newState.winner).toBe('dark');
+      }
+      expect(storage.clearGameMode).toHaveBeenCalled();
+    });
+
+    it('returns state unchanged when not in playing phase', () => {
+      const victoryState: GameFlowState = {
+        phase: 'victory',
+        mode: 'ai_agents',
+        winner: 'light',
+        gameState: createMockGameState(),
+        player1Name: 'Alice',
+        player2Name: 'NPC',
+      };
+
+      const action: GameFlowAction = {
+        type: 'AI_MAKE_MOVE',
+        result: { newState: mockGameState, engine: mockEngine as unknown as import('../chess/KingsChessEngine').KingsChessEngine },
+      };
+
+      expect(gameFlowReducer(victoryState, action)).toBe(victoryState);
+    });
+  });
+
+  describe('CONFIRM_MOVE in ai_agents mode', () => {
+    const mockGameState = createMockGameState({ currentTurn: 1 });
+    const mockEngine = {
+      checkGameEnd: vi.fn().mockReturnValue({ gameOver: false }),
+    };
+
+    it('stays in playing phase instead of going to handoff', () => {
+      const playingState: GameFlowState = {
+        phase: 'playing',
+        mode: 'ai_agents',
+        player1Name: 'Alice',
+        player2Name: 'NPC',
+        gameState: createMockGameState(),
+        selectedPosition: null,
+        legalMoves: [],
+        pendingMove: { from: [2, 0], to: [1, 0] },
+      };
+
+      const action: GameFlowAction = {
+        type: 'CONFIRM_MOVE',
+        result: { newState: mockGameState, engine: mockEngine as unknown as import('../chess/KingsChessEngine').KingsChessEngine },
+      };
+
+      const newState = gameFlowReducer(playingState, action);
+
+      expect(newState.phase).toBe('playing');
+      if (newState.phase === 'playing') {
+        expect(newState.mode).toBe('ai_agents');
+        expect(newState.gameState).toBe(mockGameState);
+        expect(newState.pendingMove).toBeNull();
+      }
+    });
+  });
 });

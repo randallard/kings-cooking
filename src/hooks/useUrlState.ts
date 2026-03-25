@@ -107,6 +107,13 @@ export function useUrlState(options: UseUrlStateOptions = {}): {
       return;
     }
 
+    // Skip structured key=value hashes (e.g. #lot=... from townage, #r=... results)
+    // These are handled by other parts of the app and are not compressed game state
+    if (/^[a-z]+=/.test(hash)) {
+      setIsLoading(false);
+      return;
+    }
+
     // Decompress and validate payload
     const decoded = decompressPayload(hash);
 
@@ -142,6 +149,11 @@ export function useUrlState(options: UseUrlStateOptions = {}): {
         // Hash removed - reset to new game
         setPayload(null);
         setError(null);
+        return;
+      }
+
+      // Skip structured key=value hashes
+      if (/^[a-z]+=/.test(hash)) {
         return;
       }
 
