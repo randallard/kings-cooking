@@ -63,7 +63,7 @@ jobs:
         run: pnpm run build
         env:
           NODE_ENV: production
-          VITE_INFERENCE_API_URL: ${{ vars.INFERENCE_API_URL }}
+          VITE_KC_INFERENCE_API_URL: ${{ vars.INFERENCE_API_URL }}
 
       - name: 📊 Analyze bundle size
         run: |

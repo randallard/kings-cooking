@@ -42,15 +42,15 @@ describe('inferenceClient – selectMove', () => {
     // stub set up in src/test/setup.ts, breaking the afterEach cleanup.
   });
 
-  it('throws when VITE_INFERENCE_API_URL is not set', async () => {
-    vi.stubEnv('VITE_INFERENCE_API_URL', '');
+  it('throws when VITE_KC_INFERENCE_API_URL is not set', async () => {
+    vi.stubEnv('VITE_KC_INFERENCE_API_URL', '');
     await expect(
       selectMove(PIECES, 'scripted_1', makeMinimalGameState(), 'dark')
-    ).rejects.toThrow('VITE_INFERENCE_API_URL is not configured');
+    ).rejects.toThrow('VITE_KC_INFERENCE_API_URL is not configured');
   });
 
   it('returns the move from the server response', async () => {
-    vi.stubEnv('VITE_INFERENCE_API_URL', 'http://localhost:8000');
+    vi.stubEnv('VITE_KC_INFERENCE_API_URL', 'http://localhost:8000');
 
     const mockResponse = {
       move: { from: [0, 0], to: [1, 0] },
@@ -69,7 +69,7 @@ describe('inferenceClient – selectMove', () => {
   });
 
   it('throws when server responds with non-ok status', async () => {
-    vi.stubEnv('VITE_INFERENCE_API_URL', 'http://localhost:8000');
+    vi.stubEnv('VITE_KC_INFERENCE_API_URL', 'http://localhost:8000');
 
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
@@ -83,7 +83,7 @@ describe('inferenceClient – selectMove', () => {
   });
 
   it('sends correct JSON body to the server', async () => {
-    vi.stubEnv('VITE_INFERENCE_API_URL', 'http://localhost:8000');
+    vi.stubEnv('VITE_KC_INFERENCE_API_URL', 'http://localhost:8000');
 
     const capturedOptions: RequestInit[] = [];
     global.fetch = vi.fn().mockImplementation((_url: string, opts: RequestInit) => {

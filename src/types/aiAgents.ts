@@ -4,7 +4,7 @@
  */
 
 /** Skill level identifiers for inference server agents. */
-export type AgentSkillLevel = 'scripted_1';
+export type AgentSkillLevel = 'scripted_1' | 'scripted_2';
 
 /**
  * Data parsed from the townage.app #lot= hash when launching from an NPC.

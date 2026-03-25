@@ -27,9 +27,9 @@ export async function selectMove(
   gameState: GameState,
   currentPlayer: 'light' | 'dark'
 ): Promise<SelectMoveResponse> {
-  const baseUrl = import.meta.env.VITE_INFERENCE_API_URL as string | undefined;
+  const baseUrl = import.meta.env.VITE_KC_INFERENCE_API_URL as string | undefined;
   if (!baseUrl) {
-    throw new Error('VITE_INFERENCE_API_URL is not configured');
+    throw new Error('VITE_KC_INFERENCE_API_URL is not configured');
   }
 
   const body = {
