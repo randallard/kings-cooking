@@ -540,7 +540,7 @@ export default function App(): ReactElement {
           if (homeReturnUrl) {
             window.location.href = homeReturnUrl;
           } else {
-            const townageUrl = import.meta.env.VITE_TOWNAGE_URL ?? 'https://townage.app';
+            const townageUrl = (import.meta.env.VITE_TOWNAGE_URL as string | undefined) ?? 'https://townage.app';
             window.location.href = `${townageUrl}#from-game`;
           }
         }}
