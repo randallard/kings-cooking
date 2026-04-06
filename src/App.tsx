@@ -18,7 +18,7 @@ import { KingsChessEngine } from './lib/chess/KingsChessEngine';
 import { buildFullStateUrl } from './lib/urlEncoding/urlBuilder';
 import type { GameState, Piece, Position, PieceType } from './lib/validation/schemas';
 import { compressToEncodedURIComponent } from 'lz-string';
-import { parseLotHash } from './lib/townage/parseLotHash';
+import { parseLotHash, parseLotHomeHash } from './lib/townage/parseLotHash';
 import { saveMidGame, clearMidGame } from './lib/townage/midGameSave';
 import { buildPiecesWithMoves } from './lib/aiAgents/buildPiecesWithMoves';
 import { selectMove } from './lib/aiAgents/inferenceClient';
@@ -59,6 +59,12 @@ export default function App(): ReactElement {
    * Parsed from #lot= hash on mount.
    */
   const [lotData, setLotData] = useState<LotLaunchData | null>(null);
+
+  /**
+   * Return URL when launched from townage phone games menu (no NPC context).
+   * Parsed from #lot-home= hash on mount.
+   */
+  const [homeReturnUrl, setHomeReturnUrl] = useState<string | null>(null);
 
   /**
    * Human player's color in AI Agents mode.
@@ -161,12 +167,18 @@ export default function App(): ReactElement {
     // URLs now contain full game state for persistence
   }, []); // Empty deps - only run on mount
 
-  // Parse #lot= hash from townage.app on mount
+  // Parse #lot= or #lot-home= hash from townage.app on mount
   useEffect(() => {
-    const parsed = parseLotHash(window.location.hash);
+    const hash = window.location.hash;
+    const parsed = parseLotHash(hash);
     if (parsed) {
       setLotData(parsed);
-      // Remove the hash so it doesn't interfere with URL state logic
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      return;
+    }
+    const homeUrl = parseLotHomeHash(hash);
+    if (homeUrl) {
+      setHomeReturnUrl(homeUrl);
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
   }, []); // Empty deps - only run on mount
@@ -524,6 +536,14 @@ export default function App(): ReactElement {
           dispatch({ type: 'SELECT_MODE', mode });
           storage.setGameMode(mode);
         }}
+        onTownageClick={() => {
+          if (homeReturnUrl) {
+            window.location.href = homeReturnUrl;
+          } else {
+            const townageUrl = import.meta.env.VITE_TOWNAGE_URL ?? 'https://townage.app';
+            window.location.href = `${townageUrl}#from-game`;
+          }
+        }}
       />
     );
   }
@@ -795,10 +815,10 @@ export default function App(): ReactElement {
             >
               Show Story/Instructions
             </button>
-            {state.mode === 'ai_agents' && lotData && (
+            {(state.mode === 'ai_agents' && lotData || homeReturnUrl) && (
               <button
                 onClick={() => {
-                  window.location.href = lotData.returnUrl;
+                  window.location.href = lotData ? lotData.returnUrl : homeReturnUrl!;
                 }}
                 style={{
                   background: 'none',

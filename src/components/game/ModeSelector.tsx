@@ -9,6 +9,8 @@ import styles from './ModeSelector.module.css';
 interface ModeSelectorProps {
   /** Callback when a mode is selected */
   onModeSelected: (mode: 'hotseat' | 'url') => void;
+  /** Callback to navigate to Townage to find NPC opponents */
+  onTownageClick?: () => void;
 }
 
 /**
@@ -29,7 +31,7 @@ interface ModeSelectorProps {
  * />
  * ```
  */
-export function ModeSelector({ onModeSelected }: ModeSelectorProps): ReactElement {
+export function ModeSelector({ onModeSelected, onTownageClick = () => {} }: ModeSelectorProps): ReactElement {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>King's Cooking Chess</h1>
@@ -66,6 +68,22 @@ export function ModeSelector({ onModeSelected }: ModeSelectorProps): ReactElemen
             <li>Each player on their own device</li>
             <li>Share URL after each move</li>
             <li>Play at your own pace</li>
+          </ul>
+        </button>
+
+        <button
+          onClick={onTownageClick}
+          className={styles.modeButton}
+          aria-label="Find NPC opponents in Townage"
+          data-testid="mode-townage"
+        >
+          <span className={styles.modeIcon} aria-hidden="true">🌐</span>
+          <h3 className={styles.modeTitle}>Find NPC Opponents</h3>
+          <p className={styles.modeDescription}>Challenge townage NPCs to a game</p>
+          <ul className={styles.featureList}>
+            <li>AI-powered NPC personalities</li>
+            <li>Track wins across all NPCs</li>
+            <li>Unlock new skill levels</li>
           </ul>
         </button>
       </div>
