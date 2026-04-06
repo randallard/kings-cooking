@@ -116,7 +116,7 @@ describe('ModeSelector', () => {
       const { container } = render(<ModeSelector onModeSelected={vi.fn()} />);
 
       const icons = container.querySelectorAll('[aria-hidden="true"]');
-      expect(icons.length).toBe(2); // Two mode icons
+      expect(icons.length).toBe(3); // Three mode icons (hot-seat, URL, townage)
     });
 
     it('should be keyboard accessible', () => {
@@ -160,10 +160,11 @@ describe('ModeSelector', () => {
       expect(h1).toHaveTextContent(/king's cooking chess/i);
 
       // h3: Mode selection subtitle + mode titles
-      expect(h3s).toHaveLength(3);
+      expect(h3s).toHaveLength(4);
       expect(h3s[0]).toHaveTextContent(/choose your game mode/i);
       expect(h3s[1]).toHaveTextContent(/hot-seat mode/i);
       expect(h3s[2]).toHaveTextContent(/url mode/i);
+      expect(h3s[3]).toHaveTextContent(/find npc opponents/i);
     });
   });
 
